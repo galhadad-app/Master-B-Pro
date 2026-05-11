@@ -1008,69 +1008,44 @@
       if(whatsappBotMode === "private" && !whatsappPhoneNumberId){showToast("במצב בעל עסק חייבים למלא Phone Number ID",true);return}
 
       el.saveBtn.disabled=true;
-      el.saveStatus.textContent="שומר ל־businessSettings...";
+      el.saveStatus.textContent="שומר דרך השרת...";
 
       try{
-        const now=Date.now();
-        const ref=db.collection(COLLECTION).doc(businessId);
-        const existing=await ref.get();
-        const data=existing.exists ? existing.data()||{} : {};
-
-        const payload={
+        await apiPost("/business/save", {
           businessId,
           businessName,
-          name:businessName,
+          name: businessName,
           whatsappNumber,
-          phone:whatsappNumber,
-          centralBotNumber:CENTRAL_BOT_WHATSAPP_NUMBER,
-          botWhatsappNumber:CENTRAL_BOT_WHATSAPP_NUMBER,
+          phone: whatsappNumber,
+          centralBotNumber: CENTRAL_BOT_WHATSAPP_NUMBER,
+          botWhatsappNumber: CENTRAL_BOT_WHATSAPP_NUMBER,
           whatsappBotMode,
           whatsappMode,
           whatsappPhoneNumberId,
-          phoneNumberId:whatsappPhoneNumberId,
+          phoneNumberId: whatsappPhoneNumberId,
           whatsappAccessToken,
           whatsappEnabled,
-          whatsappBotEnabled:whatsappEnabled,
-          botEnabled:whatsappEnabled,
-          waBotEnabled:whatsappEnabled,
+          whatsappBotEnabled: whatsappEnabled,
+          botEnabled: whatsappEnabled,
+          waBotEnabled: whatsappEnabled,
           ownerAccess,
-          clientOwnerAccess:ownerAccess,
-          plan:whatsappBotMode === "central" ? "whatsapp-central" : (whatsappBotMode === "private" ? "whatsapp-private" : "basic"),
+          clientOwnerAccess: ownerAccess,
+          plan: whatsappBotMode === "central" ? "whatsapp-central" : (whatsappBotMode === "private" ? "whatsapp-private" : "basic"),
           ownerCode,
           statsSettingsCode,
-          appUrl:appLink(businessId),
-          whatsappUrl:waLink(businessId,whatsappNumber,whatsappBotMode),
-          updatedAtMs:now,
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        if(!existing.exists){
-          payload.isFrozen=false;
-          payload.appFrozen=false;
-          payload.active=true;
-          payload.status="active";
-        }
-
-        if(!data.workingHours) payload.workingHours=DEFAULT_WORKING_HOURS;
-        if(!Array.isArray(data.services)||!data.services.length) payload.services=DEFAULT_SERVICES;
-        if(!data.logoSrc) payload.logoSrc = "logo.png";
-        if(!data.heroBg) payload.heroBg = "background-behind-logo.png";
-        if(!data.bookingTitle) payload.bookingTitle = "קביעת תור!";
-        if(!data.businessTypeLabel) payload.businessTypeLabel = "מספרה";
-        if(!data.ownerBadge) payload.ownerBadge = "עמוד בעל העסק";
-
-        if(!existing.exists){payload.createdAtMs=now;payload.createdAt=firebase.firestore.FieldValue.serverTimestamp()}
-        await ref.set(payload,{merge:true});
+          appUrl: appLink(businessId),
+          whatsappUrl: waLink(businessId,whatsappNumber,whatsappBotMode)
+        });
 
         selectedId=businessId;
         showToast("העסק נשמר בהצלחה");
-        el.saveStatus.textContent="נשמר בהצלחה ב־businessSettings בלבד";
+        el.saveStatus.textContent="נשמר בהצלחה דרך השרת";
         resetForm();
         showScreen("home");
       }catch(err){
         console.error(err);
         el.saveStatus.textContent="שגיאה: "+(err.message||err);
-        showToast("השמירה נכשלה. בדוק הרשאות Firestore",true);
+        showToast(err.message || "השמירה נכשלה",true);
       }finally{el.saveBtn.disabled=false}
     }
 
