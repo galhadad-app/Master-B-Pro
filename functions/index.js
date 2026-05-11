@@ -470,96 +470,6 @@ app.post("/waitlist/join", async (req, res) => {
 });
 
 
-
-// =======================
-// Manager endpoint: save/create business
-// =======================
-app.post("/business/save", async (req, res) => {
-  try {
-    const body = req.body || {};
-    const businessId = cleanBusinessId(body.businessId || "");
-    const businessName = String(body.businessName || body.name || "").trim();
-    const whatsappNumber = normalizePhone(body.whatsappNumber || body.phone || "");
-    const whatsappBotModeRaw = String(body.whatsappBotMode || body.whatsappMode || "off").trim().toLowerCase();
-    const whatsappBotMode = ["off", "central", "private"].includes(whatsappBotModeRaw) ? whatsappBotModeRaw : "off";
-    const whatsappPhoneNumberId = String(body.whatsappPhoneNumberId || body.phoneNumberId || "").trim();
-    const whatsappAccessToken = String(body.whatsappAccessToken || "").trim();
-    const ownerCode = String(body.ownerCode || "1234").replace(/\D/g, "").slice(0, 4) || "1234";
-    const statsSettingsCode = String(body.statsSettingsCode || "4321").replace(/\D/g, "").slice(0, 4) || "4321";
-    const ownerAccess = body.ownerAccess === true || body.ownerAccess === "true";
-    const whatsappEnabled = whatsappBotMode !== "off";
-
-    if (!businessId || !businessName) {
-      return res.status(400).json({ ok: false, error: "missing_business_fields", message: "חסר שם עסק או businessId" });
-    }
-
-    if (!/^9725\d{8}$/.test(whatsappNumber)) {
-      return res.status(400).json({ ok: false, error: "invalid_whatsapp_number", message: "מספר וואטסאפ חייב להיות בפורמט 9725XXXXXXXX" });
-    }
-
-    if (whatsappBotMode === "private" && !whatsappPhoneNumberId) {
-      return res.status(400).json({ ok: false, error: "missing_phone_number_id", message: "במצב בעל עסק חייבים למלא Phone Number ID" });
-    }
-
-    const ref = db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId);
-    const snap = await ref.get();
-    const existing = snap.exists ? (snap.data() || {}) : {};
-
-    const payload = {
-      businessId,
-      businessName,
-      name: businessName,
-      whatsappNumber,
-      phone: whatsappNumber,
-      centralBotNumber: String(body.centralBotNumber || "972547674814"),
-      botWhatsappNumber: String(body.botWhatsappNumber || "972547674814"),
-      whatsappBotMode,
-      whatsappMode: whatsappBotMode,
-      whatsappPhoneNumberId,
-      phoneNumberId: whatsappPhoneNumberId,
-      whatsappAccessToken,
-      whatsappEnabled,
-      whatsappBotEnabled: whatsappEnabled,
-      botEnabled: whatsappEnabled,
-      waBotEnabled: whatsappEnabled,
-      ownerAccess,
-      clientOwnerAccess: ownerAccess,
-      plan: String(body.plan || (whatsappBotMode === "central" ? "whatsapp-central" : (whatsappBotMode === "private" ? "whatsapp-private" : "basic"))),
-      ownerCode,
-      statsSettingsCode,
-      appUrl: String(body.appUrl || `${getAppBaseUrl().replace(/\/$/, "")}/index.html?business=${encodeURIComponent(businessId)}`),
-      whatsappUrl: String(body.whatsappUrl || ""),
-      updatedAtMs: Date.now(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-
-    if (!snap.exists) {
-      payload.isFrozen = false;
-      payload.appFrozen = false;
-      payload.active = true;
-      payload.status = "active";
-      payload.createdAtMs = Date.now();
-      payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
-    }
-
-    if (!existing.workingHours) payload.workingHours = DEFAULT_WORKING_HOURS;
-    if (!Array.isArray(existing.services) || !existing.services.length) payload.services = DEFAULT_SERVICES;
-    if (!existing.logoSrc) payload.logoSrc = "logo.png";
-    if (!existing.heroBg) payload.heroBg = "background-behind-logo.png";
-    if (!existing.bookingTitle) payload.bookingTitle = "קביעת תור!";
-    if (!existing.businessTypeLabel) payload.businessTypeLabel = "מספרה";
-    if (!existing.ownerBadge) payload.ownerBadge = "עמוד בעל העסק";
-
-    await ref.set(payload, { merge: true });
-    await writeManagerLog(businessId, snap.exists ? "business_updated" : "business_created", { whatsappBotMode, ownerAccess });
-
-    return res.status(200).json({ ok: true, businessId, created: !snap.exists, message: "העסק נשמר בהצלחה" });
-  } catch (err) {
-    console.error("business/save error:", getErrorPayload(err));
-    return res.status(500).json({ ok: false, error: "save_business_failed", message: "שגיאה בשמירת העסק" });
-  }
-});
-
 // =======================
 // Manager endpoints: business status and deletion
 // =======================
@@ -711,6 +621,72 @@ async function deleteCollectionByBusinessId(collectionName, businessId) {
   }
   return total;
 }
+
+
+// =======================
+// Frontend endpoint: save in-app business settings
+// =======================
+app.post("/business/settings/save", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const businessId = cleanBusinessId(body.businessId || "");
+    if (!businessId) {
+      return res.status(400).json({ ok: false, error: "missing_business_id", message: "חסר מזהה עסק" });
+    }
+
+    const existingRef = db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId);
+    const existingSnap = await existingRef.get();
+    if (!existingSnap.exists) {
+      return res.status(404).json({ ok: false, error: "business_not_found", message: "העסק לא נמצא" });
+    }
+
+    const allowedKeys = [
+      "businessName", "businessSubtitle", "businessDescription", "importantNotice",
+      "whatsappNumber", "businessAddress", "ownerCode", "statsSettingsCode",
+      "services", "workingHours", "logoSrc", "heroBgSrc", "logoUrl", "heroBgUrl",
+      "phoneNumber", "wazeAddress", "address", "bookingTitle", "businessTypeLabel",
+      "ownerBadge", "frozenMessage", "freezeMessage"
+    ];
+
+    const payload = {};
+    for (const key of allowedKeys) {
+      if (Object.prototype.hasOwnProperty.call(body, key)) payload[key] = body[key];
+    }
+
+    payload.businessId = businessId;
+    payload.updatedAtMs = Date.now();
+    payload.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+
+    await existingRef.set(payload, { merge: true });
+    await writeManagerLog(businessId, "business_settings_saved", { source: "app" });
+
+    return res.status(200).json({ ok: true, businessId, message: "הגדרות העסק נשמרו" });
+  } catch (err) {
+    console.error("business/settings/save error:", getErrorPayload(err));
+    return res.status(500).json({ ok: false, error: "settings_save_failed", message: "שמירת ההגדרות נכשלה" });
+  }
+});
+
+app.post("/business/visit", async (req, res) => {
+  try {
+    const businessId = cleanBusinessId(req.body?.businessId || "");
+    const dateKey = String(req.body?.dateKey || "").trim();
+    if (!businessId || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+      return res.status(400).json({ ok: false, error: "invalid_visit" });
+    }
+
+    await db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId).set({
+      visits: { [dateKey]: admin.firestore.FieldValue.increment(1) },
+      visitsUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      visitsUpdatedAtMs: Date.now(),
+    }, { merge: true });
+
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error("business/visit error:", getErrorPayload(err));
+    return res.status(200).json({ ok: false });
+  }
+});
 
 
 // =======================
