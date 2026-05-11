@@ -1758,6 +1758,9 @@ body.business-frozen{overflow:hidden;}
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '') || DEFAULT_BUSINESS_ID;
 
+    // Backend API: מכאן מתחילים להעביר פעולות רגישות מה-HTML לשרת.
+    const BACKEND_API_BASE_URL = 'https://api-sjchnvsuhq-uc.a.run.app';
+
     /*
       זה הלב של התבנית.
       לכל עסק חדש הנתונים נטענים לפי ACTIVE_BUSINESS_ID מהכתובת.
@@ -2499,13 +2502,30 @@ body.business-frozen{overflow:hidden;}
     }
 
     async function createAppointmentInFirebase(payload){
-      const createdRef = await db.collection(APPOINTMENTS_COLLECTION).add({
-        ...payload,
-        businessId: currentBusinessSettings.businessId,
-        businessName: currentBusinessSettings.businessName,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      const response = await fetch(`${BACKEND_API_BASE_URL}/appointments/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          businessId: currentBusinessSettings.businessId,
+          businessName: currentBusinessSettings.businessName
+        })
       });
-      return createdRef.id;
+
+      let result = null;
+      try{
+        result = await response.json();
+      }catch(parseErr){
+        result = null;
+      }
+
+      if(!response.ok || !result?.ok){
+        const error = new Error(result?.message || result?.error || 'CREATE_APPOINTMENT_FAILED');
+        error.code = result?.error || 'CREATE_APPOINTMENT_FAILED';
+        throw error;
+      }
+
+      return result.appointmentId;
     }
 
     async function updateAppointmentInFirebase(id, updates){
@@ -4270,7 +4290,14 @@ body.business-frozen{overflow:hidden;}
         selectedTime = null;
         document.getElementById('selectedTimeText').textContent = 'עדיין לא נבחרה שעה';
         updateBookButtonState();
-      }catch(err){ console.error(err); showToast('שגיאה בשמירת התור. נסה שוב בעוד רגע.', true); }
+      }catch(err){
+        console.error(err);
+        if(err?.code === 'slot_taken') return showToast('השעה הזו כבר נתפסה.', true);
+        if(err?.code === 'duplicate_future_appointment') return showToast('למספר הזה כבר קיים תור עתידי.', true);
+        if(err?.code === 'business_frozen') return showToast('האפליקציה לא פעילה כרגע.', true);
+        if(err?.code === 'outside_working_hours') return showToast('השעה שנבחרה לא זמינה ביום זה.', true);
+        showToast(err?.message || 'שגיאה בשמירת התור. נסה שוב בעוד רגע.', true);
+      }
     }
 
     function allowHebrewOnly(input){ input.value = input.value.replace(/[^\u0590-\u05FF\s]/g, ''); }
