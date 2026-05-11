@@ -262,6 +262,104 @@ app.post("/appointments/create", async (req, res) => {
   }
 });
 
+
+// =======================
+// Frontend endpoint: cancel appointment
+// =======================
+app.post("/appointments/cancel", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const businessId = cleanBusinessId(body.businessId || "");
+    const appointmentId = String(body.appointmentId || body.id || "").trim();
+    const source = String(body.source || "app").trim() || "app";
+    const shouldNotifyWaitlist = body.notifyWaitlist === true;
+
+    if (!businessId || !appointmentId) {
+      return res.status(400).json({
+        ok: false,
+        error: "missing_business_or_appointment",
+        message: "חסרים פרטים לביטול התור",
+      });
+    }
+
+    const appointmentRef = db.collection(APPOINTMENTS_COLLECTION).doc(appointmentId);
+    const appointmentSnap = await appointmentRef.get();
+
+    if (!appointmentSnap.exists) {
+      return res.status(404).json({
+        ok: false,
+        error: "appointment_not_found",
+        message: "התור לא נמצא",
+      });
+    }
+
+    const appointment = { id: appointmentSnap.id, ...appointmentSnap.data() };
+
+    if (String(appointment.businessId || "") !== businessId) {
+      return res.status(403).json({
+        ok: false,
+        error: "business_mismatch",
+        message: "התור לא שייך לעסק הזה",
+      });
+    }
+
+    if (!isActiveAppointment(appointment)) {
+      return res.status(409).json({
+        ok: false,
+        error: "appointment_already_cancelled",
+        message: "התור כבר בוטל",
+      });
+    }
+
+    const business = await getBusinessSettings(businessId);
+    if (!business) {
+      return res.status(404).json({
+        ok: false,
+        error: "business_not_found",
+        message: "העסק לא נמצא",
+      });
+    }
+
+    await appointmentRef.delete();
+
+    await db.collection("logs").add({
+      businessId,
+      type: "appointment_cancelled",
+      source,
+      appointmentId,
+      phone: appointment.phone || "",
+      date: appointment.date || "",
+      time: appointment.time || "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    }).catch((err) => console.warn("appointment cancel log failed", getErrorPayload(err)));
+
+    let waitlist = null;
+    if (shouldNotifyWaitlist && appointment.date && appointment.time) {
+      waitlist = await notifyWaitlistForFreedSlot(business, appointment.date, appointment.time);
+    }
+
+    return res.status(200).json({
+      ok: true,
+      appointmentId,
+      freedDate: appointment.date || "",
+      freedTime: appointment.time || "",
+      waitlist,
+      message: "התור בוטל בהצלחה",
+    });
+  } catch (err) {
+    const payload = getErrorPayload(err);
+    console.error("appointments/cancel error:", payload);
+    return res.status(500).json({
+      ok: false,
+      error: "cancel_appointment_failed",
+      message: "שגיאה בביטול התור",
+      details: payload,
+    });
+  }
+});
+
+
 // =======================
 // Frontend endpoint: automatic waitlist notify
 // =======================
