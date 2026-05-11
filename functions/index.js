@@ -23,6 +23,7 @@ const whatsappContext = new AsyncLocalStorage();
 const WHATSAPP_TOKEN_SECRET = defineSecret("WHATSAPP_TOKEN");
 const PHONE_NUMBER_ID_SECRET = defineSecret("PHONE_NUMBER_ID");
 const VERIFY_TOKEN_SECRET = defineSecret("VERIFY_TOKEN");
+const APP_BASE_URL_SECRET = defineSecret("APP_BASE_URL");
 
 function getWhatsappToken() {
   return String(WHATSAPP_TOKEN_SECRET.value() || process.env.WHATSAPP_TOKEN || "").trim();
@@ -36,7 +37,10 @@ function getVerifyToken() {
   return String(VERIFY_TOKEN_SECRET.value() || process.env.VERIFY_TOKEN || "gal_verify_token").trim();
 }
 
-const APP_BASE_URL = process.env.APP_BASE_URL || "https://galhadad-app.github.io/Master-B/";
+function getAppBaseUrl() {
+  return String(APP_BASE_URL_SECRET.value() || process.env.APP_BASE_URL || "https://gal-business-system.web.app/").trim();
+}
+
 const DEFAULT_WHATSAPP_MODE = process.env.DEFAULT_WHATSAPP_MODE || "central";
 const WAITLIST_TEMPLATE_NAME = process.env.WAITLIST_TEMPLATE_NAME || "waitlist_slot_available";
 const WAITLIST_TEMPLATE_LANGUAGE = process.env.WAITLIST_TEMPLATE_LANGUAGE || "he";
@@ -45,6 +49,7 @@ console.log("✅ WhatsApp secrets configured for runtime", {
   whatsappTokenSecret: "WHATSAPP_TOKEN",
   phoneNumberIdSecret: "PHONE_NUMBER_ID",
   verifyTokenSecret: "VERIFY_TOKEN",
+  appBaseUrlSecret: "APP_BASE_URL",
 });
 
 const BUSINESS_SETTINGS_COLLECTION = "businessSettings";
@@ -834,7 +839,7 @@ function getWaitlistRecipientPhone(entry = {}, business = {}) {
 }
 
 function buildClaimUrl(entry, time) {
-  const url = new URL(APP_BASE_URL);
+  const url = new URL(getAppBaseUrl());
   if (entry.businessId) url.searchParams.set("business", entry.businessId);
   url.searchParams.set("claimWaitlist", entry.claimToken);
   url.searchParams.set("time", time);
@@ -1472,7 +1477,7 @@ app.get("/debug/whatsapp", async (req, res) => {
     centralPhoneNumberId: getPhoneNumberId() || "",
     verifyToken: getVerifyToken() ? "configured" : "missing",
     defaultWhatsappMode: DEFAULT_WHATSAPP_MODE,
-    appBaseUrl: APP_BASE_URL,
+    appBaseUrl: getAppBaseUrl(),
     centralBotWhatsappNumber: getCentralBotWhatsappNumber(),
     waitlistTemplateName: WAITLIST_TEMPLATE_NAME,
     waitlistTemplateLanguage: WAITLIST_TEMPLATE_LANGUAGE,
@@ -1493,7 +1498,7 @@ app.get("/debug/send-test", async (req, res) => {
 exports.api = onRequest(
   {
     region: "us-central1",
-    secrets: [WHATSAPP_TOKEN_SECRET, PHONE_NUMBER_ID_SECRET, VERIFY_TOKEN_SECRET],
+    secrets: [WHATSAPP_TOKEN_SECRET, PHONE_NUMBER_ID_SECRET, VERIFY_TOKEN_SECRET, APP_BASE_URL_SECRET],
   },
   app
 );
