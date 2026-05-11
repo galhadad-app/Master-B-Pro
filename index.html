@@ -1,4 +1,4 @@
-
+ש
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -1313,9 +1313,6 @@ body.business-frozen{overflow:hidden;}
       </section>
 
     
-      <audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
-      <audio id="selectSound" src="select.mp3" preload="auto"></audio>
-      <audio id="bookSound" src="book.mp3" preload="auto"></audio>
 
       <section class="card animated-panel">
         <div class="booking-head">
@@ -1786,11 +1783,7 @@ body.business-frozen{overflow:hidden;}
       isFrozen: false,
       appFrozen: false,
       freezeMessage: 'האפליקציה לא פעילה כעת. עמכם הסליחה, נסו שוב מאוחר יותר.',
-      sounds: {
-        music: 'music.mp3',
-        select: 'select.mp3',
-        book: 'book.mp3'
-      },
+      sounds: {},
       workingHours: {
         sunday: { start: '', end: '', closed: true },
         monday: { start: '', end: '', closed: true },
@@ -2006,9 +1999,6 @@ body.business-frozen{overflow:hidden;}
       }
       document.getElementById('bookingTitle').textContent = settings.bookingTitle;
       document.getElementById('successTitle').textContent = businessName ? `התור נקבע ב${businessName}` : 'התור נקבע';
-      document.getElementById('bgMusic').src = settings.sounds.music;
-      document.getElementById('selectSound').src = settings.sounds.select;
-      document.getElementById('bookSound').src = settings.sounds.book;
 
       const settingsLogoPreview = document.getElementById('settingsLogoPreview');
       const settingsHeroPreview = document.getElementById('settingsHeroPreview');
@@ -3370,20 +3360,6 @@ body.business-frozen{overflow:hidden;}
         return true;
       }
       catch(err){ console.error(err); showToast(err.message || 'שגיאה בביטול התור.', true); return false; }
-    }){
-      if(!item?.id) return false;
-      const freedDate = item.date;
-      const freedTime = item.time;
-      const source = options.source || 'owner';
-      try{
-        await deleteAppointmentFromFirebase(item.id);
-        if(freedDate && freedTime){
-          console.log('Appointment cancelled, notifying waitlist:', { date: freedDate, time: freedTime, source });
-          await notifyWaitlistForSlot(freedDate, freedTime, { source });
-        }
-        return true;
-      }
-      catch(err){ console.error(err); showToast('שגיאה בביטול התור.', true); return false; }
     }
 
     function getActiveAppointments(){
@@ -4197,8 +4173,8 @@ body.business-frozen{overflow:hidden;}
     const phoneBtn = document.getElementById('phoneBtn');
     const wazeBtn = document.getElementById('wazeBtn');
 
-    function playSelectSound(){ const a = document.getElementById('selectSound'); if(!a) return; a.currentTime = 0; a.play().catch(()=>{}); }
-    function playBookSound(){ const a = document.getElementById('bookSound'); if(!a) return; a.currentTime = 0; a.play().catch(()=>{}); }
+    function playSelectSound(){ return; }
+    function playBookSound(){ return; }
 
     function normalizeDigitsOnly(value){ return String(value || '').replace(/\D/g, ''); }
 
