@@ -794,7 +794,13 @@ app.post("/business/visit", async (req, res) => {
       return res.status(400).json({ ok: false, error: "invalid_visit" });
     }
 
-    await db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId).set({
+    const businessRef = db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId);
+    const businessSnap = await businessRef.get();
+    if (!businessSnap.exists) {
+      return res.status(404).json({ ok: false, error: "business_not_found" });
+    }
+
+    await businessRef.set({
       visits: { [dateKey]: admin.firestore.FieldValue.increment(1) },
       visitsUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
       visitsUpdatedAtMs: Date.now(),
