@@ -2536,34 +2536,9 @@ body.business-frozen{overflow:hidden;}
       });
     }
 
-    async function deleteAppointmentFromFirebase(id, options = {}){
-      if(!id) return null;
-
-      const response = await fetch(`${BACKEND_API_BASE_URL}/appointments/cancel`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          appointmentId: id,
-          businessId: currentBusinessSettings.businessId,
-          source: options.source || 'app',
-          notifyWaitlist: options.notifyWaitlist === true
-        })
-      });
-
-      let result = null;
-      try{
-        result = await response.json();
-      }catch(parseErr){
-        result = null;
-      }
-
-      if(!response.ok || !result?.ok){
-        const error = new Error(result?.message || result?.error || 'CANCEL_APPOINTMENT_FAILED');
-        error.code = result?.error || 'CANCEL_APPOINTMENT_FAILED';
-        throw error;
-      }
-
-      return result;
+    async function deleteAppointmentFromFirebase(id){
+      if(!id) return;
+      await db.collection(APPOINTMENTS_COLLECTION).doc(id).delete();
     }
 
     async function isSlotTakenInFirebase(dateKey, time){
@@ -2655,29 +2630,25 @@ body.business-frozen{overflow:hidden;}
     async function deleteWaitlistEntry(entryId){ const entry = waitlistEntries.find(item => item.id === entryId); if(!entry) return showToast('לא נמצא ממתין למחיקה.', true); const ok = confirm(`למחוק את ${entry.name || 'הלקוח'} מרשימת ההמתנה?`); if(!ok) return; try{ await db.collection(WAITLIST_COLLECTION).doc(entryId).delete(); showToast('נמחק מרשימת ההמתנה.'); }catch(err){ console.error(err); showToast('שגיאה במחיקת הממתין.', true); } }
     function whatsappLinkFor(phone, text){ const international = toWhatsappPhone(phone); return `https://wa.me/${international}?text=${encodeURIComponent(text)}`; }
     async function createWaitlistEntry(payload){
-      const claimToken = createClaimToken();
-      const phoneDisplay = formatDisplayPhone(payload.phone || '');
-      const phoneIntl = toWhatsappPhone(phoneDisplay || payload.phone || '');
-      const cleanPayload = { ...payload };
-      delete cleanPayload.phone;
-      await db.collection(WAITLIST_COLLECTION).add({
-        ...cleanPayload,
-        // מקור אמת אחד ללקוח הממתין: המספר שהלקוח הקליד בטופס.
-        phone: phoneDisplay,
-        phoneDisplay,
-        customerPhone: phoneDisplay,
-        clientPhone: phoneDisplay,
-        customerWhatsapp: phoneIntl,
-        clientWhatsapp: phoneIntl,
-        claimToken,
-        offerToken:'',
-        offeredTime:'',
-        status:'ממתין',
-        businessId: currentBusinessSettings.businessId,
-        businessName: currentBusinessSettings.businessName,
-        createdAtMs: Date.now(),
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      const response = await fetch(`${BACKEND_API_BASE_URL}/waitlist/join`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          businessId: currentBusinessSettings.businessId,
+          businessName: currentBusinessSettings.businessName || '',
+          firstName: payload.firstName || '',
+          lastName: payload.lastName || '',
+          name: payload.name || '',
+          phone: payload.phone || '',
+          service: payload.service || 'לא נבחר',
+          date: payload.date || ''
+        })
       });
+      const data = await response.json().catch(() => ({}));
+      if(!response.ok || data.ok === false){
+        throw new Error(data.message || data.error || 'waitlist_join_failed');
+      }
+      return data.entry || data;
     }
     async function updateWaitlistEntry(id, updates){ if(!id) return; await db.collection(WAITLIST_COLLECTION).doc(id).update({ ...updates, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); }
     async function closeMatchingWaitlistEntries(phone, dateKey, bookedTime){
@@ -2696,7 +2667,7 @@ body.business-frozen{overflow:hidden;}
     }
     function subscribeWaitlistRealtime(){ if(waitlistUnsubscribe) waitlistUnsubscribe(); waitlistUnsubscribe = db.collection(WAITLIST_COLLECTION).where('businessId', '==', currentBusinessSettings.businessId).onSnapshot(snapshot => { waitlistEntries.length = 0; snapshot.forEach(doc => waitlistEntries.push(normalizeWaitlistRecord(doc.data(), doc.id))); renderOwnerWaitlist(); renderDays(); renderSlots(); }, err => { console.error(err); showToast('שגיאה בטעינת רשימת ההמתנה.', true); }); }
     function getWaitlistAutoNotifyApiUrl(){
-      const DEFAULT_WAITLIST_NOTIFY_API_URL = 'https://api-81941134785.us-central1.run.app/waitlist/notify';
+      const DEFAULT_WAITLIST_NOTIFY_API_URL = `${BACKEND_API_BASE_URL}/waitlist/notify`;
       const savedUrl = String(
         window.WAITLIST_AUTO_NOTIFY_API_URL ||
         localStorage.getItem('WAITLIST_AUTO_NOTIFY_API_URL') ||
@@ -2705,7 +2676,7 @@ body.business-frozen{overflow:hidden;}
       ).trim();
 
       // אם נשמר בדפדפן קישור ישן ל-api-v2, מתעלמים ממנו כדי שההתראות יעברו לשרת הפעיל.
-      if(!savedUrl || savedUrl.includes('api-v2-81941134785')){
+      if(!savedUrl || savedUrl.includes('api-v2-81941134785') || savedUrl.includes('api-81941134785.us-central1.run.app')){
         try{
           localStorage.setItem('WAITLIST_AUTO_NOTIFY_API_URL', DEFAULT_WAITLIST_NOTIFY_API_URL);
           localStorage.setItem('whatsappWaitlistApiUrl', DEFAULT_WAITLIST_NOTIFY_API_URL);
@@ -3462,7 +3433,7 @@ body.business-frozen{overflow:hidden;}
       if(!activeCustomerPhone) return;
       const normalizedPhone = normalizePhone(activeCustomerPhone);
       const customerAppointments = appointments.filter(item => normalizePhone(item.phone) === normalizedPhone);
-      try{ await Promise.all(customerAppointments.map(item => deleteAppointmentFromFirebase(item.id, { source:'delete_customer', notifyWaitlist:false }))); closeCustomerModal(); showToast('הלקוח נמחק.'); }
+      try{ await Promise.all(customerAppointments.map(item => deleteAppointmentFromFirebase(item.id))); closeCustomerModal(); showToast('הלקוח נמחק.'); }
       catch(err){ console.error(err); showToast('שגיאה במחיקת הלקוח.', true); }
     }
 
@@ -3507,21 +3478,18 @@ body.business-frozen{overflow:hidden;}
 
     async function removeAppointment(item, options = {}){
       if(!item?.id) return false;
+      const freedDate = item.date;
+      const freedTime = item.time;
       const source = options.source || 'owner';
       try{
-        const result = await deleteAppointmentFromFirebase(item.id, {
-          source,
-          notifyWaitlist: true
-        });
-
-        const waitlist = result?.waitlist || null;
-        if(waitlist && Number(waitlist.sent || 0) > 0){
-          showToast('התור בוטל ונשלחה הודעה לרשימת ההמתנה.');
+        await deleteAppointmentFromFirebase(item.id);
+        if(freedDate && freedTime){
+          console.log('Appointment cancelled, notifying waitlist:', { date: freedDate, time: freedTime, source });
+          await notifyWaitlistForSlot(freedDate, freedTime, { source });
         }
-
         return true;
       }
-      catch(err){ console.error(err); showToast(err?.message || 'שגיאה בביטול התור.', true); return false; }
+      catch(err){ console.error(err); showToast('שגיאה בביטול התור.', true); return false; }
     }
 
     function getActiveAppointments(){
