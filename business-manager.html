@@ -409,7 +409,8 @@
     const COLLECTION = "businessSettings";
     const CENTRAL_BOT_WHATSAPP_NUMBER = "972547674814";
     const APPOINTMENTS_COLLECTION = "appointments";
-    const APP_BASE_URL = "https://galhadad-app.github.io/Master-B/index.html";
+    const APP_BASE_URL = "https://gal-business-system.web.app/index.html";
+    const API_BASE_URL = "https://api-sjchnvsuhq-uc.a.run.app";
 
     const DEFAULT_WORKING_HOURS = {
       sunday:{start:"10:00",end:"20:00",closed:false},
@@ -526,6 +527,18 @@
     function html(v){return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
     function js(v){return String(v||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
     function appLink(id){return APP_BASE_URL+"?business="+encodeURIComponent(id)}
+    async function apiPost(path, payload){
+      const response = await fetch(API_BASE_URL + path, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(payload || {})
+      });
+      const data = await response.json().catch(()=>({ok:false,message:"שגיאת שרת"}));
+      if(!response.ok || data.ok === false){
+        throw new Error(data.message || data.error || "שגיאת שרת");
+      }
+      return data;
+    }
     function waLink(id,phone,mode="off"){
       const currentMode = String(mode || "off").toLowerCase();
       const target = currentMode === "central" ? CENTRAL_BOT_WHATSAPP_NUMBER : phone;
@@ -1070,20 +1083,11 @@
         : "להחזיר את העסק לפעילות רגילה?";
       if(!confirm(msg)) return;
       try{
-        await db.collection(COLLECTION).doc(id).set({
-          isFrozen:nextFrozen,
-          appFrozen:nextFrozen,
-          active:!nextFrozen,
-          status:nextFrozen ? "frozen" : "active",
-          frozenMessage:nextFrozen ? "האפליקציה לא פעילה כעת. עמכם הסליחה." : firebase.firestore.FieldValue.delete(),
-          frozenAtMs:nextFrozen ? Date.now() : firebase.firestore.FieldValue.delete(),
-          updatedAtMs:Date.now(),
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
+        await apiPost("/businesses/freeze", {businessId:id, frozen:nextFrozen});
         showToast(nextFrozen ? "העסק הוקפא — הנתונים נשמרו" : "העסק חזר לפעילות רגילה");
       }catch(err){
         console.error(err);
-        showToast("עדכון סטטוס העסק נכשל",true);
+        showToast(err.message || "עדכון סטטוס העסק נכשל",true);
       }
     }
 
@@ -1093,21 +1097,11 @@
       const current=whatsappBotModeForBusiness(b);
       const next=current === "off" ? "central" : "off";
       try{
-        await db.collection(COLLECTION).doc(id).set({
-          whatsappBotMode:next,
-          whatsappMode:next,
-          whatsappEnabled:next !== "off",
-          whatsappBotEnabled:next !== "off",
-          botEnabled:next !== "off",
-          waBotEnabled:next !== "off",
-          plan:next === "off" ? "basic" : "whatsapp-central",
-          updatedAtMs:Date.now(),
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
+        await apiPost("/businesses/whatsapp", {businessId:id, mode:next});
         showToast(next === "off" ? "שירות הוואטסאפ כובה" : "שירות הוואטסאפ הופעל דרך הבוט המרכזי");
       }catch(err){
         console.error(err);
-        showToast("עדכון וואטסאפ נכשל",true);
+        showToast(err.message || "עדכון וואטסאפ נכשל",true);
       }
     }
 
@@ -1120,27 +1114,33 @@
         : "לסגור ללקוח את גישת העריכה ולהשאיר שליטה אצלך בלבד?";
       if(!confirm(msg)) return;
       try{
-        await db.collection(COLLECTION).doc(id).set({
-          ownerAccess:next,
-          clientOwnerAccess:next,
-          updatedAtMs:Date.now(),
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
+        await apiPost("/businesses/owner-access", {businessId:id, ownerAccess:next});
         showToast(next ? "גישת בעל העסק נפתחה" : "גישת בעל העסק נסגרה");
       }catch(err){
         console.error(err);
-        showToast("עדכון גישת בעל עסק נכשל",true);
+        showToast(err.message || "עדכון גישת בעל עסק נכשל",true);
       }
     }
 
     async function deleteBusiness(id){
-      if(!confirm("למחוק את העסק לגמרי מ־businessSettings?")) return;
+      const b=businesses.find(x=>x.id===id);
+      const name=(b && (b.businessName || b.name)) || id;
+      if(!confirm(`למחוק את העסק "${name}" לגמרי?\n\nיימחקו גם תורים, רשימת המתנה, סשנים ולוגים.`)) return;
+      const typed=prompt(`לאישור מחיקה סופית הקלד את מזהה העסק:\n${id}`);
+      if(cleanId(typed) !== id){
+        showToast("המחיקה בוטלה — מזהה העסק לא תואם", true);
+        return;
+      }
       try{
-        await db.collection(COLLECTION).doc(id).delete();
-        showToast("העסק נמחק לגמרי");
+        const result = await apiPost("/businesses/delete", {businessId:id, confirmBusinessId:id});
+        const deleted = result.deleted || {};
+        showToast(`העסק נמחק. תורים: ${deleted.appointments||0}, המתנה: ${deleted.waitlist||0}`);
         if(editingId === id) resetForm();
         if(selectedId === id){selectedId="";showScreen("home")}
-      }catch(err){console.error(err);showToast("מחיקה נכשלה",true)}
+      }catch(err){
+        console.error(err);
+        showToast(err.message || "מחיקה נכשלה",true);
+      }
     }
 
     function openDetails(id){
