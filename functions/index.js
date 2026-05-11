@@ -141,6 +141,127 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
+
+// =======================
+// Frontend endpoint: create appointment
+// =======================
+app.post("/appointments/create", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const businessId = cleanBusinessId(body.businessId || "");
+    const name = String(body.name || "").trim();
+    const phoneDisplay = whatsappToIsraeliPhone(body.phone || "");
+    const service = String(body.service || "").trim();
+    const date = String(body.date || "").trim();
+    const time = String(body.time || "").trim();
+    const notes = String(body.notes || "").trim();
+    const source = String(body.source || "אפליקציה").trim() || "אפליקציה";
+
+    if (!businessId || !name || !phoneDisplay || !service || !date || !isValidTime(time)) {
+      return res.status(400).json({ ok: false, error: "missing_required_fields", message: "חסרים פרטים לקביעת התור" });
+    }
+
+    if (!/^05\d{8}$/.test(phoneDisplay)) {
+      return res.status(400).json({ ok: false, error: "invalid_phone", message: "יש להזין מספר פלאפון מלא שמתחיל ב-05" });
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ ok: false, error: "invalid_date", message: "תאריך לא תקין" });
+    }
+
+    const business = await getBusinessSettings(businessId);
+    if (!business) {
+      return res.status(404).json({ ok: false, error: "business_not_found", message: "העסק לא נמצא" });
+    }
+
+    if (business.appFrozen === true || business.isFrozen === true || business.active === false) {
+      return res.status(403).json({ ok: false, error: "business_frozen", message: "האפליקציה לא פעילה כרגע" });
+    }
+
+    const dateObj = parseDateKeyToDate(date);
+    if (!dateObj) {
+      return res.status(400).json({ ok: false, error: "invalid_date", message: "תאריך לא תקין" });
+    }
+
+    const validSlots = getSlotsForDate(dateObj, business);
+    if (!validSlots.includes(time) || isPastSlot(dateObj, time)) {
+      return res.status(409).json({ ok: false, error: "outside_working_hours", message: "השעה שנבחרה לא זמינה" });
+    }
+
+    const normalizedPhone = normalizePhone(phoneDisplay);
+    const appointmentRef = db.collection(APPOINTMENTS_COLLECTION).doc();
+
+    await db.runTransaction(async (tx) => {
+      const slotQuery = db.collection(APPOINTMENTS_COLLECTION)
+        .where("businessId", "==", businessId)
+        .where("date", "==", date)
+        .where("time", "==", time);
+
+      const slotSnap = await tx.get(slotQuery);
+      const slotTaken = slotSnap.docs.some((doc) => isActiveAppointment(doc.data() || {}));
+      if (slotTaken) throw new Error("slot_taken");
+
+      const businessAppointmentsQuery = db.collection(APPOINTMENTS_COLLECTION)
+        .where("businessId", "==", businessId);
+      const businessAppointmentsSnap = await tx.get(businessAppointmentsQuery);
+      const duplicateFuture = businessAppointmentsSnap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .some((appt) => {
+          if (!isActiveAppointment(appt)) return false;
+          if (normalizePhone(appt.phone) !== normalizedPhone) return false;
+          return appointmentDateTime(appt) >= new Date();
+        });
+
+      if (duplicateFuture) throw new Error("duplicate_future_appointment");
+
+      tx.set(appointmentRef, {
+        businessId,
+        businessName: business.businessName || business.name || String(body.businessName || ""),
+        name,
+        phone: phoneDisplay,
+        service,
+        date,
+        time,
+        status: "נקבע",
+        source,
+        notes,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAtMs: Date.now(),
+      });
+    });
+
+    await db.collection("logs").add({
+      businessId,
+      type: "appointment_created",
+      source,
+      appointmentId: appointmentRef.id,
+      phone: phoneDisplay,
+      date,
+      time,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    }).catch((err) => console.warn("appointment log failed", getErrorPayload(err)));
+
+    return res.status(200).json({
+      ok: true,
+      appointmentId: appointmentRef.id,
+      appointment: { id: appointmentRef.id, businessId, name, phone: phoneDisplay, service, date, time, status: "נקבע", source },
+      message: "התור נשמר בהצלחה",
+    });
+  } catch (err) {
+    const payload = getErrorPayload(err);
+    const code = String(err?.message || payload || "create_appointment_failed");
+    const status = ["slot_taken", "duplicate_future_appointment", "outside_working_hours"].includes(code) ? 409 : 500;
+    const messages = {
+      slot_taken: "השעה הזו כבר נתפסה",
+      duplicate_future_appointment: "למספר הזה כבר קיים תור עתידי",
+      outside_working_hours: "השעה שנבחרה לא זמינה",
+    };
+    console.error("appointments/create error:", payload);
+    return res.status(status).json({ ok: false, error: code, message: messages[code] || "שגיאה בשמירת התור" });
+  }
+});
+
 // =======================
 // Frontend endpoint: automatic waitlist notify
 // =======================
@@ -1404,6 +1525,12 @@ function minutesToTime(total) {
   const h = Math.floor(total / 60);
   const m = total % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function parseDateKeyToDate(dateKey) {
+  const [y, m, d] = String(dateKey || "").split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
 }
 
 function formatDateKey(date) {
