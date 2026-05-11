@@ -2420,10 +2420,49 @@ body.business-frozen{overflow:hidden;}
       return data;
     }
 
+    function showBusinessNotFoundScreen(){
+      try{
+        localStorage.removeItem(BUSINESS_SETTINGS_STORAGE_KEY);
+        localStorage.removeItem(`daily_visit_counted_${BUSINESS_TEMPLATE.businessId}_${getLocalDateKey()}`);
+      }catch(err){}
+
+      document.body.classList.add('business-frozen');
+
+      const loader = document.getElementById('loader');
+      if(loader) loader.classList.add('hide');
+
+      const appEl = document.querySelector('.app');
+      if(appEl) appEl.style.display = 'none';
+
+      const screen = document.getElementById('businessFrozenScreen');
+      const messageEl = document.getElementById('businessFrozenMessage');
+      if(screen){
+        screen.classList.add('show');
+        screen.setAttribute('aria-hidden', 'false');
+        const titleEl = screen.querySelector('h1');
+        if(titleEl) titleEl.textContent = 'העסק לא נמצא';
+        if(messageEl) messageEl.textContent = 'האפליקציה אינה זמינה כרגע.';
+      }
+
+      if(appointmentsUnsubscribe){
+        try{ appointmentsUnsubscribe(); }catch(err){}
+        appointmentsUnsubscribe = null;
+      }
+      if(waitlistUnsubscribe){
+        try{ waitlistUnsubscribe(); }catch(err){}
+        waitlistUnsubscribe = null;
+      }
+    }
+
     function subscribeBusinessSettingsRealtime(){
       if(businessSettingsUnsubscribe) businessSettingsUnsubscribe();
       businessSettingsUnsubscribe = businessSettingsDocRef.onSnapshot(snapshot => {
-        if(!snapshot.exists) return;
+        if(!snapshot.exists){
+          showBusinessNotFoundScreen();
+          return;
+        }
+        const appEl = document.querySelector('.app');
+        if(appEl) appEl.style.display = '';
         applyCloudBusinessSettings(snapshot.data() || {});
       }, err => {
         console.error('Business settings realtime error', err);
@@ -4712,5 +4751,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
-<!-- business not found patch not auto inserted -->
