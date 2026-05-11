@@ -260,105 +260,116 @@ app.post("/appointments/create", async (req, res) => {
     console.error("appointments/create error:", payload);
     return res.status(status).json({ ok: false, error: code, message: messages[code] || "שגיאה בשמירת התור" });
   }
+
 });
 
-
 // =======================
-// Frontend endpoint: cancel appointment
+// Frontend endpoint: join waitlist
 // =======================
-app.post("/appointments/cancel", async (req, res) => {
+app.post("/waitlist/join", async (req, res) => {
   try {
     const body = req.body || {};
     const businessId = cleanBusinessId(body.businessId || "");
-    const appointmentId = String(body.appointmentId || body.id || "").trim();
-    const source = String(body.source || "app").trim() || "app";
-    const shouldNotifyWaitlist = body.notifyWaitlist === true;
+    const firstName = String(body.firstName || "").trim();
+    const lastName = String(body.lastName || "").trim();
+    const name = String(body.name || `${firstName} ${lastName}`).trim();
+    const phoneDisplay = whatsappToIsraeliPhone(body.phone || "");
+    const phoneIntl = toWhatsAppRecipient(phoneDisplay);
+    const service = String(body.service || "לא נבחר").trim() || "לא נבחר";
+    const date = String(body.date || "").trim();
 
-    if (!businessId || !appointmentId) {
-      return res.status(400).json({
-        ok: false,
-        error: "missing_business_or_appointment",
-        message: "חסרים פרטים לביטול התור",
-      });
+    if (!businessId || !firstName || !lastName || !phoneDisplay || !date) {
+      return res.status(400).json({ ok: false, error: "missing_required_fields", message: "יש למלא שם, שם משפחה ופלאפון" });
     }
 
-    const appointmentRef = db.collection(APPOINTMENTS_COLLECTION).doc(appointmentId);
-    const appointmentSnap = await appointmentRef.get();
-
-    if (!appointmentSnap.exists) {
-      return res.status(404).json({
-        ok: false,
-        error: "appointment_not_found",
-        message: "התור לא נמצא",
-      });
+    if (!/^05\d{8}$/.test(phoneDisplay)) {
+      return res.status(400).json({ ok: false, error: "invalid_phone", message: "יש להזין מספר פלאפון מלא שמתחיל ב-05" });
     }
 
-    const appointment = { id: appointmentSnap.id, ...appointmentSnap.data() };
-
-    if (String(appointment.businessId || "") !== businessId) {
-      return res.status(403).json({
-        ok: false,
-        error: "business_mismatch",
-        message: "התור לא שייך לעסק הזה",
-      });
-    }
-
-    if (!isActiveAppointment(appointment)) {
-      return res.status(409).json({
-        ok: false,
-        error: "appointment_already_cancelled",
-        message: "התור כבר בוטל",
-      });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !parseDateKeyToDate(date)) {
+      return res.status(400).json({ ok: false, error: "invalid_date", message: "תאריך לא תקין" });
     }
 
     const business = await getBusinessSettings(businessId);
     if (!business) {
-      return res.status(404).json({
-        ok: false,
-        error: "business_not_found",
-        message: "העסק לא נמצא",
+      return res.status(404).json({ ok: false, error: "business_not_found", message: "העסק לא נמצא" });
+    }
+
+    if (business.appFrozen === true || business.isFrozen === true || business.active === false) {
+      return res.status(403).json({ ok: false, error: "business_frozen", message: "האפליקציה לא פעילה כרגע" });
+    }
+
+    const normalizedPhone = normalizePhone(phoneDisplay);
+    const existingSnap = await db.collection(WAITLIST_COLLECTION)
+      .where("businessId", "==", businessId)
+      .where("date", "==", date)
+      .get();
+
+    const existing = existingSnap.docs.find((doc) => {
+      const entry = normalizeWaitlistEntry({ id: doc.id, ...doc.data() });
+      return normalizePhone(entry.phone) === normalizedPhone && String(entry.status || "ממתין") === "ממתין";
+    });
+
+    if (existing) {
+      const existingEntry = normalizeWaitlistEntry({ id: existing.id, ...existing.data() });
+      return res.status(200).json({
+        ok: true,
+        duplicate: true,
+        waitlistId: existing.id,
+        entry: existingEntry,
+        message: "הלקוח כבר נמצא ברשימת ההמתנה לתאריך הזה",
       });
     }
 
-    await appointmentRef.delete();
+    const waitlistRef = db.collection(WAITLIST_COLLECTION).doc();
+    const claimToken = createClaimToken();
+    const entry = {
+      businessId,
+      businessName: business.businessName || business.name || String(body.businessName || ""),
+      firstName,
+      lastName,
+      name,
+      phone: phoneDisplay,
+      phoneDisplay,
+      customerPhone: phoneDisplay,
+      clientPhone: phoneDisplay,
+      customerWhatsapp: phoneIntl,
+      clientWhatsapp: phoneIntl,
+      service,
+      date,
+      claimToken,
+      offerToken: "",
+      offeredTime: "",
+      status: "ממתין",
+      createdAtMs: Date.now(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    await waitlistRef.set(entry);
 
     await db.collection("logs").add({
       businessId,
-      type: "appointment_cancelled",
-      source,
-      appointmentId,
-      phone: appointment.phone || "",
-      date: appointment.date || "",
-      time: appointment.time || "",
+      type: "waitlist_joined",
+      waitlistId: waitlistRef.id,
+      phone: phoneDisplay,
+      date,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       createdAtMs: Date.now(),
-    }).catch((err) => console.warn("appointment cancel log failed", getErrorPayload(err)));
-
-    let waitlist = null;
-    if (shouldNotifyWaitlist && appointment.date && appointment.time) {
-      waitlist = await notifyWaitlistForFreedSlot(business, appointment.date, appointment.time);
-    }
+    }).catch((err) => console.warn("waitlist log failed", getErrorPayload(err)));
 
     return res.status(200).json({
       ok: true,
-      appointmentId,
-      freedDate: appointment.date || "",
-      freedTime: appointment.time || "",
-      waitlist,
-      message: "התור בוטל בהצלחה",
+      waitlistId: waitlistRef.id,
+      entry: { id: waitlistRef.id, ...entry },
+      message: "נכנסת לרשימת ההמתנה",
     });
   } catch (err) {
     const payload = getErrorPayload(err);
-    console.error("appointments/cancel error:", payload);
-    return res.status(500).json({
-      ok: false,
-      error: "cancel_appointment_failed",
-      message: "שגיאה בביטול התור",
-      details: payload,
-    });
+    console.error("waitlist/join error:", payload);
+    return res.status(500).json({ ok: false, error: "waitlist_join_failed", message: "שגיאה בשמירת רשימת ההמתנה" });
   }
 });
-
 
 // =======================
 // Frontend endpoint: automatic waitlist notify
