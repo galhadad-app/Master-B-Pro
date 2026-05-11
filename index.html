@@ -2905,6 +2905,8 @@ body.business-frozen{overflow:hidden;}
           showToast('הקישור כבר לא פעיל.', true);
         }else if(code === 'INVALID_OFFER'){
           showToast('הקישור כבר לא עדכני.', true);
+        }else if(code === 'OFFER_EXPIRED'){
+          showToast('הקישור כבר לא פעיל.', true);
         }else{
           showToast(err.message || 'שגיאה באישור התור. נסה לרענן וללחוץ שוב.', true);
         }
