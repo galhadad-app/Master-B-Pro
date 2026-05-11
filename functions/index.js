@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const express = require("express");
 const axios = require("axios");
@@ -19,22 +20,31 @@ app.use(express.json({ limit: "2mb" }));
 
 const whatsappContext = new AsyncLocalStorage();
 
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "gal_verify_token";
+const WHATSAPP_TOKEN_SECRET = defineSecret("WHATSAPP_TOKEN");
+const PHONE_NUMBER_ID_SECRET = defineSecret("PHONE_NUMBER_ID");
+const VERIFY_TOKEN_SECRET = defineSecret("VERIFY_TOKEN");
+
+function getWhatsappToken() {
+  return String(WHATSAPP_TOKEN_SECRET.value() || process.env.WHATSAPP_TOKEN || "").trim();
+}
+
+function getPhoneNumberId() {
+  return String(PHONE_NUMBER_ID_SECRET.value() || process.env.PHONE_NUMBER_ID || "").trim();
+}
+
+function getVerifyToken() {
+  return String(VERIFY_TOKEN_SECRET.value() || process.env.VERIFY_TOKEN || "gal_verify_token").trim();
+}
+
 const APP_BASE_URL = process.env.APP_BASE_URL || "https://galhadad-app.github.io/Master-B/";
 const DEFAULT_WHATSAPP_MODE = process.env.DEFAULT_WHATSAPP_MODE || "central";
 const WAITLIST_TEMPLATE_NAME = process.env.WAITLIST_TEMPLATE_NAME || "waitlist_slot_available";
 const WAITLIST_TEMPLATE_LANGUAGE = process.env.WAITLIST_TEMPLATE_LANGUAGE || "he";
 
-if (!WHATSAPP_TOKEN || !PHONE_NUMBER_ID) {
-  console.error("❌ חסר WHATSAPP_TOKEN או PHONE_NUMBER_ID");
-}
-
-console.log("✅ WhatsApp env loaded", {
-  hasWhatsappToken: Boolean(WHATSAPP_TOKEN),
-  phoneNumberId: PHONE_NUMBER_ID || "",
-  verifyTokenConfigured: Boolean(VERIFY_TOKEN),
+console.log("✅ WhatsApp secrets configured for runtime", {
+  whatsappTokenSecret: "WHATSAPP_TOKEN",
+  phoneNumberIdSecret: "PHONE_NUMBER_ID",
+  verifyTokenSecret: "VERIFY_TOKEN",
 });
 
 const BUSINESS_SETTINGS_COLLECTION = "businessSettings";
@@ -83,7 +93,7 @@ app.get("/webhook", (req, res) => {
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+  if (mode === "subscribe" && token === getVerifyToken()) {
     return res.status(200).send(challenge);
   }
 
@@ -1275,8 +1285,8 @@ function resolveWhatsAppConfig(business, options = {}) {
   return {
     mode: "central",
     businessId: activeBusiness?.businessId || activeBusiness?.id || store.businessId || "",
-    phoneNumberId: String(PHONE_NUMBER_ID || store.incomingPhoneNumberId || "").trim(),
-    token: String(WHATSAPP_TOKEN || "").trim(),
+    phoneNumberId: String(getPhoneNumberId() || store.incomingPhoneNumberId || "").trim(),
+    token: String(getWhatsappToken() || "").trim(),
   };
 }
 
@@ -1458,9 +1468,9 @@ function getErrorPayload(err) {
 app.get("/debug/whatsapp", async (req, res) => {
   res.status(200).json({
     ok: true,
-    hasWhatsappToken: Boolean(WHATSAPP_TOKEN),
-    centralPhoneNumberId: PHONE_NUMBER_ID || "",
-    verifyToken: VERIFY_TOKEN ? "configured" : "missing",
+    hasWhatsappToken: Boolean(getWhatsappToken()),
+    centralPhoneNumberId: getPhoneNumberId() || "",
+    verifyToken: getVerifyToken() ? "configured" : "missing",
     defaultWhatsappMode: DEFAULT_WHATSAPP_MODE,
     appBaseUrl: APP_BASE_URL,
     centralBotWhatsappNumber: getCentralBotWhatsappNumber(),
@@ -1480,7 +1490,11 @@ app.get("/debug/send-test", async (req, res) => {
   }
 });
 
-exports.api = functions.https.onRequest(app);
+exports.api = functions
+  .runWith({
+    secrets: ["WHATSAPP_TOKEN", "PHONE_NUMBER_ID", "VERIFY_TOKEN"],
+  })
+  .https.onRequest(app);
 
 if (require.main === module) {
   const port = process.env.PORT || 8080;
