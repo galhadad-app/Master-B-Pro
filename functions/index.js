@@ -632,38 +632,46 @@ app.post("/business/save", async (req, res) => {
     const businessId = cleanBusinessId(body.businessId || "");
     const businessName = String(body.businessName || body.name || "").trim();
     const whatsappNumber = normalizePhone(body.whatsappNumber || body.phone || "");
+    const selectedMode = String(body.whatsappBotMode || body.whatsappMode || "off").trim().toLowerCase();
+    const whatsappBotMode = selectedMode === "bot" ? "central" : selectedMode;
 
-    const rawMode = String(body.whatsappBotMode || body.whatsappMode || "off").trim().toLowerCase();
-    const whatsappBotMode = ["off", "central", "private"].includes(rawMode) ? rawMode : "off";
-    const whatsappEnabled = whatsappBotMode !== "off";
+    if (!businessId) {
+      return res.status(400).json({ ok: false, error: "missing_business_id", message: "חסר מזהה עסק" });
+    }
 
-    const whatsappPhoneNumberId = String(body.whatsappPhoneNumberId || body.phoneNumberId || "").trim();
-    const whatsappAccessToken = String(body.whatsappAccessToken || body.accessToken || "").trim();
-    const ownerAccess = body.ownerAccess === true || body.ownerAccess === "true" || body.clientOwnerAccess === true || body.clientOwnerAccess === "true";
-    const ownerCode = String(body.ownerCode || "1234").replace(/\D/g, "").slice(0, 4) || "1234";
-    const statsSettingsCode = String(body.statsSettingsCode || "4321").replace(/\D/g, "").slice(0, 4) || "4321";
-
-    if (!businessId || !businessName) {
-      return res.status(400).json({ ok: false, error: "missing_fields", message: "חסרים שם עסק או מזהה עסק" });
+    if (!businessName) {
+      return res.status(400).json({ ok: false, error: "missing_business_name", message: "חסר שם עסק" });
     }
 
     if (!/^9725\d{8}$/.test(whatsappNumber)) {
       return res.status(400).json({ ok: false, error: "invalid_whatsapp_number", message: "מספר וואטסאפ חייב להתחיל ב־972 ולהיות 12 ספרות" });
     }
 
+    if (!["off", "central", "private"].includes(whatsappBotMode)) {
+      return res.status(400).json({ ok: false, error: "invalid_whatsapp_mode", message: "מצב וואטסאפ לא תקין" });
+    }
+
+    const whatsappPhoneNumberId = String(body.whatsappPhoneNumberId || body.phoneNumberId || body.waPhoneNumberId || "").trim();
+    const whatsappAccessToken = String(body.whatsappAccessToken || body.accessToken || body.waAccessToken || "").trim();
+
     if (whatsappBotMode === "private" && !whatsappPhoneNumberId) {
       return res.status(400).json({ ok: false, error: "missing_phone_number_id", message: "במצב בעל עסק חייבים למלא Phone Number ID" });
     }
 
+    const whatsappEnabled = whatsappBotMode !== "off";
+    const ownerAccess = body.ownerAccess === true || body.ownerAccess === "true" || body.clientOwnerAccess === true || body.clientOwnerAccess === "true";
+    const ownerCode = String(body.ownerCode || "1234").replace(/\D/g, "").slice(0, 4) || "1234";
+    const statsSettingsCode = String(body.statsSettingsCode || "4321").replace(/\D/g, "").slice(0, 4) || "4321";
+    const centralBotNumber = normalizePhone(body.centralBotNumber || body.botWhatsappNumber || getCentralBotWhatsappNumber() || "972547674814");
+    const whatsappUrl = whatsappBotMode === "central"
+      ? `https://wa.me/${centralBotNumber}?text=${encodeURIComponent(`start_${businessId}`)}`
+      : whatsappBotMode === "private"
+        ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`start_${businessId}`)}`
+        : `https://wa.me/${whatsappNumber}`;
+
     const ref = db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId);
     const snap = await ref.get();
-    const exists = snap.exists;
-
-    const whatsappUrl = whatsappBotMode === "central"
-      ? `https://wa.me/${getCentralBotWhatsappNumber()}?text=${encodeURIComponent(`start_${businessId}`)}`
-      : (whatsappBotMode === "private"
-        ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`start_${businessId}`)}`
-        : `https://wa.me/${whatsappNumber}`);
+    const isNew = !snap.exists;
 
     const payload = {
       businessId,
@@ -671,8 +679,8 @@ app.post("/business/save", async (req, res) => {
       name: businessName,
       whatsappNumber,
       phone: whatsappNumber,
-      centralBotNumber: getCentralBotWhatsappNumber(),
-      botWhatsappNumber: getCentralBotWhatsappNumber(),
+      centralBotNumber,
+      botWhatsappNumber: centralBotNumber,
       whatsappBotMode,
       whatsappMode: whatsappBotMode,
       whatsappPhoneNumberId,
@@ -687,43 +695,49 @@ app.post("/business/save", async (req, res) => {
       plan: whatsappBotMode === "central" ? "whatsapp-central" : (whatsappBotMode === "private" ? "whatsapp-private" : "basic"),
       ownerCode,
       statsSettingsCode,
-      appUrl: `${getAppBaseUrl().replace(/\/$/, "")}/index.html?business=${encodeURIComponent(businessId)}`,
+      appUrl: String(body.appUrl || `${getAppBaseUrl().replace(/\/$/, "")}/index.html?business=${encodeURIComponent(businessId)}`),
       whatsappUrl,
-      active: body.active === false ? false : true,
-      appFrozen: body.appFrozen === true ? true : false,
-      isFrozen: body.isFrozen === true ? true : false,
-      status: body.active === false || body.appFrozen === true || body.isFrozen === true ? "frozen" : "active",
       updatedAtMs: Date.now(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
-    if (!exists) {
-      payload.createdAtMs = Date.now();
+    if (isNew) {
       payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+      payload.createdAtMs = Date.now();
+      payload.active = true;
+      payload.appFrozen = false;
+      payload.isFrozen = false;
+      payload.status = "active";
       payload.bookingTitle = "קביעת תור!";
       payload.businessTypeLabel = "מספרה";
       payload.ownerBadge = "עמוד בעל העסק";
       payload.logoSrc = "logo.png";
       payload.heroBg = "background-behind-logo.png";
-      payload.services = DEFAULT_SERVICES;
-      payload.workingHours = DEFAULT_WORKING_HOURS;
       payload.businessSubtitle = "";
       payload.businessDescription = "";
       payload.importantNotice = "";
       payload.businessAddress = "";
       payload.freezeMessage = "האפליקציה לא פעילה כעת. עמכם הסליחה, נסו שוב מאוחר יותר.";
+      payload.services = DEFAULT_SERVICES;
+      payload.workingHours = DEFAULT_WORKING_HOURS;
     }
 
     await ref.set(payload, { merge: true });
-    await writeManagerLog(businessId, exists ? "business_updated" : "business_created", {
+    await writeManagerLog(businessId, isNew ? "business_created" : "business_updated", {
       whatsappBotMode,
       ownerAccess,
     });
 
-    return res.status(200).json({ ok: true, businessId, message: exists ? "העסק עודכן" : "העסק נוצר" });
+    return res.status(200).json({
+      ok: true,
+      businessId,
+      whatsappBotMode,
+      whatsappEnabled,
+      message: "העסק נשמר בהצלחה",
+    });
   } catch (err) {
     console.error("business/save error:", getErrorPayload(err));
-    return res.status(500).json({ ok: false, error: "business_save_failed", message: "שמירת העסק נכשלה" });
+    return res.status(500).json({ ok: false, error: "business_save_failed", message: "שגיאת שרת" });
   }
 });
 
