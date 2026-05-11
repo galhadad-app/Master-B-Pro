@@ -60,6 +60,7 @@ const SESSIONS_COLLECTION = "wa_sessions";
 
 const SLOT_STEP_MINUTES = 30;
 const MAX_DAYS_TO_SHOW = 7;
+const WAITLIST_CLAIM_TTL_MS = 10 * 60 * 1000; // 10 דקות לתפיסת תור מרשימת המתנה
 
 const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 const dayNames = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
@@ -665,6 +666,7 @@ app.post("/waitlist/claim", async (req, res) => {
       if (String(entry.status || "ממתין") !== "ממתין") throw new Error("INVALID_WAITLIST");
       if (offerToken && entry.offerToken && offerToken !== entry.offerToken) throw new Error("INVALID_OFFER");
       if (entry.offeredTime && entry.offeredTime !== time) throw new Error("INVALID_OFFER");
+      if (entry.offerExpiresAtMs && Date.now() > Number(entry.offerExpiresAtMs)) throw new Error("OFFER_EXPIRED");
 
       const claimId = `${businessId}_${date}_${time}_${offerToken || "no_offer"}`.replace(/[^a-zA-Z0-9_-]/g, "_");
       const appointmentId = `waitlist_${entry.id}_${date}_${time}`.replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -693,6 +695,10 @@ app.post("/waitlist/claim", async (req, res) => {
       if (claimSnap.exists) {
         const claim = claimSnap.data() || {};
         if (claim.waitlistId !== entry.id) throw new Error("TAKEN_BY_OTHER");
+        if (claim.status === "claimed" && claim.appointmentId) {
+          txResult = { alreadyCreated: true, appointment: { id: claim.appointmentId, businessId, date, time }, waitlistId: entry.id, offerToken: offerToken || "" };
+          return;
+        }
       }
 
       const slotTaken = slotSnap.docs.some((doc) => {
@@ -727,6 +733,8 @@ app.post("/waitlist/claim", async (req, res) => {
         waitlistId: entry.id,
         phone: phoneDisplay,
         appointmentId,
+        status: "claimed",
+        offerExpiresAtMs: entry.offerExpiresAtMs || 0,
         claimedAt: admin.firestore.FieldValue.serverTimestamp(),
         claimedAtMs: Date.now(),
       }, { merge: true });
@@ -735,6 +743,8 @@ app.post("/waitlist/claim", async (req, res) => {
       tx.update(waitDoc.ref, {
         status: "נקבע",
         offeredTime: time,
+        claimStatus: "claimed",
+        claimedAppointmentId: appointmentId,
         claimedAt: admin.firestore.FieldValue.serverTimestamp(),
         claimedAtMs: Date.now(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -792,10 +802,11 @@ app.post("/waitlist/claim", async (req, res) => {
     const messages = {
       INVALID_WAITLIST: "הקישור כבר לא פעיל",
       INVALID_OFFER: "הקישור כבר לא עדכני",
+      OFFER_EXPIRED: "הקישור כבר לא פעיל",
       TAKEN_BY_OTHER: "מישהו כבר תפס את התור הזה",
       CLAIM_FAILED: "שגיאה באישור התור",
     };
-    const status = ["INVALID_WAITLIST", "INVALID_OFFER", "TAKEN_BY_OTHER"].includes(code) ? 409 : 500;
+    const status = ["INVALID_WAITLIST", "INVALID_OFFER", "OFFER_EXPIRED", "TAKEN_BY_OTHER"].includes(code) ? 409 : 500;
     console.error("waitlist/claim error:", getErrorPayload(err));
     return res.status(status).json({ ok: false, error: code, message: messages[code] || "שגיאה באישור התור" });
   }
@@ -862,6 +873,7 @@ app.post("/waitlist/notify", async (req, res) => {
               offeredTime: time,
               offerToken,
               claimToken,
+              offerExpiresAtMs: Date.now() + WAITLIST_CLAIM_TTL_MS,
               notifiedAtMs: Date.now(),
               notifiedAt: admin.firestore.FieldValue.serverTimestamp(),
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -1415,6 +1427,7 @@ function normalizeWaitlistEntry(entry) {
     status: String(entry.status || "ממתין").trim(),
     claimToken: String(entry.claimToken || "").trim(),
     offerToken: String(entry.offerToken || "").trim(),
+    offerExpiresAtMs: Number(entry.offerExpiresAtMs || 0),
     createdAtMs: Number(entry.createdAtMs || 0),
   };
 }
