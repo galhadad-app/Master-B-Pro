@@ -371,6 +371,159 @@ app.post("/waitlist/join", async (req, res) => {
   }
 });
 
+
+// =======================
+// Manager endpoints: business status and deletion
+// =======================
+app.post("/businesses/freeze", async (req, res) => {
+  try {
+    const businessId = cleanBusinessId(req.body?.businessId || "");
+    const frozen = Boolean(req.body?.frozen);
+    if (!businessId) return res.status(400).json({ ok: false, error: "missing_business_id", message: "חסר מזהה עסק" });
+
+    const ref = db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId);
+    const snap = await ref.get();
+    if (!snap.exists) return res.status(404).json({ ok: false, error: "business_not_found", message: "העסק לא נמצא" });
+
+    const payload = {
+      isFrozen: frozen,
+      appFrozen: frozen,
+      active: !frozen,
+      status: frozen ? "frozen" : "active",
+      updatedAtMs: Date.now(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    if (frozen) {
+      payload.frozenMessage = "האפליקציה לא פעילה כעת. עמכם הסליחה.";
+      payload.frozenAtMs = Date.now();
+    } else {
+      payload.frozenMessage = admin.firestore.FieldValue.delete();
+      payload.frozenAtMs = admin.firestore.FieldValue.delete();
+    }
+
+    await ref.set(payload, { merge: true });
+    await writeManagerLog(businessId, frozen ? "business_frozen" : "business_unfrozen", { frozen });
+    return res.status(200).json({ ok: true, businessId, frozen });
+  } catch (err) {
+    console.error("businesses/freeze error:", getErrorPayload(err));
+    return res.status(500).json({ ok: false, error: "freeze_failed", message: "עדכון סטטוס העסק נכשל" });
+  }
+});
+
+app.post("/businesses/owner-access", async (req, res) => {
+  try {
+    const businessId = cleanBusinessId(req.body?.businessId || "");
+    const ownerAccess = Boolean(req.body?.ownerAccess);
+    if (!businessId) return res.status(400).json({ ok: false, error: "missing_business_id", message: "חסר מזהה עסק" });
+
+    const ref = db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId);
+    const snap = await ref.get();
+    if (!snap.exists) return res.status(404).json({ ok: false, error: "business_not_found", message: "העסק לא נמצא" });
+
+    await ref.set({
+      ownerAccess,
+      clientOwnerAccess: ownerAccess,
+      updatedAtMs: Date.now(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    await writeManagerLog(businessId, ownerAccess ? "owner_access_opened" : "owner_access_closed", { ownerAccess });
+    return res.status(200).json({ ok: true, businessId, ownerAccess });
+  } catch (err) {
+    console.error("businesses/owner-access error:", getErrorPayload(err));
+    return res.status(500).json({ ok: false, error: "owner_access_failed", message: "עדכון גישת בעל עסק נכשל" });
+  }
+});
+
+app.post("/businesses/whatsapp", async (req, res) => {
+  try {
+    const businessId = cleanBusinessId(req.body?.businessId || "");
+    const mode = String(req.body?.mode || "off").trim().toLowerCase();
+    if (!businessId) return res.status(400).json({ ok: false, error: "missing_business_id", message: "חסר מזהה עסק" });
+    if (!["off", "central", "private"].includes(mode)) return res.status(400).json({ ok: false, error: "invalid_mode", message: "מצב וואטסאפ לא תקין" });
+
+    const ref = db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId);
+    const snap = await ref.get();
+    if (!snap.exists) return res.status(404).json({ ok: false, error: "business_not_found", message: "העסק לא נמצא" });
+
+    await ref.set({
+      whatsappBotMode: mode,
+      whatsappMode: mode,
+      whatsappEnabled: mode !== "off",
+      whatsappBotEnabled: mode !== "off",
+      botEnabled: mode !== "off",
+      waBotEnabled: mode !== "off",
+      plan: mode === "off" ? "basic" : (mode === "private" ? "whatsapp-private" : "whatsapp-central"),
+      updatedAtMs: Date.now(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    await writeManagerLog(businessId, "business_whatsapp_changed", { mode });
+    return res.status(200).json({ ok: true, businessId, mode });
+  } catch (err) {
+    console.error("businesses/whatsapp error:", getErrorPayload(err));
+    return res.status(500).json({ ok: false, error: "whatsapp_update_failed", message: "עדכון וואטסאפ נכשל" });
+  }
+});
+
+app.post("/businesses/delete", async (req, res) => {
+  try {
+    const businessId = cleanBusinessId(req.body?.businessId || "");
+    const confirmBusinessId = cleanBusinessId(req.body?.confirmBusinessId || "");
+    if (!businessId) return res.status(400).json({ ok: false, error: "missing_business_id", message: "חסר מזהה עסק" });
+    if (confirmBusinessId !== businessId) {
+      return res.status(400).json({ ok: false, error: "delete_confirmation_mismatch", message: "אישור המחיקה לא תואם למזהה העסק" });
+    }
+
+    const businessRef = db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId);
+    const businessSnap = await businessRef.get();
+    if (!businessSnap.exists) return res.status(404).json({ ok: false, error: "business_not_found", message: "העסק לא נמצא" });
+
+    const deleted = {};
+    deleted.appointments = await deleteCollectionByBusinessId(APPOINTMENTS_COLLECTION, businessId);
+    deleted.waitlist = await deleteCollectionByBusinessId(WAITLIST_COLLECTION, businessId);
+    deleted.waitlistClaims = await deleteCollectionByBusinessId(WAITLIST_CLAIMS_COLLECTION, businessId);
+    deleted.sessions = await deleteCollectionByBusinessId(SESSIONS_COLLECTION, businessId);
+    deleted.logs = await deleteCollectionByBusinessId("logs", businessId);
+
+    await businessRef.delete();
+
+    return res.status(200).json({ ok: true, businessId, deleted, message: "העסק וכל הנתונים הנלווים נמחקו" });
+  } catch (err) {
+    console.error("businesses/delete error:", getErrorPayload(err));
+    return res.status(500).json({ ok: false, error: "delete_business_failed", message: "מחיקה נכשלה" });
+  }
+});
+
+async function writeManagerLog(businessId, type, extra = {}) {
+  try {
+    await db.collection("logs").add({
+      businessId,
+      type,
+      ...extra,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    });
+  } catch (err) {
+    console.warn("manager log failed", getErrorPayload(err));
+  }
+}
+
+async function deleteCollectionByBusinessId(collectionName, businessId) {
+  let total = 0;
+  while (true) {
+    const snap = await db.collection(collectionName).where("businessId", "==", businessId).limit(400).get();
+    if (snap.empty) break;
+    const batch = db.batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    total += snap.size;
+    if (snap.size < 400) break;
+  }
+  return total;
+}
+
 // =======================
 // Frontend endpoint: automatic waitlist notify
 // =======================
