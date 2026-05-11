@@ -470,6 +470,96 @@ app.post("/waitlist/join", async (req, res) => {
 });
 
 
+
+// =======================
+// Manager endpoint: save/create business
+// =======================
+app.post("/business/save", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const businessId = cleanBusinessId(body.businessId || "");
+    const businessName = String(body.businessName || body.name || "").trim();
+    const whatsappNumber = normalizePhone(body.whatsappNumber || body.phone || "");
+    const whatsappBotModeRaw = String(body.whatsappBotMode || body.whatsappMode || "off").trim().toLowerCase();
+    const whatsappBotMode = ["off", "central", "private"].includes(whatsappBotModeRaw) ? whatsappBotModeRaw : "off";
+    const whatsappPhoneNumberId = String(body.whatsappPhoneNumberId || body.phoneNumberId || "").trim();
+    const whatsappAccessToken = String(body.whatsappAccessToken || "").trim();
+    const ownerCode = String(body.ownerCode || "1234").replace(/\D/g, "").slice(0, 4) || "1234";
+    const statsSettingsCode = String(body.statsSettingsCode || "4321").replace(/\D/g, "").slice(0, 4) || "4321";
+    const ownerAccess = body.ownerAccess === true || body.ownerAccess === "true";
+    const whatsappEnabled = whatsappBotMode !== "off";
+
+    if (!businessId || !businessName) {
+      return res.status(400).json({ ok: false, error: "missing_business_fields", message: "חסר שם עסק או businessId" });
+    }
+
+    if (!/^9725\d{8}$/.test(whatsappNumber)) {
+      return res.status(400).json({ ok: false, error: "invalid_whatsapp_number", message: "מספר וואטסאפ חייב להיות בפורמט 9725XXXXXXXX" });
+    }
+
+    if (whatsappBotMode === "private" && !whatsappPhoneNumberId) {
+      return res.status(400).json({ ok: false, error: "missing_phone_number_id", message: "במצב בעל עסק חייבים למלא Phone Number ID" });
+    }
+
+    const ref = db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId);
+    const snap = await ref.get();
+    const existing = snap.exists ? (snap.data() || {}) : {};
+
+    const payload = {
+      businessId,
+      businessName,
+      name: businessName,
+      whatsappNumber,
+      phone: whatsappNumber,
+      centralBotNumber: String(body.centralBotNumber || "972547674814"),
+      botWhatsappNumber: String(body.botWhatsappNumber || "972547674814"),
+      whatsappBotMode,
+      whatsappMode: whatsappBotMode,
+      whatsappPhoneNumberId,
+      phoneNumberId: whatsappPhoneNumberId,
+      whatsappAccessToken,
+      whatsappEnabled,
+      whatsappBotEnabled: whatsappEnabled,
+      botEnabled: whatsappEnabled,
+      waBotEnabled: whatsappEnabled,
+      ownerAccess,
+      clientOwnerAccess: ownerAccess,
+      plan: String(body.plan || (whatsappBotMode === "central" ? "whatsapp-central" : (whatsappBotMode === "private" ? "whatsapp-private" : "basic"))),
+      ownerCode,
+      statsSettingsCode,
+      appUrl: String(body.appUrl || `${getAppBaseUrl().replace(/\/$/, "")}/index.html?business=${encodeURIComponent(businessId)}`),
+      whatsappUrl: String(body.whatsappUrl || ""),
+      updatedAtMs: Date.now(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    if (!snap.exists) {
+      payload.isFrozen = false;
+      payload.appFrozen = false;
+      payload.active = true;
+      payload.status = "active";
+      payload.createdAtMs = Date.now();
+      payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+    }
+
+    if (!existing.workingHours) payload.workingHours = DEFAULT_WORKING_HOURS;
+    if (!Array.isArray(existing.services) || !existing.services.length) payload.services = DEFAULT_SERVICES;
+    if (!existing.logoSrc) payload.logoSrc = "logo.png";
+    if (!existing.heroBg) payload.heroBg = "background-behind-logo.png";
+    if (!existing.bookingTitle) payload.bookingTitle = "קביעת תור!";
+    if (!existing.businessTypeLabel) payload.businessTypeLabel = "מספרה";
+    if (!existing.ownerBadge) payload.ownerBadge = "עמוד בעל העסק";
+
+    await ref.set(payload, { merge: true });
+    await writeManagerLog(businessId, snap.exists ? "business_updated" : "business_created", { whatsappBotMode, ownerAccess });
+
+    return res.status(200).json({ ok: true, businessId, created: !snap.exists, message: "העסק נשמר בהצלחה" });
+  } catch (err) {
+    console.error("business/save error:", getErrorPayload(err));
+    return res.status(500).json({ ok: false, error: "save_business_failed", message: "שגיאה בשמירת העסק" });
+  }
+});
+
 // =======================
 // Manager endpoints: business status and deletion
 // =======================
