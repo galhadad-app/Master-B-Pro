@@ -1,4 +1,4 @@
-const functions = require("firebase-functions");
+const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const express = require("express");
@@ -1490,11 +1490,13 @@ app.get("/debug/send-test", async (req, res) => {
   }
 });
 
-exports.api = functions
-  .runWith({
-    secrets: ["WHATSAPP_TOKEN", "PHONE_NUMBER_ID", "VERIFY_TOKEN"],
-  })
-  .https.onRequest(app);
+exports.api = onRequest(
+  {
+    region: "us-central1",
+    secrets: [WHATSAPP_TOKEN_SECRET, PHONE_NUMBER_ID_SECRET, VERIFY_TOKEN_SECRET],
+  },
+  app
+);
 
 if (require.main === module) {
   const port = process.env.PORT || 8080;
