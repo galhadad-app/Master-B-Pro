@@ -2536,9 +2536,34 @@ body.business-frozen{overflow:hidden;}
       });
     }
 
-    async function deleteAppointmentFromFirebase(id){
-      if(!id) return;
-      await db.collection(APPOINTMENTS_COLLECTION).doc(id).delete();
+    async function deleteAppointmentFromFirebase(id, options = {}){
+      if(!id) return null;
+
+      const response = await fetch(`${BACKEND_API_BASE_URL}/appointments/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appointmentId: id,
+          businessId: currentBusinessSettings.businessId,
+          source: options.source || 'app',
+          notifyWaitlist: options.notifyWaitlist === true
+        })
+      });
+
+      let result = null;
+      try{
+        result = await response.json();
+      }catch(parseErr){
+        result = null;
+      }
+
+      if(!response.ok || !result?.ok){
+        const error = new Error(result?.message || result?.error || 'CANCEL_APPOINTMENT_FAILED');
+        error.code = result?.error || 'CANCEL_APPOINTMENT_FAILED';
+        throw error;
+      }
+
+      return result;
     }
 
     async function isSlotTakenInFirebase(dateKey, time){
@@ -3437,7 +3462,7 @@ body.business-frozen{overflow:hidden;}
       if(!activeCustomerPhone) return;
       const normalizedPhone = normalizePhone(activeCustomerPhone);
       const customerAppointments = appointments.filter(item => normalizePhone(item.phone) === normalizedPhone);
-      try{ await Promise.all(customerAppointments.map(item => deleteAppointmentFromFirebase(item.id))); closeCustomerModal(); showToast('הלקוח נמחק.'); }
+      try{ await Promise.all(customerAppointments.map(item => deleteAppointmentFromFirebase(item.id, { source:'delete_customer', notifyWaitlist:false }))); closeCustomerModal(); showToast('הלקוח נמחק.'); }
       catch(err){ console.error(err); showToast('שגיאה במחיקת הלקוח.', true); }
     }
 
@@ -3482,18 +3507,21 @@ body.business-frozen{overflow:hidden;}
 
     async function removeAppointment(item, options = {}){
       if(!item?.id) return false;
-      const freedDate = item.date;
-      const freedTime = item.time;
       const source = options.source || 'owner';
       try{
-        await deleteAppointmentFromFirebase(item.id);
-        if(freedDate && freedTime){
-          console.log('Appointment cancelled, notifying waitlist:', { date: freedDate, time: freedTime, source });
-          await notifyWaitlistForSlot(freedDate, freedTime, { source });
+        const result = await deleteAppointmentFromFirebase(item.id, {
+          source,
+          notifyWaitlist: true
+        });
+
+        const waitlist = result?.waitlist || null;
+        if(waitlist && Number(waitlist.sent || 0) > 0){
+          showToast('התור בוטל ונשלחה הודעה לרשימת ההמתנה.');
         }
+
         return true;
       }
-      catch(err){ console.error(err); showToast('שגיאה בביטול התור.', true); return false; }
+      catch(err){ console.error(err); showToast(err?.message || 'שגיאה בביטול התור.', true); return false; }
     }
 
     function getActiveAppointments(){
