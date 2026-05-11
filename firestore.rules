@@ -1,0 +1,135 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===========
+    // Public reads needed by the app
+    // ===========
+
+    // Business settings are read by the customer app and business manager.
+    // TEMPORARY: client-side write is still allowed here because business-manager.html
+    // has not yet been moved fully to the server.
+    match /businessSettings/{businessId} {
+      allow read: if true;
+
+      // Temporary until we move business-manager actions to server endpoints.
+      allow create, update: if isValidBusinessSettingsWrite();
+
+      // Delete should be done only through the server /deleteBusiness.
+      allow delete: if false;
+    }
+
+    // Appointments:
+    // reads are needed for availability + owner view.
+    // writes are blocked from browsers because create/cancel now go through the server.
+    match /appointments/{appointmentId} {
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+
+    // Waitlist:
+    // reads are needed for owner view.
+    // writes are blocked from browsers because joinWaitlist now goes through the server.
+    match /waitlist/{waitlistId} {
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+
+    // Waitlist claims should be server controlled.
+    match /waitlistClaims/{claimId} {
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+
+    // WhatsApp sessions are internal server state.
+    match /wa_sessions/{sessionId} {
+      allow read, write: if false;
+    }
+
+    // Logs/analytics/reports should not be publicly writable.
+    match /logs/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /analytics/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /reports/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Default deny for anything else.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===========
+    // Helper validation
+    // ===========
+
+    function isValidBusinessSettingsWrite() {
+      return request.resource.data.keys().hasOnly([
+        'active',
+        'appFrozen',
+        'appUrl',
+        'bookingTitle',
+        'botEnabled',
+        'businessId',
+        'businessName',
+        'name',
+        'subtitle',
+        'businessSubtitle',
+        'phone',
+        'businessPhone',
+        'whatsapp',
+        'businessWhatsapp',
+        'whatsappMode',
+        'whatsappBotMode',
+        'whatsappEnabled',
+        'whatsappBotEnabled',
+        'whatsappPhoneNumberId',
+        'phoneNumberId',
+        'waPhoneNumberId',
+        'address',
+        'businessAddress',
+        'wazeAddress',
+        'logo',
+        'logoUrl',
+        'background',
+        'backgroundUrl',
+        'heroBackground',
+        'importantMessage',
+        'services',
+        'workingHours',
+        'ownerCode',
+        'statsCode',
+        'appointmentsCode',
+        'settingsCode',
+        'plan',
+        'createdAt',
+        'createdAtMs',
+        'updatedAt',
+        'updatedAtMs',
+        'deleted',
+        'deletedAt',
+        'deletedAtMs'
+      ])
+      && (!('businessId' in request.resource.data) || request.resource.data.businessId is string)
+      && (!('businessName' in request.resource.data) || request.resource.data.businessName is string)
+      && (!('name' in request.resource.data) || request.resource.data.name is string)
+      && (!('phone' in request.resource.data) || request.resource.data.phone is string)
+      && (!('businessPhone' in request.resource.data) || request.resource.data.businessPhone is string)
+      && (!('whatsapp' in request.resource.data) || request.resource.data.whatsapp is string)
+      && (!('businessWhatsapp' in request.resource.data) || request.resource.data.businessWhatsapp is string)
+      && (!('address' in request.resource.data) || request.resource.data.address is string)
+      && (!('businessAddress' in request.resource.data) || request.resource.data.businessAddress is string)
+      && (!('workingHours' in request.resource.data) || request.resource.data.workingHours is map)
+      && (!('services' in request.resource.data) || request.resource.data.services is list);
+    }
+  }
+}
