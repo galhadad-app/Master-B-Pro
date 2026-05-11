@@ -2536,9 +2536,23 @@ body.business-frozen{overflow:hidden;}
       });
     }
 
-    async function deleteAppointmentFromFirebase(id){
-      if(!id) return;
-      await db.collection(APPOINTMENTS_COLLECTION).doc(id).delete();
+    async function deleteAppointmentFromFirebase(id, options = {}){
+      if(!id) return null;
+      const response = await fetch(`${BACKEND_API_BASE_URL}/appointments/cancel`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          businessId: currentBusinessSettings.businessId,
+          appointmentId: id,
+          source: options.source || 'app',
+          notifyWaitlist: options.notifyWaitlist !== false
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if(!response.ok || data.ok === false){
+        throw new Error(data.message || data.error || 'cancel_appointment_failed');
+      }
+      return data;
     }
 
     async function isSlotTakenInFirebase(dateKey, time){
@@ -2609,7 +2623,7 @@ body.business-frozen{overflow:hidden;}
     function getFirstServiceForWaitlist(){ const services = currentBusinessSettings.services || []; const first = services.find(s => s?.value || s?.label || s?.text); return first?.value || first?.label || first?.text || 'לא נבחר'; }
     function isWaitlistClaimRequest(){ const params = new URLSearchParams(window.location.search); return !!(params.get('claimWaitlist') && params.get('time')); }
     function buildClaimUrl(entry, time){
-      const liveAppUrl = 'https://galhadad-app.github.io/Master-B/';
+      const liveAppUrl = 'https://gal-business-system.web.app/';
       const currentUrl = window.location.href.split('#')[0];
       const isLocalFile =
         window.location.protocol === 'file:' ||
@@ -2845,193 +2859,56 @@ body.business-frozen{overflow:hidden;}
       if(bookBtn){ bookBtn.disabled = true; bookBtn.textContent = 'מאשר תור...'; }
 
       try{
-        let waitSnap = await db.collection(WAITLIST_COLLECTION)
-          .where('businessId', '==', currentBusinessSettings.businessId)
-          .where('claimToken', '==', token)
-          .limit(1)
-          .get();
-
-        // גיבוי: אם ה-business נטען באיחור/נשמר בצורה ישנה, מחפשים לפי הטוקן בלבד
-        // ואז מאמתים שה-business תואם לפני אישור התור.
-        if(waitSnap.empty){
-          waitSnap = await db.collection(WAITLIST_COLLECTION)
-            .where('claimToken', '==', token)
-            .limit(3)
-            .get();
-        }
-
-        if(waitSnap.empty){
-          showToast('הקישור כבר לא תקף.', true);
-          return false;
-        }
-
-        const waitDoc = waitSnap.docs.find(doc => {
-          const data = doc.data() || {};
-          return !data.businessId || data.businessId === currentBusinessSettings.businessId;
-        }) || waitSnap.docs[0];
-        const entry = normalizeWaitlistRecord(waitDoc.data(), waitDoc.id);
-        if(entry.businessId && entry.businessId !== currentBusinessSettings.businessId){
-          showToast('הקישור לא שייך לעסק הזה.', true);
-          return false;
-        }
-        const dateKey = entry.date;
-        const phone = formatDisplayPhone(entry.customerPhone || entry.phoneDisplay || entry.phone);
-        const name = entry.name || `${entry.firstName || ''} ${entry.lastName || ''}`.trim() || 'לקוח מרשימת המתנה';
-        const service = entry.service || getFirstServiceForWaitlist();
-        saveReturningCustomerFromKnownData(entry.firstName, entry.lastName, name, phone);
-        applyReturningCustomer();
-
-        if(!dateKey || !/^\d{2}:\d{2}$/.test(time)){
-          showToast('קישור לא תקין.', true);
-          return false;
-        }
-
-        if(String(entry.status || 'ממתין') !== 'ממתין'){
-          // אם כבר נוצר תור מאותו קישור, מציגים הצלחה במקום שגיאה.
-          const existingMine = appointments.find(item =>
-            normalizePhone(item.phone) === normalizePhone(phone) &&
-            item.date === dateKey &&
-            item.time === time &&
-            isActiveAppointment(item)
-          );
-          if(existingMine){
-            openSuccessModal(formatDatePrettyFromKey(dateKey), time, existingMine.service || service);
-            clearWaitlistClaimParams();
-            return true;
-          }
-          showToast('התור כבר נתפס או שהקישור לא פעיל.', true);
-          return false;
-        }
-
-        if(offerToken && entry.offerToken && offerToken !== entry.offerToken){
-          showToast('הקישור כבר לא עדכני.', true);
-          return false;
-        }
-
-        const waitRef = db.collection(WAITLIST_COLLECTION).doc(entry.id);
-        const lockId = `${currentBusinessSettings.businessId}_${dateKey}_${time}`.replace(/[^a-zA-Z0-9_-]/g,'_');
-        const lockRef = db.collection(WAITLIST_CLAIMS_COLLECTION).doc(lockId);
-        const apptRef = db.collection(APPOINTMENTS_COLLECTION).doc(`waitlist_${entry.id}_${dateKey}_${time}`.replace(/[^a-zA-Z0-9_-]/g,'_'));
-
-        // בדיקת השעה שהתפנתה בלבד.
-        // אם זה אותו לקוח שחזר מהקישור אחרי שהתור כבר נוצר — מציגים הצלחה במקום שגיאה.
-        const slotTakenBeforeTx = await isSlotTakenInFirebase(dateKey, time);
-        if(slotTakenBeforeTx){
-          const existingApptDoc = await apptRef.get();
-          if(existingApptDoc.exists){
-            const existingAppt = normalizeAppointmentRecord(existingApptDoc.data(), existingApptDoc.id);
-            if(isActiveAppointment(existingAppt)){
-              if(!appointments.some(item => item.id === existingAppt.id)) appointments.push(existingAppt);
-              syncBusyMapFromAppointments();
-              rerenderAll();
-              openSuccessModal(formatDatePrettyFromKey(dateKey), time, existingAppt.service || service || 'התור נקבע מרשימת ההמתנה');
-              clearWaitlistClaimParams();
-              return true;
-            }
-          }
-
-          showToast('מישהו כבר תפס את התור הזה.', true);
-          clearWaitlistClaimParams();
-          return false;
-        }
-
-        await db.runTransaction(async (tx) => {
-          const [freshWaitDoc, lockDoc, existingApptDoc] = await Promise.all([
-            tx.get(waitRef),
-            tx.get(lockRef),
-            tx.get(apptRef)
-          ]);
-
-          if(!freshWaitDoc.exists) throw new Error('INVALID_WAITLIST');
-
-          const freshEntry = normalizeWaitlistRecord(freshWaitDoc.data(), freshWaitDoc.id);
-          if(offerToken && freshEntry.offerToken && offerToken !== freshEntry.offerToken) throw new Error('INVALID_WAITLIST');
-
-          // לחיצה חוזרת על אותו קישור אחרי שהוא כבר אישר - לא שגיאה.
-          if(existingApptDoc.exists){
-            return;
-          }
-
-          if(lockDoc.exists){
-            const lockData = lockDoc.data() || {};
-
-            // אם זו נעילה של אותו לקוח אבל אין עדיין מסמך תור,
-            // ממשיכים ויוצרים את התור. קודם היה כאן return וזה השאיר אותו בהמתנה.
-            if(lockData.waitlistId !== entry.id){
-              // אם נשארה נעילה ישנה על השעה אבל אין תור פעיל בפועל,
-              // לא חוסמים את הלקוח מרשימת ההמתנה.
-              tx.delete(lockRef);
-            }
-          }
-
-          if(String(freshEntry.status || 'ממתין') !== 'ממתין') throw new Error('INVALID_WAITLIST');
-
-          tx.set(lockRef, {
+        const response = await fetch(`${BACKEND_API_BASE_URL}/waitlist/claim`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
             businessId: currentBusinessSettings.businessId,
-            date: dateKey,
-            time,
             claimToken: token,
-            offerToken: offerToken || '',
-            waitlistId: entry.id,
-            phone: freshEntry.customerPhone || freshEntry.phoneDisplay || freshEntry.phone || phone || '',
-            appointmentId: apptRef.id,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-
-          tx.set(apptRef, {
-            name: freshEntry.name || name,
-            phone: freshEntry.customerPhone || freshEntry.phoneDisplay || freshEntry.phone || phone,
-            service: freshEntry.service || service,
-            date: dateKey,
-            time,
-            status:'נקבע',
-            source:'רשימת המתנה',
-            notes:'',
-            waitlistId: entry.id,
-            businessId: currentBusinessSettings.businessId,
-            businessName: currentBusinessSettings.businessName,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-
-          tx.update(waitRef, {
-            status:'נקבע',
-            offeredTime: time,
-            claimedAtMs: Date.now(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+            offerToken,
+            time
+          })
         });
 
-        const createdAppointmentDoc = await apptRef.get();
-
-        if(!createdAppointmentDoc.exists){
-          throw new Error('WAITLIST_APPOINTMENT_NOT_CREATED');
+        const data = await response.json().catch(() => ({}));
+        if(!response.ok || data.ok === false){
+          const error = new Error(data.message || data.error || 'WAITLIST_CLAIM_FAILED');
+          error.code = data.error || 'WAITLIST_CLAIM_FAILED';
+          throw error;
         }
 
-        const createdAppointment = normalizeAppointmentRecord(createdAppointmentDoc.data(), createdAppointmentDoc.id);
+        const createdAppointment = normalizeAppointmentRecord(data.appointment || {}, data.appointmentId || data.appointment?.id || '');
+        const dateKey = createdAppointment.date || data.appointment?.date || '';
+        const service = createdAppointment.service || data.appointment?.service || 'התור נקבע מרשימת ההמתנה';
 
-        if(!appointments.some(item => item.id === createdAppointment.id)){
+        if(createdAppointment.id && !appointments.some(item => item.id === createdAppointment.id)){
           appointments.push(createdAppointment);
         }
 
-        const waiting = waitlistEntries.find(item => item.id === entry.id);
+        const waiting = waitlistEntries.find(item => item.id === data.waitlistId);
         if(waiting) waiting.status = 'נקבע';
+
+        saveReturningCustomerFromKnownData('', '', createdAppointment.name || '', formatDisplayPhone(createdAppointment.phone || ''));
+        applyReturningCustomer();
         syncBusyMapFromAppointments();
         reconcileReturningCustomerWithAppointments();
         rerenderAll();
-        openSuccessModal(formatDatePrettyFromKey(dateKey), time, service || 'התור נקבע מרשימת ההמתנה');
+        openSuccessModal(formatDatePrettyFromKey(dateKey), time, service);
         clearWaitlistClaimParams();
         return true;
       }catch(err){
         console.error(err);
-        if(err && err.message === 'TAKEN_BY_OTHER'){
+        const code = err?.code || err?.message || '';
+        if(code === 'TAKEN_BY_OTHER'){
           showToast('מישהו כבר תפס את התור הזה.', true);
-        } else if(err && err.message === 'INVALID_WAITLIST'){
+        }else if(code === 'INVALID_WAITLIST'){
           showToast('הקישור כבר לא פעיל.', true);
-        } else if(err && err.message === 'WAITLIST_APPOINTMENT_NOT_CREATED'){
-          showToast('האישור לא הושלם. נסה שוב מהקישור בוואטסאפ.', true);
-        } else {
-          showToast('שגיאה באישור התור. נסה לרענן וללחוץ שוב.', true);
+        }else if(code === 'INVALID_OFFER'){
+          showToast('הקישור כבר לא עדכני.', true);
+        }else{
+          showToast(err.message || 'שגיאה באישור התור. נסה לרענן וללחוץ שוב.', true);
         }
+        clearWaitlistClaimParams();
         return false;
       }finally{
         waitlistClaimInProgress = false;
@@ -3477,6 +3354,22 @@ body.business-frozen{overflow:hidden;}
     }
 
     async function removeAppointment(item, options = {}){
+      if(!item?.id) return false;
+      const source = options.source || 'owner';
+      try{
+        const result = await deleteAppointmentFromFirebase(item.id, { source, notifyWaitlist: true });
+        const waitlist = result?.waitlist || null;
+        if(waitlist && typeof waitlist.sent === 'number' && waitlist.sent > 0){
+          showToast(`התור בוטל ונשלחה הודעה אוטומטית ל-${waitlist.sent} ממתינים.`);
+        }else if(waitlist && waitlist.disabled){
+          showToast('התור בוטל. הווצאפ כבוי לעסק הזה.');
+        }else{
+          showToast('התור בוטל והשעה חזרה להיות זמינה.');
+        }
+        return true;
+      }
+      catch(err){ console.error(err); showToast(err.message || 'שגיאה בביטול התור.', true); return false; }
+    }){
       if(!item?.id) return false;
       const freedDate = item.date;
       const freedTime = item.time;
