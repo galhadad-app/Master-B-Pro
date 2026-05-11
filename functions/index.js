@@ -624,6 +624,111 @@ async function deleteCollectionByBusinessId(collectionName, businessId) {
 
 
 // =======================
+// Manager endpoint: create/update business
+// =======================
+app.post("/business/save", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const businessId = cleanBusinessId(body.businessId || "");
+    const businessName = String(body.businessName || body.name || "").trim();
+    const whatsappNumber = normalizePhone(body.whatsappNumber || body.phone || "");
+
+    const rawMode = String(body.whatsappBotMode || body.whatsappMode || "off").trim().toLowerCase();
+    const whatsappBotMode = ["off", "central", "private"].includes(rawMode) ? rawMode : "off";
+    const whatsappEnabled = whatsappBotMode !== "off";
+
+    const whatsappPhoneNumberId = String(body.whatsappPhoneNumberId || body.phoneNumberId || "").trim();
+    const whatsappAccessToken = String(body.whatsappAccessToken || body.accessToken || "").trim();
+    const ownerAccess = body.ownerAccess === true || body.ownerAccess === "true" || body.clientOwnerAccess === true || body.clientOwnerAccess === "true";
+    const ownerCode = String(body.ownerCode || "1234").replace(/\D/g, "").slice(0, 4) || "1234";
+    const statsSettingsCode = String(body.statsSettingsCode || "4321").replace(/\D/g, "").slice(0, 4) || "4321";
+
+    if (!businessId || !businessName) {
+      return res.status(400).json({ ok: false, error: "missing_fields", message: "חסרים שם עסק או מזהה עסק" });
+    }
+
+    if (!/^9725\d{8}$/.test(whatsappNumber)) {
+      return res.status(400).json({ ok: false, error: "invalid_whatsapp_number", message: "מספר וואטסאפ חייב להתחיל ב־972 ולהיות 12 ספרות" });
+    }
+
+    if (whatsappBotMode === "private" && !whatsappPhoneNumberId) {
+      return res.status(400).json({ ok: false, error: "missing_phone_number_id", message: "במצב בעל עסק חייבים למלא Phone Number ID" });
+    }
+
+    const ref = db.collection(BUSINESS_SETTINGS_COLLECTION).doc(businessId);
+    const snap = await ref.get();
+    const exists = snap.exists;
+
+    const whatsappUrl = whatsappBotMode === "central"
+      ? `https://wa.me/${getCentralBotWhatsappNumber()}?text=${encodeURIComponent(`start_${businessId}`)}`
+      : (whatsappBotMode === "private"
+        ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`start_${businessId}`)}`
+        : `https://wa.me/${whatsappNumber}`);
+
+    const payload = {
+      businessId,
+      businessName,
+      name: businessName,
+      whatsappNumber,
+      phone: whatsappNumber,
+      centralBotNumber: getCentralBotWhatsappNumber(),
+      botWhatsappNumber: getCentralBotWhatsappNumber(),
+      whatsappBotMode,
+      whatsappMode: whatsappBotMode,
+      whatsappPhoneNumberId,
+      phoneNumberId: whatsappPhoneNumberId,
+      whatsappAccessToken,
+      whatsappEnabled,
+      whatsappBotEnabled: whatsappEnabled,
+      botEnabled: whatsappEnabled,
+      waBotEnabled: whatsappEnabled,
+      ownerAccess,
+      clientOwnerAccess: ownerAccess,
+      plan: whatsappBotMode === "central" ? "whatsapp-central" : (whatsappBotMode === "private" ? "whatsapp-private" : "basic"),
+      ownerCode,
+      statsSettingsCode,
+      appUrl: `${getAppBaseUrl().replace(/\/$/, "")}/index.html?business=${encodeURIComponent(businessId)}`,
+      whatsappUrl,
+      active: body.active === false ? false : true,
+      appFrozen: body.appFrozen === true ? true : false,
+      isFrozen: body.isFrozen === true ? true : false,
+      status: body.active === false || body.appFrozen === true || body.isFrozen === true ? "frozen" : "active",
+      updatedAtMs: Date.now(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    if (!exists) {
+      payload.createdAtMs = Date.now();
+      payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+      payload.bookingTitle = "קביעת תור!";
+      payload.businessTypeLabel = "מספרה";
+      payload.ownerBadge = "עמוד בעל העסק";
+      payload.logoSrc = "logo.png";
+      payload.heroBg = "background-behind-logo.png";
+      payload.services = DEFAULT_SERVICES;
+      payload.workingHours = DEFAULT_WORKING_HOURS;
+      payload.businessSubtitle = "";
+      payload.businessDescription = "";
+      payload.importantNotice = "";
+      payload.businessAddress = "";
+      payload.freezeMessage = "האפליקציה לא פעילה כעת. עמכם הסליחה, נסו שוב מאוחר יותר.";
+    }
+
+    await ref.set(payload, { merge: true });
+    await writeManagerLog(businessId, exists ? "business_updated" : "business_created", {
+      whatsappBotMode,
+      ownerAccess,
+    });
+
+    return res.status(200).json({ ok: true, businessId, message: exists ? "העסק עודכן" : "העסק נוצר" });
+  } catch (err) {
+    console.error("business/save error:", getErrorPayload(err));
+    return res.status(500).json({ ok: false, error: "business_save_failed", message: "שמירת העסק נכשלה" });
+  }
+});
+
+
+// =======================
 // Frontend endpoint: save in-app business settings
 // =======================
 app.post("/business/settings/save", async (req, res) => {
