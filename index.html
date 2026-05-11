@@ -1,4 +1,4 @@
-ש
+
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -2385,12 +2385,11 @@ body.business-frozen{overflow:hidden;}
       if(localStorage.getItem(localKey)) return;
 
       try{
-        await db.collection('businessSettings').doc(businessId).set({
-          visits: {
-            [todayKey]: firebase.firestore.FieldValue.increment(1)
-          },
-          visitsUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge:true });
+        await fetch(`${BACKEND_API_BASE_URL}/business/visit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ businessId, dateKey: todayKey })
+        });
 
         localStorage.setItem(localKey, String(Date.now()));
       }catch(err){
@@ -2409,10 +2408,16 @@ body.business-frozen{overflow:hidden;}
 
     async function saveBusinessSettingsToCloud(settings = currentBusinessSettings){
       const payload = getSettingsForCloud(settings);
-      await businessSettingsDocRef.set({
-        ...payload,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      const response = await fetch(`${BACKEND_API_BASE_URL}/business/settings/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({ ok:false, message:'שגיאת שרת' }));
+      if(!response.ok || data.ok === false){
+        throw new Error(data.message || data.error || 'settings_save_failed');
+      }
+      return data;
     }
 
     function subscribeBusinessSettingsRealtime(){
