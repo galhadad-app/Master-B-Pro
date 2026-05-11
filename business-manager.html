@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>ניהול עסקים</title>
+  <style>
+    :root{
+      --bg:#06121a;
+      --panel:#0b1f2a;
+      --panel2:#0f2c3a;
+      --field:#071822;
+      --line:rgba(255,255,255,.08);
+      --text:#e9faff;
+      --muted:#7fa6b8;
+      --primary:#2bd4ff;
+      --primary2:#00a8cc;
+      --accent:#1de9b6;
+      --ok:#1de9b6;
+      --danger:#ff7b7b;
+      --shadow:0 22px 60px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:Arial,"Heebo",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(43,212,255,.14), transparent 25%),
+        radial-gradient(circle at bottom left, rgba(29,233,182,.08), transparent 28%),
+        linear-gradient(180deg,#0b111d 0%,#070b13 100%);
+    }
+    .page{max-width:920px;margin:0 auto;padding:18px 14px 34px}
+    .top-title{
+      border-radius:28px;border:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(23,34,55,.95),rgba(12,18,30,.95));
+      box-shadow:var(--shadow);padding:23px 18px;margin-bottom:14px;text-align:center;
+    }
+    .top-title h1{margin:0;font-size:30px;color:var(--primary);letter-spacing:-.5px}
+    .card{
+      border-radius:26px;border:1px solid rgba(255,255,255,.07);
+      background:linear-gradient(180deg,rgba(18,26,41,.78),rgba(9,14,24,.78));
+      backdrop-filter:blur(12px);box-shadow:var(--shadow);padding:16px;margin-bottom:14px;
+    }
+    .section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .section-head h2{margin:0;color:var(--primary);font-size:21px}
+    .small-note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:5px}
+    .screen{display:none;animation:fadeIn .2s ease both}.screen.active{display:block}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    label{display:block;margin:12px 4px 7px;color:var(--muted);font-size:12px}
+    input,select{
+      width:100%;border:1px solid rgba(255,255,255,.09);outline:none;border-radius:17px;
+      padding:14px 15px;background:var(--field);color:var(--text);font-size:15px;
+    }
+    input:focus,select:focus{border-color:rgba(43,212,255,.5);box-shadow:0 0 0 3px rgba(43,212,255,.08)}
+    .ltr{direction:ltr;text-align:left}.hint{font-size:11px;color:rgba(168,179,199,.76);line-height:1.55;margin:6px 4px 0}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btn{
+      border:none;cursor:pointer;border-radius:18px;padding:14px 16px;font-weight:900;
+      transition:.18s transform,.18s opacity,.18s box-shadow,.18s background;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .btn:hover{transform:translateY(-2px);box-shadow:0 0 14px rgba(43,212,255,.24)}
+    .btn.primary{width:100%;color:#00222c;background:linear-gradient(135deg,var(--primary),var(--primary2));box-shadow:0 14px 32px rgba(43,212,255,.18)}
+    .btn.ghost{color:var(--text);background:#111b2c;border:1px solid rgba(255,255,255,.10)}
+    .btn.danger{color:#ffc8c8;background:rgba(255,123,123,.08);border:1px solid rgba(255,123,123,.26)}
+    .btn.freeze{color:#ffe8b2;background:rgba(230,193,115,.10);border:1px solid rgba(230,193,115,.28)}
+    .btn.unfreeze{color:#bcf8d1;background:rgba(29,233,182,.10);border:1px solid rgba(29,233,182,.28)}
+    .btn.small{padding:11px 12px;border-radius:15px;font-size:12px}
+    .form-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.status{min-height:22px;margin-top:10px;color:var(--muted);font-size:12px;line-height:1.6}
+    #saveBtn{margin-top:14px;}
+    .add-business-box{padding:0}.add-business-box .btn{min-height:58px;font-size:16px}
+    .topbar{display:flex;gap:10px;margin:12px 0 14px;align-items:center}
+    .business-list{display:grid;gap:10px}
+    .business-row{
+      width:100%;text-align:right;border:1px solid rgba(255,255,255,.09);border-radius:20px;
+      background:linear-gradient(180deg,rgba(23,34,55,.90),rgba(12,18,30,.92));
+      color:var(--text);padding:14px 15px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;cursor:pointer;
+      transition:.2s ease;
+    }
+    .business-row:hover{transform:translateY(-2px);box-shadow:0 0 18px rgba(43,212,255,.16);border-color:rgba(43,212,255,.24)}
+    .row-title{font-weight:900;font-size:16px;color:#fff}.row-sub{font-size:12px;color:var(--muted);margin-top:5px;direction:ltr;text-align:right}
+    .row-arrow{color:var(--primary);font-weight:900;font-size:20px}.empty{text-align:center;padding:30px 12px;color:var(--muted);line-height:1.8;border:1px dashed rgba(255,255,255,.10);border-radius:22px;background:rgba(255,255,255,.02)}
+    .detail-card{border-radius:24px;border:1px solid rgba(255,255,255,.09);background:rgba(5,12,22,.34);padding:16px;margin-top:12px}
+    .business-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:8px}.meta{color:var(--muted);font-size:13px;line-height:1.75}.badge{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:900;background:rgba(140,240,181,.12);color:#bcf8d1;border:1px solid rgba(140,240,181,.22);white-space:nowrap}.badge.pro{background:rgba(114,201,255,.11);color:#b9e9ff;border-color:rgba(114,201,255,.24)}.badge.premium{background:rgba(230,193,115,.12);color:#ffe8b2;border-color:rgba(230,193,115,.25)}.badge.frozen{background:rgba(255,123,123,.12);color:#ffc8c8;border-color:rgba(255,123,123,.28);margin-inline-start:6px}
+    .business-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.link-label{margin:12px 0 6px;color:rgba(168,179,199,.86);font-size:12px}.link-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.link-box{direction:ltr;text-align:left;background:#09101d;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px 13px;color:#9fdcff;word-break:break-all;font-size:13px;min-height:42px;display:flex;align-items:center}.mini-btn{min-width:92px;padding:12px 13px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:#111b2c;color:var(--text);cursor:pointer;font-weight:900;font-size:12px}.actions{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-top:14px}
+    .stats-wrap{margin:10px 0 2px;display:grid;gap:7px}
+    .stats-strip{
+      display:grid;grid-template-columns:repeat(4,1fr);align-items:center;
+      border:1px solid rgba(255,255,255,.06);border-radius:16px;overflow:hidden;
+      background:linear-gradient(90deg,rgba(9,16,29,.32),rgba(11,31,42,.24),rgba(9,16,29,.32));
+    }
+    .stat-item{
+      min-height:42px;padding:7px 6px;text-align:center;position:relative;
+      display:flex;flex-direction:column;justify-content:center;gap:2px;transition:.22s ease;
+    }
+    .stat-item:not(:last-child)::after{
+      content:"";position:absolute;left:0;top:10px;bottom:10px;width:1px;background:rgba(255,255,255,.07);
+    }
+    .stat-label{font-size:9.5px;color:var(--muted);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .stat-value{font-size:17px;font-weight:900;color:#fff;letter-spacing:-.3px;line-height:1}
+    .stat-item.stat-changed{animation:softStatPulse .75s ease both}
+    .stat-item.stat-changed .stat-value{animation:softNumberPop .45s ease both;color:#e9fcff}
+    @keyframes softStatPulse{0%{background:rgba(43,212,255,0);transform:translateY(0)}35%{background:rgba(43,212,255,.08);transform:translateY(-1px)}100%{background:rgba(43,212,255,0);transform:translateY(0)}}
+    @keyframes softNumberPop{0%{transform:scale(.96);opacity:.72}55%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}}
+    .activity-line{padding:0 3px;color:var(--muted);font-size:11px;line-height:1.55}
+    .activity-line strong{color:#dff8ff;font-size:12px;font-weight:800}
+    .activity-line.activity-changed strong{animation:softActivityGlow .9s ease both}
+    .created-date{margin-top:4px;color:var(--muted);font-size:12px;line-height:1.5}
+    @keyframes softActivityGlow{0%{text-shadow:0 0 0 rgba(43,212,255,0)}40%{text-shadow:0 0 12px rgba(43,212,255,.35)}100%{text-shadow:0 0 0 rgba(43,212,255,0)}}
+
+    .reports-list{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:7px;
+      margin-top:12px;
+    }
+    .report-tile{
+      min-height:78px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      background:linear-gradient(180deg,rgba(23,34,55,.66),rgba(10,16,28,.84));
+      padding:7px 5px 8px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      box-shadow:0 8px 18px rgba(0,0,0,.13);
+    }
+    .report-month{
+      width:100%;
+      text-align:center;
+      font-size:10px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.25;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .report-download{
+      width:34px;
+      height:39px;
+      border:none;
+      cursor:pointer;
+      background:transparent;
+      padding:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      -webkit-tap-highlight-color:transparent;
+      transition:.18s transform,.18s opacity;
+    }
+    .report-download:hover{transform:translateY(-2px);opacity:.92}
+    .pdf-icon{
+      width:32px;
+      height:37px;
+      border-radius:7px;
+      background:#f7f7f2;
+      border:1px solid rgba(255,255,255,.55);
+      position:relative;
+      box-shadow:0 8px 16px rgba(0,0,0,.16);
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .pdf-icon:before{
+      content:"";
+      position:absolute;
+      top:0;
+      left:0;
+      width:11px;
+      height:11px;
+      background:linear-gradient(135deg,#d9d9d2 0%,#d9d9d2 50%,transparent 51%);
+      border-bottom-right-radius:3px;
+    }
+    .pdf-icon span{
+      width:100%;
+      padding:4px 0 5px;
+      background:#c83a32;
+      color:#fff;
+      font-size:8.5px;
+      font-weight:900;
+      letter-spacing:.6px;
+      direction:ltr;
+      text-align:center;
+    }
+
+    @media(max-width:420px){
+      .reports-list{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+      .report-tile{min-height:72px;border-radius:13px;padding:6px 4px}
+      .report-month{font-size:9px}
+      .report-download{width:31px;height:36px}
+      .pdf-icon{width:29px;height:34px;border-radius:6px}
+    }
+    .report-mini-data{display:none;}
+    .reports-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:14px}
+
+    /* PDF: soft classic premium report style */
+    .pdf-source{
+      position:absolute;top:0;left:0;width:794px;min-height:1123px;
+      background:#f4f1ea;color:#222;font-family:Arial,"Heebo",sans-serif;
+      direction:rtl;padding:54px;z-index:999999;overflow:hidden;box-shadow:none;
+    }
+    .pdf-card{
+      min-height:1015px;background:#fff;border:1px solid #ded8cc;border-radius:18px;
+      padding:54px 58px 42px;box-shadow:none;position:relative;overflow:hidden;
+    }
+    .pdf-card:before{
+      content:"";position:absolute;top:0;right:0;left:0;height:8px;
+      background:linear-gradient(90deg,#d8c49a,#f1e6cf,#d8c49a);
+    }
+    .pdf-head{
+      display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;
+      padding-bottom:28px;border-bottom:1px solid #e8e1d5;margin-bottom:34px;
+    }
+    .pdf-kicker{font-size:12px;color:#9a8560;font-weight:900;letter-spacing:.7px;margin-bottom:10px;}
+    .pdf-business{font-size:34px;font-weight:900;color:#171717;line-height:1.15;margin:0 0 8px;letter-spacing:-.4px;}
+    .pdf-month{font-size:15px;color:#6f6a60;line-height:1.55;}
+    .pdf-date-box{
+      min-width:124px;border:1px solid #e6dfd2;border-radius:16px;background:#fbfaf7;
+      padding:14px 16px;text-align:center;color:#7a7469;
+    }
+    .pdf-date-box .small{font-size:10px;color:#a49b8d;margin-bottom:6px;font-weight:800;}
+    .pdf-date-box .date{font-size:14px;color:#2b2b2b;font-weight:900;direction:ltr;}
+    .pdf-summary{
+      border:1px solid #e9e2d6;border-radius:20px;background:linear-gradient(180deg,#fff,#fcfbf8);
+      padding:26px;margin-bottom:28px;text-align:center;
+    }
+    .pdf-summary-label{font-size:13px;color:#8b806e;margin-bottom:8px;font-weight:800;}
+    .pdf-summary-value{font-size:52px;font-weight:900;color:#151515;line-height:1;direction:ltr;}
+    .pdf-summary-note{font-size:11px;color:#9b9489;margin-top:9px;}
+    .pdf-block{margin-bottom:24px;}
+    .pdf-block-title{
+      font-size:14px;font-weight:900;color:#2b2b2b;margin-bottom:10px;
+      display:flex;align-items:center;gap:10px;
+    }
+    .pdf-block-title:before{
+      content:"";width:24px;height:1px;background:#d8c49a;display:inline-block;
+    }
+    .pdf-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+    .pdf-grid.three{grid-template-columns:repeat(3,1fr);}
+    .pdf-metric-card{
+      border:1px solid #ece5da;border-radius:18px;background:#fff;padding:18px 16px;
+      min-height:104px;display:flex;flex-direction:column;justify-content:space-between;
+    }
+    .pdf-metric-label{font-size:12px;color:#82786b;font-weight:800;line-height:1.35;}
+    .pdf-metric-value{font-size:34px;font-weight:900;color:#181818;line-height:1;direction:ltr;text-align:right;margin-top:14px;}
+    .pdf-wide{grid-column:1 / -1;}
+    .pdf-note{
+      margin-top:30px;padding-top:16px;border-top:1px solid #eee7dc;color:#8d8579;
+      font-size:11.5px;line-height:1.8;text-align:center;word-spacing:2px;letter-spacing:.05px;
+    }
+    .pdf-footer{
+      position:absolute;right:58px;left:58px;bottom:34px;border-top:1px solid #eee7dc;
+      padding-top:12px;display:flex;justify-content:space-between;gap:20px;color:#9a9286;font-size:10.5px;
+    }
+    .pdf-footer .ltr{direction:ltr;text-align:left;unicode-bidi:bidi-override;}
+    @media(max-width:720px){.report-row{grid-template-columns:1fr}.report-row .mini-btn{width:100%}}
+
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(18px);opacity:0;pointer-events:none;transition:.25s ease;width:min(92vw,520px);padding:14px 16px;border-radius:18px;text-align:center;z-index:99999;box-shadow:var(--shadow);background:#101827;border:1px solid rgba(255,255,255,.10);color:var(--text)}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.toast.error{background:#351111;border-color:rgba(255,123,123,.55)}
+    @media(max-width:720px){.page{padding-top:12px}.top-title h1{font-size:26px}.row,.form-actions,.actions,.link-row{grid-template-columns:1fr}.stats-strip{grid-template-columns:repeat(4,1fr)}.mini-btn{width:100%}.topbar{display:grid}}
+
+    /* Keep business details aligned: info on the right, plan badge on the left — also on mobile */
+    .business-top{
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:flex-start;
+    }
+    .business-badges{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:6px;
+      min-width:max-content;
+    }
+    @media(max-width:720px){
+      .business-top{
+        display:grid;
+        grid-template-columns:1fr auto;
+        align-items:flex-start;
+      }
+      .business-badges{
+        align-items:flex-start;
+      }
+    }
+    @media(max-width:390px){
+      .business-top{
+        gap:8px;
+      }
+      .badge{
+        padding:7px 9px;
+        font-size:11px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="top-title"><h1>ניהול עסקים</h1></section>
+
+    <section id="homeScreen" class="screen active">
+      <div class="card add-business-box">
+        <button class="btn primary" id="openAddBtn">+ הוסף עסק</button>
+      </div>
+
+      <section class="card">
+        <div class="section-head"><h2>העסקים שלי</h2></div>
+        <div class="small-note">העסקים מוצגים כרשימה נקייה. לחיצה על עסק פותחת את הפרטים שלו.</div>
+        <div class="topbar"><input id="searchInput" placeholder="חפש עסק / ID / מספר..." /></div>
+        <div id="businessList" class="business-list"><div class="empty">טוען עסקים...</div></div>
+      </section>
+    </section>
+
+    <section id="formScreen" class="screen">
+      <section class="card">
+        <div class="section-head">
+          <div><h2 id="formTitle">הוספת עסק</h2><div class="small-note">יצירה או עריכה של עסק מתוך businessSettings בלבד.</div></div>
+          <button class="btn ghost small" id="backFromFormBtn">חזרה</button>
+        </div>
+
+        <label>שם העסק</label>
+        <input id="businessName" placeholder="לדוגמה: מספרת אליהו" />
+
+        <label>businessId</label>
+        <input id="businessId" class="ltr" placeholder="eliyahu-barber" />
+        <div class="hint">אנגלית, מספרים ומקף בלבד. לדוגמה: shimon-barber</div>
+
+        <label>מספר וואטסאפ של בעל העסק</label>
+        <input id="whatsappNumber" class="ltr" inputmode="numeric" maxlength="12" placeholder="9725XXXXXXXX" />
+        <div class="hint">במצב רגיל זה הצ׳אט של בעל העסק. במצב בעל עסק זה אותו מספר יקבל start_businessId.</div>
+
+        <div class="row">
+          <div>
+            <label>מצב וואטסאפ</label>
+            <select id="whatsappBotMode">
+              <option value="off">רגיל</option>
+              <option value="central">בוט</option>
+              <option value="private">בעל עסק</option>
+            </select>
+          </div>
+          <div>
+            <label>Phone Number ID</label>
+            <input id="whatsappPhoneNumberId" class="ltr" placeholder="רק במצב: בעל עסק" />
+          </div>
+        </div>
+
+        <label>Access Token של מספר העסק</label>
+        <input id="whatsappAccessToken" class="ltr" placeholder="רק במצב: בעל עסק" />
+        <div class="hint">רגיל — וואטסאפ של בעל העסק בלי start. בוט — נשלח לבוט המרכזי 972547674814. בעל עסק — נשלח למספר בעל העסק עם start_businessId.</div>
+
+        <div class="row">
+          <div><label>גישת בעל עסק</label><select id="ownerAccess"><option value="false">סגורה — רק אני מנהל</option><option value="true">פתוחה — הלקוח יכול לערוך</option></select></div>
+        </div>
+
+        <div class="row">
+          <div><label>קוד לתורים/לקוחות</label><input id="ownerCode" inputmode="numeric" maxlength="4" placeholder="1234" /></div>
+          <div><label>קוד לסטטיסטיקה/הגדרות</label><input id="statsSettingsCode" inputmode="numeric" maxlength="4" placeholder="4321" /></div>
+        </div>
+
+        <button class="btn primary" id="saveBtn">שמור עסק</button>
+        <div class="form-actions"><button class="btn ghost" id="resetBtn">נקה טופס</button><button class="btn ghost" id="refreshBtn">רענן</button></div>
+        <div class="status" id="saveStatus"></div>
+      </section>
+    </section>
+
+    <section id="detailScreen" class="screen">
+      <section class="card">
+        <div class="section-head"><h2>פרטי עסק</h2><button class="btn ghost small" id="backFromDetailsBtn">חזרה</button></div>
+        <div id="businessDetails"></div>
+      </section>
+    </section>
+
+
+    <section id="reportsScreen" class="screen">
+      <section class="card">
+        <div class="section-head">
+          <div><h2>דוחות חודשיים</h2><div class="small-note">בחר חודש והורד דוח PDF מסודר לעסק.</div></div>
+          <button class="btn ghost small" id="backFromReportsBtn">חזרה</button>
+        </div>
+        <div id="reportsList" class="reports-list"></div>
+      </section>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+        apiKey: 'AIzaSyA3gamCGVxRnQOYxVcg2C8CasBjzNiVGcM',
+        authDomain: 'gal-business-system.firebaseapp.com',
+        projectId: 'gal-business-system',
+        storageBucket: 'gal-business-system.firebasestorage.app',
+        messagingSenderId: '81941134785',
+        appId: '1:81941134785:web:98069b8c50146441fb8340'
+    };
+
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const COLLECTION = "businessSettings";
+    const CENTRAL_BOT_WHATSAPP_NUMBER = "972547674814";
+    const APPOINTMENTS_COLLECTION = "appointments";
+    const APP_BASE_URL = "https://galhadad-app.github.io/Master-B/index.html";
+
+    const DEFAULT_WORKING_HOURS = {
+      sunday:{start:"10:00",end:"20:00",closed:false},
+      monday:{start:"10:00",end:"20:00",closed:false},
+      tuesday:{start:"10:00",end:"20:00",closed:false},
+      wednesday:{start:"10:00",end:"20:00",closed:false},
+      thursday:{start:"10:00",end:"20:00",closed:false},
+      friday:{start:"09:00",end:"14:00",closed:false},
+      saturday:{start:"",end:"",closed:true}
+    };
+
+    const DEFAULT_SERVICES = [
+      {text:"תספורת",price:"60",label:"תספורת - ₪60",value:"תספורת - ₪60"},
+      {text:"תספורת + זקן",price:"80",label:"תספורת + זקן - ₪80",value:"תספורת + זקן - ₪80"},
+      {text:"תספורת ילד",price:"40",label:"תספורת ילד - ₪40",value:"תספורת ילד - ₪40"}
+    ];
+
+    const planLabels = {basic:"אפליקציה בלבד",whatsapp:"עם בוט וואטסאפ"};
+    const yesNoLabels = {true:"פעיל",false:"כבוי"};
+
+    function boolValue(value, fallback=false){
+      if(value === true || value === "true") return true;
+      if(value === false || value === "false") return false;
+      return fallback;
+    }
+
+    function whatsappBotModeForBusiness(b){
+      const explicit = String(b?.whatsappBotMode || b?.whatsappMode || "").toLowerCase();
+      if(explicit === "off" || explicit === "regular" || explicit === "normal") return "off";
+      if(explicit === "central" || explicit === "bot") return "central";
+      if(explicit === "private" || explicit === "owner") return "private";
+
+      const legacyEnabled = boolValue(b?.whatsappEnabled, boolValue(b?.botEnabled, false));
+      return legacyEnabled ? "central" : "off";
+    }
+
+    function whatsappEnabledForBusiness(b){
+      return whatsappBotModeForBusiness(b) !== "off";
+    }
+
+    function whatsappModeForBusiness(b){
+      return whatsappBotModeForBusiness(b);
+    }
+
+    function whatsappModeLabel(b){
+      const mode = whatsappBotModeForBusiness(b);
+      if(mode === "central") return "בוט";
+      if(mode === "private") return "בעל עסק";
+      return "רגיל";
+    }
+
+    function ownerAccessForBusiness(b){
+      return boolValue(b?.ownerAccess, boolValue(b?.clientOwnerAccess, false));
+    }
+
+    let businesses = [];
+    let editingId = "";
+    let selectedId = "";
+    let appointments = [];
+    const previousStats = {};
+    let unsubscribe = null;
+    let unsubscribeAppointments = null;
+
+    const el = {
+      homeScreen:document.getElementById("homeScreen"),
+      formScreen:document.getElementById("formScreen"),
+      detailScreen:document.getElementById("detailScreen"),
+      reportsScreen:document.getElementById("reportsScreen"),
+      openAddBtn:document.getElementById("openAddBtn"),
+      backFromFormBtn:document.getElementById("backFromFormBtn"),
+      backFromDetailsBtn:document.getElementById("backFromDetailsBtn"),
+      businessDetails:document.getElementById("businessDetails"),
+      reportsList:document.getElementById("reportsList"),
+      businessName:document.getElementById("businessName"),
+      businessId:document.getElementById("businessId"),
+      whatsappNumber:document.getElementById("whatsappNumber"),
+      whatsappBotMode:document.getElementById("whatsappBotMode"),
+      whatsappPhoneNumberId:document.getElementById("whatsappPhoneNumberId"),
+      whatsappAccessToken:document.getElementById("whatsappAccessToken"),
+      ownerAccess:document.getElementById("ownerAccess"),
+      ownerCode:document.getElementById("ownerCode"),
+      statsSettingsCode:document.getElementById("statsSettingsCode"),
+      saveBtn:document.getElementById("saveBtn"),
+      resetBtn:document.getElementById("resetBtn"),
+      refreshBtn:document.getElementById("refreshBtn"),
+      searchInput:document.getElementById("searchInput"),
+      businessList:document.getElementById("businessList"),
+      formTitle:document.getElementById("formTitle"),
+      saveStatus:document.getElementById("saveStatus")
+    };
+
+    function showScreen(name){
+      [el.homeScreen,el.formScreen,el.detailScreen,el.reportsScreen].forEach(s=>s.classList.remove("active"));
+      if(name === "form") el.formScreen.classList.add("active");
+      else if(name === "details") el.detailScreen.classList.add("active");
+      else if(name === "reports") el.reportsScreen.classList.add("active");
+      else el.homeScreen.classList.add("active");
+      window.scrollTo({top:0,behavior:"smooth"});
+    }
+
+    function showToast(text, error=false){
+      const t=document.getElementById("toast");
+      t.textContent=text;
+      t.classList.toggle("error",error);
+      t.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer=setTimeout(()=>t.classList.remove("show"),3200);
+    }
+
+    function digits(v){return String(v||"").replace(/\D/g,"")}
+    function cleanPhone(v){return digits(v).slice(0,12)}
+    function validPhone(v){return /^972\d{9}$/.test(String(v||""))}
+    function cleanId(v){return String(v||"").trim().toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"").replace(/-+/g,"-").replace(/^-|-$/g,"")}
+    function html(v){return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
+    function js(v){return String(v||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
+    function appLink(id){return APP_BASE_URL+"?business="+encodeURIComponent(id)}
+    function waLink(id,phone,mode="off"){
+      const currentMode = String(mode || "off").toLowerCase();
+      const target = currentMode === "central" ? CENTRAL_BOT_WHATSAPP_NUMBER : phone;
+      const base = "https://wa.me/"+target;
+      return currentMode === "central" || currentMode === "private" ? base+"?text="+encodeURIComponent("start_"+id) : base;
+    }
+    function isBusinessFrozen(b){return b && (b.isFrozen === true || b.appFrozen === true || b.active === false || b.status === "frozen")}
+    function frozenLabel(b){return isBusinessFrozen(b) ? "מוקפא" : "פעיל"}
+
+    function toLocalDateString(d){
+      const y=d.getFullYear();
+      const m=String(d.getMonth()+1).padStart(2,"0");
+      const day=String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function normalizeDateValue(v){
+      if(!v) return null;
+      if(v.toDate && typeof v.toDate === "function") return v.toDate();
+      if(typeof v === "number") return new Date(v);
+      if(typeof v === "string"){
+        const raw=v.trim();
+        if(!raw) return null;
+        if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw+"T12:00:00");
+        const d=new Date(raw);
+        return isNaN(d.getTime()) ? null : d;
+      }
+      return null;
+    }
+
+    function appointmentBusinessId(a){
+      return String(a.businessId || a.businessID || a.business || a.bizId || a.business_id || "").trim();
+    }
+
+    function appointmentDate(a){
+      return normalizeDateValue(a.date || a.appointmentDate || a.day || a.slotDate || a.dateKey || a.startAt || a.time || a.createdAt || a.createdAtMs);
+    }
+
+    function appointmentActivityDate(a){
+      return normalizeDateValue(a.updatedAt || a.updatedAtMs || a.createdAt || a.createdAtMs || a.date || a.appointmentDate || a.day || a.startAt);
+    }
+
+    function appointmentPhone(a){
+      return cleanPhone(a.phone || a.customerPhone || a.whatsappNumber || a.customerWhatsapp || a.clientPhone || "");
+    }
+
+    function appointmentName(a){
+      return String(a.name || a.customerName || a.fullName || a.clientName || "").trim();
+    }
+
+    function appointmentTime(a){
+      return String(a.hour || a.timeSlot || a.slot || a.time || a.appointmentTime || "").trim();
+    }
+
+    function formatHebDate(d){
+      if(!d) return "-";
+      try{return d.toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"numeric"})}
+      catch(e){return toLocalDateString(d)}
+    }
+
+    function businessCreatedDate(b){
+      const d=normalizeDateValue(b.createdAt || b.createdAtMs || b.createdDate || b.openedAt || b.openedAtMs);
+      return d && !isNaN(d.getTime()) ? formatHebDate(d) : "-";
+    }
+
+    function computeStats(id){
+      const now=new Date();
+      const todayKey=toLocalDateString(now);
+      const startOfWeek=new Date(now); startOfWeek.setHours(0,0,0,0); startOfWeek.setDate(now.getDate()-now.getDay());
+      const endOfWeek=new Date(startOfWeek); endOfWeek.setDate(startOfWeek.getDate()+7);
+      const startOfMonth=new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth=new Date(now.getFullYear(), now.getMonth()+1, 1);
+      const relevant=appointments.filter(a=>appointmentBusinessId(a) === id);
+      const customerCounts={};
+      relevant.forEach(a=>{
+        const phone=appointmentPhone(a);
+        if(phone) customerCounts[phone]=(customerCounts[phone]||0)+1;
+      });
+      const totalCustomers=Object.keys(customerCounts).length;
+      const returningCustomers=Object.values(customerCounts).filter(n=>n>1).length;
+      let today=0, week=0, month=0;
+      relevant.forEach(a=>{
+        const d=appointmentDate(a);
+        if(!d || isNaN(d.getTime())) return;
+        const key=toLocalDateString(d);
+        if(key===todayKey) today++;
+        if(d>=startOfWeek && d<endOfWeek) week++;
+        if(d>=startOfMonth && d<endOfMonth) month++;
+      });
+      let last=null;
+      relevant.forEach(a=>{
+        const d=appointmentActivityDate(a);
+        if(!d || isNaN(d.getTime())) return;
+        if(!last || d>last.date) last={date:d,a};
+      });
+      return {totalCustomers,returningCustomers,today,week,month,last};
+    }
+
+    function getBusinessVisitStats(id){
+      const b=businesses.find(x=>x.id===id) || {};
+      const visits=b.visits && typeof b.visits === "object" ? b.visits : {};
+      const now=new Date();
+      const todayKey=toLocalDateString(now);
+      const startOfWeek=new Date(now);
+      startOfWeek.setHours(0,0,0,0);
+      startOfWeek.setDate(now.getDate()-now.getDay());
+      const endOfWeek=new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate()+7);
+      const startOfMonth=new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth=new Date(now.getFullYear(), now.getMonth()+1, 1);
+
+      const todayVisits=Number(visits[todayKey] || 0);
+      let totalVisits=0, weekVisits=0, monthVisits=0;
+      Object.entries(visits).forEach(([dateKey,count])=>{
+        const n=Number(count || 0);
+        if(!n) return;
+        totalVisits += n;
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+        const d=new Date(dateKey+"T12:00:00");
+        if(d>=startOfWeek && d<endOfWeek) weekVisits += n;
+        if(d>=startOfMonth && d<endOfMonth) monthVisits += n;
+      });
+      totalVisits += Number(b.visitsTotal || b.totalVisits || b.entriesTotal || 0);
+
+      const whatsappSources=[
+        b.whatsappClicks,
+        b.whatsappVisits,
+        b.waClicks,
+        b.waVisits,
+        b.whatsappStats,
+        b.whatsappEntries
+      ].filter(x=>x && typeof x === "object");
+
+      let todayWhatsapp=0, weekWhatsapp=0, monthWhatsapp=0, totalWhatsapp=0;
+      whatsappSources.forEach(src=>{
+        Object.entries(src).forEach(([dateKey,count])=>{
+          const n=Number(count || 0);
+          if(!n) return;
+          totalWhatsapp += n;
+          if(!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+          const d=new Date(dateKey+"T12:00:00");
+          if(dateKey===todayKey) todayWhatsapp += n;
+          if(d>=startOfWeek && d<endOfWeek) weekWhatsapp += n;
+          if(d>=startOfMonth && d<endOfMonth) monthWhatsapp += n;
+        });
+      });
+      totalWhatsapp += Number(b.whatsappTotal || b.totalWhatsapp || b.waTotal || 0);
+
+      return {totalVisits,todayVisits,weekVisits,monthVisits,todayWhatsapp,weekWhatsapp,monthWhatsapp,totalWhatsapp};
+    }
+
+    function monthKeyFromDate(d){
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+    }
+
+    function monthLabelFromKey(monthKey){
+      const [y,m]=String(monthKey).split("-").map(Number);
+      const d=new Date(y,(m||1)-1,1);
+      return d.toLocaleDateString("he-IL",{month:"long",year:"numeric"});
+    }
+
+    function getMonthRange(monthKey){
+      const [y,m]=String(monthKey).split("-").map(Number);
+      const start=new Date(y,(m||1)-1,1);
+      const end=new Date(y,(m||1),1);
+      return {start,end};
+    }
+
+    function getMonthlyObjectTotal(obj, start, end){
+      if(!obj || typeof obj !== "object") return 0;
+      let total=0;
+      Object.entries(obj).forEach(([dateKey,count])=>{
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+        const d=new Date(dateKey+"T12:00:00");
+        if(d>=start && d<end) total += Number(count || 0);
+      });
+      return total;
+    }
+
+    function isWhatsappAppointment(a){
+      const raw=[
+        a.source, a.channel, a.bookingSource, a.bookedFrom, a.createdFrom,
+        a.platform, a.origin, a.via, a.type, a.sourceType
+      ].join(" ").toLowerCase();
+      return a.viaWhatsapp === true ||
+        a.fromWhatsapp === true ||
+        a.whatsapp === true ||
+        a.isWhatsapp === true ||
+        /whatsapp|וואטסאפ|ווצאפ|wa\b|bot|בוט/.test(raw);
+    }
+
+    function getBusinessMonthlyReport(id, monthKey){
+      const b=businesses.find(x=>x.id===id) || {};
+      const {start,end}=getMonthRange(monthKey);
+      const visits=b.visits && typeof b.visits === "object" ? b.visits : {};
+      let monthVisits=0;
+      Object.entries(visits).forEach(([dateKey,count])=>{
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+        const d=new Date(dateKey+"T12:00:00");
+        if(d>=start && d<end) monthVisits += Number(count || 0);
+      });
+
+      const relevant=appointments.filter(a=>appointmentBusinessId(a) === id);
+      let monthAppAppointments=0;
+      let monthWhatsappAppointments=0;
+      const customerCounts={};
+      relevant.forEach(a=>{
+        const d=appointmentDate(a);
+        if(!d || isNaN(d.getTime()) || d<start || d>=end) return;
+        if(isWhatsappAppointment(a)) monthWhatsappAppointments++;
+        else monthAppAppointments++;
+        const phone=appointmentPhone(a);
+        if(phone) customerCounts[phone]=(customerCounts[phone]||0)+1;
+      });
+
+      const whatsappBookingSources=[
+        b.whatsappAppointments,
+        b.waAppointments,
+        b.whatsappBookings,
+        b.waBookings,
+        b.botAppointments,
+        b.botBookings
+      ].filter(x=>x && typeof x === "object");
+      const storedWhatsappAppointments=whatsappBookingSources.reduce((sum,src)=>sum+getMonthlyObjectTotal(src,start,end),0);
+      if(storedWhatsappAppointments > monthWhatsappAppointments){
+        monthWhatsappAppointments = storedWhatsappAppointments;
+      }
+
+      const monthAppointments=monthAppAppointments + monthWhatsappAppointments;
+      const totalCustomers=Object.keys(customerCounts).length;
+      const returningCustomers=Object.values(customerCounts).filter(n=>n>1).length;
+      const newCustomers=Object.values(customerCounts).filter(n=>n===1).length;
+      const conversion=monthVisits > 0 ? Math.round((monthAppAppointments / monthVisits) * 100) : 0;
+      return {monthVisits,monthAppointments,monthAppAppointments,monthWhatsappAppointments,totalCustomers,returningCustomers,newCustomers,conversion};
+    }
+
+    function getAvailableReportMonths(id){
+      const b=businesses.find(x=>x.id===id) || {};
+      const set=new Set();
+      const visits=b.visits && typeof b.visits === "object" ? b.visits : {};
+      Object.keys(visits).forEach(k=>{ if(/^\d{4}-\d{2}-\d{2}$/.test(k)) set.add(k.slice(0,7)); });
+      appointments.filter(a=>appointmentBusinessId(a) === id).forEach(a=>{
+        const d=appointmentDate(a);
+        if(d && !isNaN(d.getTime())) set.add(monthKeyFromDate(d));
+      });
+      const now=new Date();
+      for(let i=0;i<6;i++) set.add(monthKeyFromDate(new Date(now.getFullYear(), now.getMonth()-i, 1)));
+      return Array.from(set).sort().reverse().slice(0,12);
+    }
+
+    function openReports(id){
+      selectedId=id;
+      const b=businesses.find(x=>x.id===id);
+      if(!b){showToast("העסק לא נמצא",true);return;}
+      const months=getAvailableReportMonths(id);
+      el.reportsList.innerHTML=months.map(monthKey=>{
+        const label=monthLabelFromKey(monthKey);
+        return `<div class="report-tile" title="${html(label)}">
+          <div class="report-month">${html(label)}</div>
+          <button class="report-download" onclick="downloadMonthlyPdf('${js(id)}','${js(monthKey)}')" aria-label="הורד דוח PDF עבור ${html(label)}">
+            <span class="pdf-icon"><span>PDF</span></span>
+          </button>
+        </div>`;
+      }).join("") || '<div class="empty">אין עדיין נתונים לדוחות.</div>';
+      showScreen("reports");
+    }
+
+    async function downloadMonthlyPdf(id, monthKey){
+      if(!window.html2pdf){showToast("ספריית PDF עדיין נטענת. נסה שוב בעוד רגע",true);return;}
+      const b=businesses.find(x=>x.id===id) || {};
+      const name=b.businessName || b.name || id;
+      const label=monthLabelFromKey(monthKey);
+      const r=getBusinessMonthlyReport(id,monthKey);
+      const fileName=`דוח-${id}-${monthKey}.pdf`;
+      const wrap=document.createElement("div");
+      wrap.className="pdf-source";
+      wrap.innerHTML=`
+        <div class="pdf-card">
+          <div class="pdf-head">
+            <div>
+              <div class="pdf-kicker">דו״ח פעילות חודשי</div>
+              <h1 class="pdf-business">${html(name)}</h1>
+              <div class="pdf-month">${html(label)}</div>
+            </div>
+            <div class="pdf-date-box">
+              <div class="small">תאריך הפקה</div>
+              <div class="date">${formatHebDate(new Date())}</div>
+            </div>
+          </div>
+
+          <div class="pdf-summary">
+            <div class="pdf-summary-label">יחס המרה מהאפליקציה</div>
+            <div class="pdf-summary-value">${r.conversion}%</div>
+            <div class="pdf-summary-note">מחושב לפי תורי אפליקציה מול כניסות</div>
+          </div>
+
+          <div class="pdf-block">
+            <div class="pdf-block-title">לקוחות</div>
+            <div class="pdf-grid">
+              <div class="pdf-metric-card">
+                <div class="pdf-metric-label">סה״כ</div>
+                <div class="pdf-metric-value">${r.totalCustomers}</div>
+              </div>
+              <div class="pdf-metric-card">
+                <div class="pdf-metric-label">חדשים</div>
+                <div class="pdf-metric-value">${r.newCustomers}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pdf-block">
+            <div class="pdf-block-title">תורים</div>
+            <div class="pdf-grid three">
+              <div class="pdf-metric-card">
+                <div class="pdf-metric-label">אפליקציה</div>
+                <div class="pdf-metric-value">${r.monthAppAppointments}</div>
+              </div>
+              <div class="pdf-metric-card">
+                <div class="pdf-metric-label">ווצאפ</div>
+                <div class="pdf-metric-value">${r.monthWhatsappAppointments}</div>
+              </div>
+              <div class="pdf-metric-card">
+                <div class="pdf-metric-label">סה״כ</div>
+                <div class="pdf-metric-value">${r.monthAppointments}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pdf-block">
+            <div class="pdf-block-title">כניסות</div>
+            <div class="pdf-grid">
+              <div class="pdf-metric-card pdf-wide">
+                <div class="pdf-metric-label">סה״כ כניסות לאפליקציה</div>
+                <div class="pdf-metric-value">${r.monthVisits}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pdf-note">הדוח מבוסס על הנתונים שנשמרו במערכת בזמן הפקת הקובץ.</div>
+
+          <div class="pdf-footer">
+            <div>מערכת ניהול עסקים</div>
+            <div class="ltr">${html(id)}</div>
+          </div>
+        </div>`;
+      document.body.appendChild(wrap);
+      try{
+        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+        await html2pdf().set({
+          margin:0,
+          filename:fileName,
+          image:{type:"jpeg",quality:0.98},
+          html2canvas:{
+            scale:2,
+            useCORS:true,
+            backgroundColor:"#f4f1ea",
+            width:794,
+            height:1123,
+            windowWidth:794,
+            windowHeight:1123,
+            scrollX:0,
+            scrollY:0,
+            x:0,
+            y:0
+          },
+          jsPDF:{unit:"px",format:[794,1123],orientation:"portrait"},
+          pagebreak:{mode:["avoid-all"]}
+        }).from(wrap).save();
+        showToast("הדוח ירד בהצלחה");
+      }catch(err){
+        console.error(err);
+        showToast("יצירת PDF נכשלה",true);
+      }finally{
+        wrap.remove();
+      }
+    }
+
+    function renderStatsHtml(id){
+      const s=computeStats(id);
+      const v=getBusinessVisitStats(id);
+      const totalAppointments=appointments.filter(a=>appointmentBusinessId(a) === id).length;
+
+      const current={
+        totalCustomers:s.totalCustomers,
+        totalAppointments,
+        totalWhatsapp:v.totalWhatsapp,
+        totalVisits:v.totalVisits
+      };
+      const prev=previousStats[id] || null;
+      const changed=(key)=>prev && String(prev[key]) !== String(current[key]) ? " stat-changed" : "";
+      previousStats[id]=current;
+
+      return `
+        <div class="stats-wrap">
+          <div class="stats-strip" aria-label="נתונים כלליים לעסק">
+            <div class="stat-item${changed("totalCustomers")}"><div class="stat-value">${s.totalCustomers}</div><div class="stat-label">סה״כ לקוחות</div></div>
+            <div class="stat-item${changed("totalAppointments")}"><div class="stat-value">${totalAppointments}</div><div class="stat-label">סה״כ תורים</div></div>
+            <div class="stat-item${changed("totalWhatsapp")}"><div class="stat-value">${v.totalWhatsapp}</div><div class="stat-label">סה״כ תורים ווצאפ</div></div>
+            <div class="stat-item${changed("totalVisits")}"><div class="stat-value">${v.totalVisits}</div><div class="stat-label">סה״כ כניסות</div></div>
+          </div>
+        </div>`;
+    }
+
+    async function copyText(text){
+      try{await navigator.clipboard.writeText(text);showToast("הועתק")}
+      catch(e){const i=document.createElement("input");i.value=text;document.body.appendChild(i);i.select();document.execCommand("copy");i.remove();showToast("הועתק")}
+    }
+
+    function resetForm(){
+      editingId="";
+      el.formTitle.textContent="הוספת עסק";
+      el.saveBtn.textContent="שמור עסק";
+      el.businessName.value="";
+      el.businessId.value="";
+      el.businessId.disabled=false;
+      el.whatsappNumber.value="";
+      el.whatsappBotMode.value="off";
+      el.whatsappPhoneNumberId.value="";
+      el.whatsappAccessToken.value="";
+      el.ownerAccess.value="false";
+      el.ownerCode.value="1234";
+      el.statsSettingsCode.value="4321";
+      el.saveStatus.textContent="";
+    }
+
+    function fillForm(id){
+      const b=businesses.find(x=>x.id===id);
+      if(!b) return;
+      editingId=id;
+      el.formTitle.textContent="עריכת עסק";
+      el.saveBtn.textContent="עדכן עסק";
+      el.businessName.value=b.businessName||b.name||"";
+      el.businessId.value=id;
+      el.businessId.disabled=true;
+      el.whatsappNumber.value=cleanPhone(b.whatsappNumber||b.phone||"");
+      el.whatsappBotMode.value=whatsappBotModeForBusiness(b);
+      el.whatsappPhoneNumberId.value=String(b.whatsappPhoneNumberId||b.phoneNumberId||b.waPhoneNumberId||"");
+      el.whatsappAccessToken.value=String(b.whatsappAccessToken||b.accessToken||b.waAccessToken||"");
+      el.ownerAccess.value=ownerAccessForBusiness(b) ? "true" : "false";
+      el.ownerCode.value=digits(b.ownerCode||"1234").slice(0,4);
+      el.statsSettingsCode.value=digits(b.statsSettingsCode||"4321").slice(0,4);
+      showScreen("form");
+    }
+
+    async function saveBusiness(){
+      const businessName=el.businessName.value.trim();
+      const businessId=cleanId(el.businessId.value);
+      const whatsappNumber=cleanPhone(el.whatsappNumber.value);
+      const selectedWhatsappMode=String(el.whatsappBotMode.value||"off").toLowerCase();
+      const whatsappBotMode=["off","central","private"].includes(selectedWhatsappMode) ? selectedWhatsappMode : "off";
+      const whatsappMode=whatsappBotMode;
+      const whatsappPhoneNumberId=String(el.whatsappPhoneNumberId.value||"").trim();
+      const whatsappAccessToken=String(el.whatsappAccessToken.value||"").trim();
+      const whatsappEnabled=whatsappBotMode !== "off";
+      const ownerAccess=el.ownerAccess.value === "true";
+      const ownerCode=digits(el.ownerCode.value).slice(0,4)||"1234";
+      const statsSettingsCode=digits(el.statsSettingsCode.value).slice(0,4)||"4321";
+
+      el.businessId.value=businessId;
+      el.whatsappNumber.value=whatsappNumber;
+      el.ownerCode.value=ownerCode;
+      el.statsSettingsCode.value=statsSettingsCode;
+
+      if(!businessName){showToast("חסר שם עסק",true);return}
+      if(!businessId){showToast("חסר businessId תקין",true);return}
+      if(!validPhone(whatsappNumber)){showToast("מספר וואטסאפ חייב להתחיל ב־972 ולהיות 12 ספרות",true);return}
+      if(whatsappBotMode === "private" && !whatsappPhoneNumberId){showToast("במצב בעל עסק חייבים למלא Phone Number ID",true);return}
+
+      el.saveBtn.disabled=true;
+      el.saveStatus.textContent="שומר ל־businessSettings...";
+
+      try{
+        const now=Date.now();
+        const ref=db.collection(COLLECTION).doc(businessId);
+        const existing=await ref.get();
+        const data=existing.exists ? existing.data()||{} : {};
+
+        const payload={
+          businessId,
+          businessName,
+          name:businessName,
+          whatsappNumber,
+          phone:whatsappNumber,
+          centralBotNumber:CENTRAL_BOT_WHATSAPP_NUMBER,
+          botWhatsappNumber:CENTRAL_BOT_WHATSAPP_NUMBER,
+          whatsappBotMode,
+          whatsappMode,
+          whatsappPhoneNumberId,
+          phoneNumberId:whatsappPhoneNumberId,
+          whatsappAccessToken,
+          whatsappEnabled,
+          whatsappBotEnabled:whatsappEnabled,
+          botEnabled:whatsappEnabled,
+          waBotEnabled:whatsappEnabled,
+          ownerAccess,
+          clientOwnerAccess:ownerAccess,
+          plan:whatsappBotMode === "central" ? "whatsapp-central" : (whatsappBotMode === "private" ? "whatsapp-private" : "basic"),
+          ownerCode,
+          statsSettingsCode,
+          appUrl:appLink(businessId),
+          whatsappUrl:waLink(businessId,whatsappNumber,whatsappBotMode),
+          updatedAtMs:now,
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if(!existing.exists){
+          payload.isFrozen=false;
+          payload.appFrozen=false;
+          payload.active=true;
+          payload.status="active";
+        }
+
+        if(!data.workingHours) payload.workingHours=DEFAULT_WORKING_HOURS;
+        if(!Array.isArray(data.services)||!data.services.length) payload.services=DEFAULT_SERVICES;
+        if(!data.logoSrc) payload.logoSrc = "logo.png";
+        if(!data.heroBg) payload.heroBg = "background-behind-logo.png";
+        if(!data.bookingTitle) payload.bookingTitle = "קביעת תור!";
+        if(!data.businessTypeLabel) payload.businessTypeLabel = "מספרה";
+        if(!data.ownerBadge) payload.ownerBadge = "עמוד בעל העסק";
+
+        if(!existing.exists){payload.createdAtMs=now;payload.createdAt=firebase.firestore.FieldValue.serverTimestamp()}
+        await ref.set(payload,{merge:true});
+
+        selectedId=businessId;
+        showToast("העסק נשמר בהצלחה");
+        el.saveStatus.textContent="נשמר בהצלחה ב־businessSettings בלבד";
+        resetForm();
+        showScreen("home");
+      }catch(err){
+        console.error(err);
+        el.saveStatus.textContent="שגיאה: "+(err.message||err);
+        showToast("השמירה נכשלה. בדוק הרשאות Firestore",true);
+      }finally{el.saveBtn.disabled=false}
+    }
+
+    async function toggleBusinessFreeze(id){
+      const b=businesses.find(x=>x.id===id);
+      if(!b) return;
+      const nextFrozen=!isBusinessFrozen(b);
+      const msg=nextFrozen
+        ? "להקפיא את העסק? האפליקציה לא תהיה פעילה, אבל כל הנתונים יישמרו."
+        : "להחזיר את העסק לפעילות רגילה?";
+      if(!confirm(msg)) return;
+      try{
+        await db.collection(COLLECTION).doc(id).set({
+          isFrozen:nextFrozen,
+          appFrozen:nextFrozen,
+          active:!nextFrozen,
+          status:nextFrozen ? "frozen" : "active",
+          frozenMessage:nextFrozen ? "האפליקציה לא פעילה כעת. עמכם הסליחה." : firebase.firestore.FieldValue.delete(),
+          frozenAtMs:nextFrozen ? Date.now() : firebase.firestore.FieldValue.delete(),
+          updatedAtMs:Date.now(),
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        showToast(nextFrozen ? "העסק הוקפא — הנתונים נשמרו" : "העסק חזר לפעילות רגילה");
+      }catch(err){
+        console.error(err);
+        showToast("עדכון סטטוס העסק נכשל",true);
+      }
+    }
+
+    async function toggleWhatsappFeature(id){
+      const b=businesses.find(x=>x.id===id);
+      if(!b) return;
+      const current=whatsappBotModeForBusiness(b);
+      const next=current === "off" ? "central" : "off";
+      try{
+        await db.collection(COLLECTION).doc(id).set({
+          whatsappBotMode:next,
+          whatsappMode:next,
+          whatsappEnabled:next !== "off",
+          whatsappBotEnabled:next !== "off",
+          botEnabled:next !== "off",
+          waBotEnabled:next !== "off",
+          plan:next === "off" ? "basic" : "whatsapp-central",
+          updatedAtMs:Date.now(),
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        showToast(next === "off" ? "שירות הוואטסאפ כובה" : "שירות הוואטסאפ הופעל דרך הבוט המרכזי");
+      }catch(err){
+        console.error(err);
+        showToast("עדכון וואטסאפ נכשל",true);
+      }
+    }
+
+    async function toggleOwnerAccess(id){
+      const b=businesses.find(x=>x.id===id);
+      if(!b) return;
+      const next=!ownerAccessForBusiness(b);
+      const msg=next
+        ? "לפתוח ללקוח גישה לעריכת ההגדרות באפליקציה?"
+        : "לסגור ללקוח את גישת העריכה ולהשאיר שליטה אצלך בלבד?";
+      if(!confirm(msg)) return;
+      try{
+        await db.collection(COLLECTION).doc(id).set({
+          ownerAccess:next,
+          clientOwnerAccess:next,
+          updatedAtMs:Date.now(),
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        showToast(next ? "גישת בעל העסק נפתחה" : "גישת בעל העסק נסגרה");
+      }catch(err){
+        console.error(err);
+        showToast("עדכון גישת בעל עסק נכשל",true);
+      }
+    }
+
+    async function deleteBusiness(id){
+      if(!confirm("למחוק את העסק לגמרי מ־businessSettings?")) return;
+      try{
+        await db.collection(COLLECTION).doc(id).delete();
+        showToast("העסק נמחק לגמרי");
+        if(editingId === id) resetForm();
+        if(selectedId === id){selectedId="";showScreen("home")}
+      }catch(err){console.error(err);showToast("מחיקה נכשלה",true)}
+    }
+
+    function openDetails(id){
+      selectedId=id;
+      renderDetails();
+      showScreen("details");
+    }
+
+    function renderDetails(){
+      const b=businesses.find(x=>x.id===selectedId);
+      if(!b){el.businessDetails.innerHTML='<div class="empty">העסק לא נמצא.</div>';return}
+      const id=b.id;
+      const name=b.businessName||b.name||id;
+      const phone=cleanPhone(b.whatsappNumber||b.phone||"");
+      const whatsappOn=whatsappEnabledForBusiness(b);
+      const whatsappMode=whatsappBotModeForBusiness(b);
+      const ownerOpen=ownerAccessForBusiness(b);
+      const app=appLink(id);
+      const wa=validPhone(phone)?waLink(id,phone,whatsappMode):"מספר וואטסאפ לא תקין";
+      const badgeClass=whatsappOn ? "premium" : "";
+      el.businessDetails.innerHTML=`
+        <div class="detail-card">
+          <div class="business-top">
+            <div>
+              <div class="business-title">${html(name)}</div>
+              <div class="meta">ID: ${html(id)}<br>וואטסאפ: ${html(phone||"-")}<br>מצב וואטסאפ: ${html(whatsappModeLabel(b))}<br>Phone Number ID: ${html(b.whatsappPhoneNumberId||b.phoneNumberId||"-")}<br>שירות וואטסאפ: ${whatsappOn ? "פעיל" : "כבוי"}${whatsappMode === "central" ? `<br>מספר בוט מרכזי: ${html(CENTRAL_BOT_WHATSAPP_NUMBER)}` : ``}<br>גישת בעל עסק: ${ownerOpen ? "פתוחה" : "סגורה"}<br>קוד תורים/לקוחות: ${html(b.ownerCode||"-")}<br>קוד סטטיסטיקה/הגדרות: ${html(b.statsSettingsCode||"-")}<br>תאריך פתיחה: ${html(businessCreatedDate(b))}</div>
+            </div>
+            <div class="business-badges"><span class="badge ${badgeClass}">${whatsappOn ? "וואטסאפ: "+whatsappModeLabel(b) : "אפליקציה בלבד"}</span><span class="badge ${ownerOpen ? "pro" : ""}">${ownerOpen ? "גישה פתוחה" : "שליטה אצלך"}</span>${isBusinessFrozen(b) ? `<span class="badge frozen">מוקפא</span>` : ``}</div>
+          </div>
+          ${renderStatsHtml(id)}
+          <div class="link-label">קישור לאפליקציה</div>
+          <div class="link-row"><div class="link-box">${html(app)}</div><button class="mini-btn" onclick="copyText('${js(app)}')">העתק</button></div>
+          <div class="link-label">קישור וואטסאפ</div>
+          <div class="link-row"><div class="link-box">${html(wa)}</div><button class="mini-btn" onclick="copyText('${js(wa)}')">העתק</button></div>
+          <div class="actions">
+            <button class="btn ghost small" onclick="fillForm('${js(id)}')">ערוך</button>
+            <button class="btn ghost small" onclick="window.open('${js(app)}','_blank')">פתח אפליקציה</button>
+            <button class="btn ghost small" onclick="openReports('${js(id)}')">דוחות</button>
+            <button class="btn ${ownerOpen ? "unfreeze" : "freeze"} small" onclick="toggleOwnerAccess('${js(id)}')">${ownerOpen ? "סגור גישה" : "פתח גישה"}</button>
+            <button class="btn ${isBusinessFrozen(b) ? "unfreeze" : "freeze"} small" onclick="toggleBusinessFreeze('${js(id)}')">${isBusinessFrozen(b) ? "הפעל עסק" : "הקפא עסק"}</button>
+            <button class="btn danger small" onclick="deleteBusiness('${js(id)}')">מחק</button>
+          </div>
+        </div>`;
+    }
+
+    function render(){
+      const q=String(el.searchInput.value||"").toLowerCase().trim();
+      const list=businesses.filter(b=>{
+        const t=[b.id,b.businessName,b.name,b.whatsappNumber,b.phone,b.plan,whatsappModeLabel(b),b.whatsappPhoneNumberId,whatsappEnabledForBusiness(b)?"וואטסאפ פעיל":"וואטסאפ כבוי",ownerAccessForBusiness(b)?"גישה פתוחה":"גישה סגורה"].join(" ").toLowerCase();
+        return !q || t.includes(q);
+      });
+      if(!list.length){el.businessList.innerHTML='<div class="empty">אין עסקים להצגה. לחץ על הוסף עסק כדי ליצור עסק חדש.</div>';return}
+      el.businessList.innerHTML=list.map(b=>{
+        const id=b.id;
+        const name=b.businessName||b.name||id;
+        const phone=cleanPhone(b.whatsappNumber||b.phone||"");
+        const whatsappOn=whatsappEnabledForBusiness(b);
+        const ownerOpen=ownerAccessForBusiness(b);
+        const state=frozenLabel(b);
+        return `<button class="business-row" onclick="openDetails('${js(id)}')">
+          <div><div class="row-title">${html(name)}</div><div class="row-sub">${html(id)} · ${html(phone||"-")} · וואטסאפ: ${whatsappOn ? "פעיל" : "כבוי"} · ${html(whatsappModeLabel(b))} · גישה: ${ownerOpen ? "פתוחה" : "סגורה"} · ${html(state)}</div></div>
+          <div class="row-arrow">‹</div>
+        </button>`;
+      }).join("");
+      if(selectedId) renderDetails();
+    }
+
+    function subscribeAppointments(){
+      if(unsubscribeAppointments) unsubscribeAppointments();
+      unsubscribeAppointments=db.collection(APPOINTMENTS_COLLECTION).onSnapshot(snap=>{
+        appointments=snap.docs.map(d=>({id:d.id,...d.data()}));
+        if(selectedId) renderDetails();
+      },err=>{
+        console.error(err);
+        showToast("טעינת נתוני תורים נכשלה",true);
+      });
+    }
+
+    function subscribe(){
+      if(unsubscribe) unsubscribe();
+      el.businessList.innerHTML='<div class="empty">טוען עסקים...</div>';
+      unsubscribe=db.collection(COLLECTION).orderBy("updatedAtMs","desc").onSnapshot(snap=>{
+        businesses=snap.docs.map(d=>({id:d.id,...d.data()}));
+        render();
+      },err=>{
+        console.error(err);
+        el.businessList.innerHTML='<div class="empty">לא הצלחתי לטעון עסקים.<br>'+html(err.message||err)+'</div>';
+        showToast("טעינת עסקים נכשלה",true);
+      });
+    }
+
+    el.openAddBtn.addEventListener("click",()=>{resetForm();showScreen("form")});
+    el.backFromFormBtn.addEventListener("click",()=>showScreen("home"));
+    el.backFromDetailsBtn.addEventListener("click",()=>showScreen("home"));
+    document.getElementById("backFromReportsBtn").addEventListener("click",()=>showScreen("details"));
+    el.businessId.addEventListener("input",()=>el.businessId.value=cleanId(el.businessId.value));
+    el.whatsappNumber.addEventListener("input",()=>el.whatsappNumber.value=cleanPhone(el.whatsappNumber.value));
+    el.ownerCode.addEventListener("input",()=>el.ownerCode.value=digits(el.ownerCode.value).slice(0,4));
+    el.statsSettingsCode.addEventListener("input",()=>el.statsSettingsCode.value=digits(el.statsSettingsCode.value).slice(0,4));
+    el.saveBtn.addEventListener("click",saveBusiness);
+    el.resetBtn.addEventListener("click",resetForm);
+    el.refreshBtn.addEventListener("click",subscribe);
+    el.searchInput.addEventListener("input",render);
+
+    resetForm();
+    subscribe();
+    subscribeAppointments();
+  </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "תן לעבוד!",
+  "short_name": "תן לעבוד",
+  "description": "מערכת קביעת תורים לעסקים",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "he",
+  "background_color": "#0d1016",
+  "theme_color": "#0d1016",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
