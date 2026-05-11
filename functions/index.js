@@ -263,6 +263,103 @@ app.post("/appointments/create", async (req, res) => {
 
 });
 
+
+// =======================
+// Frontend endpoint: cancel appointment + automatic waitlist notify
+// =======================
+app.post("/appointments/cancel", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const businessId = cleanBusinessId(body.businessId || "");
+    const appointmentId = String(body.appointmentId || body.id || "").trim();
+    const source = String(body.source || "app").trim() || "app";
+    const shouldNotifyWaitlist = body.notifyWaitlist !== false;
+
+    if (!businessId || !appointmentId) {
+      return res.status(400).json({
+        ok: false,
+        error: "missing_business_or_appointment",
+        message: "חסרים פרטים לביטול התור",
+      });
+    }
+
+    const appointmentRef = db.collection(APPOINTMENTS_COLLECTION).doc(appointmentId);
+    const appointmentSnap = await appointmentRef.get();
+
+    if (!appointmentSnap.exists) {
+      return res.status(404).json({
+        ok: false,
+        error: "appointment_not_found",
+        message: "התור לא נמצא",
+      });
+    }
+
+    const appointment = { id: appointmentSnap.id, ...appointmentSnap.data() };
+
+    if (String(appointment.businessId || "") !== businessId) {
+      return res.status(403).json({
+        ok: false,
+        error: "business_mismatch",
+        message: "התור לא שייך לעסק הזה",
+      });
+    }
+
+    if (!isActiveAppointment(appointment)) {
+      return res.status(409).json({
+        ok: false,
+        error: "appointment_already_cancelled",
+        message: "התור כבר בוטל",
+      });
+    }
+
+    const business = await getBusinessSettings(businessId);
+    if (!business) {
+      return res.status(404).json({
+        ok: false,
+        error: "business_not_found",
+        message: "העסק לא נמצא",
+      });
+    }
+
+    await appointmentRef.delete();
+
+    await db.collection("logs").add({
+      businessId,
+      type: "appointment_cancelled",
+      source,
+      appointmentId,
+      phone: appointment.phone || "",
+      date: appointment.date || "",
+      time: appointment.time || "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    }).catch((err) => console.warn("appointment cancel log failed", getErrorPayload(err)));
+
+    let waitlist = null;
+    if (shouldNotifyWaitlist && appointment.date && appointment.time) {
+      waitlist = await notifyWaitlistForFreedSlot(business, appointment.date, appointment.time);
+    }
+
+    return res.status(200).json({
+      ok: true,
+      appointmentId,
+      freedDate: appointment.date || "",
+      freedTime: appointment.time || "",
+      waitlist,
+      message: "התור בוטל בהצלחה",
+    });
+  } catch (err) {
+    const payload = getErrorPayload(err);
+    console.error("appointments/cancel error:", payload);
+    return res.status(500).json({
+      ok: false,
+      error: "cancel_appointment_failed",
+      message: "שגיאה בביטול התור",
+      details: payload,
+    });
+  }
+});
+
 // =======================
 // Frontend endpoint: join waitlist
 // =======================
@@ -523,6 +620,186 @@ async function deleteCollectionByBusinessId(collectionName, businessId) {
   }
   return total;
 }
+
+
+// =======================
+// Frontend endpoint: claim waitlist slot - first click wins
+// =======================
+app.post("/waitlist/claim", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const businessId = cleanBusinessId(body.businessId || "");
+    const claimToken = String(body.claimToken || body.token || "").trim();
+    const offerToken = String(body.offerToken || body.offer || "").trim();
+    const time = String(body.time || "").trim();
+
+    if (!businessId || !claimToken || !isValidTime(time)) {
+      return res.status(400).json({ ok: false, error: "invalid_claim", message: "קישור האישור לא תקין" });
+    }
+
+    const business = await getBusinessSettings(businessId);
+    if (!business) {
+      return res.status(404).json({ ok: false, error: "business_not_found", message: "העסק לא נמצא" });
+    }
+
+    if (business.appFrozen === true || business.isFrozen === true || business.active === false) {
+      return res.status(403).json({ ok: false, error: "business_frozen", message: "האפליקציה לא פעילה כרגע" });
+    }
+
+    let txResult = null;
+
+    await db.runTransaction(async (tx) => {
+      const waitQuery = db.collection(WAITLIST_COLLECTION)
+        .where("businessId", "==", businessId)
+        .where("claimToken", "==", claimToken)
+        .limit(1);
+
+      const waitSnap = await tx.get(waitQuery);
+      if (waitSnap.empty) throw new Error("INVALID_WAITLIST");
+
+      const waitDoc = waitSnap.docs[0];
+      const entry = normalizeWaitlistEntry({ id: waitDoc.id, ...waitDoc.data() });
+      const date = String(entry.date || "").trim();
+
+      if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("INVALID_WAITLIST");
+      if (String(entry.status || "ממתין") !== "ממתין") throw new Error("INVALID_WAITLIST");
+      if (offerToken && entry.offerToken && offerToken !== entry.offerToken) throw new Error("INVALID_OFFER");
+      if (entry.offeredTime && entry.offeredTime !== time) throw new Error("INVALID_OFFER");
+
+      const claimId = `${businessId}_${date}_${time}_${offerToken || "no_offer"}`.replace(/[^a-zA-Z0-9_-]/g, "_");
+      const appointmentId = `waitlist_${entry.id}_${date}_${time}`.replace(/[^a-zA-Z0-9_-]/g, "_");
+      const claimRef = db.collection(WAITLIST_CLAIMS_COLLECTION).doc(claimId);
+      const appointmentRef = db.collection(APPOINTMENTS_COLLECTION).doc(appointmentId);
+
+      const slotQuery = db.collection(APPOINTMENTS_COLLECTION)
+        .where("businessId", "==", businessId)
+        .where("date", "==", date)
+        .where("time", "==", time);
+
+      const [claimSnap, appointmentSnap, slotSnap] = await Promise.all([
+        tx.get(claimRef),
+        tx.get(appointmentRef),
+        tx.get(slotQuery),
+      ]);
+
+      if (appointmentSnap.exists) {
+        const existing = { id: appointmentSnap.id, ...appointmentSnap.data() };
+        if (isActiveAppointment(existing) && existing.waitlistId === entry.id) {
+          txResult = { alreadyCreated: true, appointment: existing, waitlistId: entry.id };
+          return;
+        }
+      }
+
+      if (claimSnap.exists) {
+        const claim = claimSnap.data() || {};
+        if (claim.waitlistId !== entry.id) throw new Error("TAKEN_BY_OTHER");
+      }
+
+      const slotTaken = slotSnap.docs.some((doc) => {
+        if (doc.id === appointmentRef.id) return false;
+        return isActiveAppointment(doc.data() || {});
+      });
+      if (slotTaken) throw new Error("TAKEN_BY_OTHER");
+
+      const phoneDisplay = whatsappToIsraeliPhone(entry.customerPhone || entry.phoneDisplay || entry.phone || "");
+      const appointment = {
+        businessId,
+        businessName: business.businessName || business.name || "",
+        name: entry.name || `${entry.firstName || ""} ${entry.lastName || ""}`.trim() || "לקוח מרשימת המתנה",
+        phone: phoneDisplay,
+        service: entry.service || "לא נבחר",
+        date,
+        time,
+        status: "נקבע",
+        source: "רשימת המתנה",
+        notes: "",
+        waitlistId: entry.id,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAtMs: Date.now(),
+      };
+
+      tx.set(claimRef, {
+        businessId,
+        date,
+        time,
+        claimToken,
+        offerToken: offerToken || "",
+        waitlistId: entry.id,
+        phone: phoneDisplay,
+        appointmentId,
+        claimedAt: admin.firestore.FieldValue.serverTimestamp(),
+        claimedAtMs: Date.now(),
+      }, { merge: true });
+
+      tx.set(appointmentRef, appointment);
+      tx.update(waitDoc.ref, {
+        status: "נקבע",
+        offeredTime: time,
+        claimedAt: admin.firestore.FieldValue.serverTimestamp(),
+        claimedAtMs: Date.now(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      txResult = { alreadyCreated: false, appointment: { id: appointmentId, ...appointment }, waitlistId: entry.id, offerToken: offerToken || "" };
+    });
+
+    if (!txResult?.appointment) throw new Error("CLAIM_FAILED");
+
+    // Close the same offer for other waiting customers, so old links become inactive.
+    if (txResult.offerToken) {
+      const othersSnap = await db.collection(WAITLIST_COLLECTION)
+        .where("businessId", "==", businessId)
+        .where("offerToken", "==", txResult.offerToken)
+        .get();
+
+      const batch = db.batch();
+      let count = 0;
+      othersSnap.docs.forEach((doc) => {
+        if (doc.id === txResult.waitlistId) return;
+        const data = doc.data() || {};
+        if (String(data.status || "ממתין") !== "ממתין") return;
+        batch.set(doc.ref, {
+          status: "נסגר",
+          closedReason: "slot_claimed_by_other",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        count += 1;
+      });
+      if (count) await batch.commit();
+    }
+
+    await db.collection("logs").add({
+      businessId,
+      type: "waitlist_claimed",
+      appointmentId: txResult.appointment.id,
+      waitlistId: txResult.waitlistId || "",
+      date: txResult.appointment.date || "",
+      time: txResult.appointment.time || "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    }).catch((err) => console.warn("waitlist claim log failed", getErrorPayload(err)));
+
+    return res.status(200).json({
+      ok: true,
+      appointmentId: txResult.appointment.id,
+      appointment: txResult.appointment,
+      waitlistId: txResult.waitlistId,
+      alreadyCreated: Boolean(txResult.alreadyCreated),
+      message: "התור אושר בהצלחה",
+    });
+  } catch (err) {
+    const code = String(err?.message || "CLAIM_FAILED");
+    const messages = {
+      INVALID_WAITLIST: "הקישור כבר לא פעיל",
+      INVALID_OFFER: "הקישור כבר לא עדכני",
+      TAKEN_BY_OTHER: "מישהו כבר תפס את התור הזה",
+      CLAIM_FAILED: "שגיאה באישור התור",
+    };
+    const status = ["INVALID_WAITLIST", "INVALID_OFFER", "TAKEN_BY_OTHER"].includes(code) ? 409 : 500;
+    console.error("waitlist/claim error:", getErrorPayload(err));
+    return res.status(status).json({ ok: false, error: code, message: messages[code] || "שגיאה באישור התור" });
+  }
+});
 
 // =======================
 // Frontend endpoint: automatic waitlist notify
