@@ -411,6 +411,7 @@
     const APPOINTMENTS_COLLECTION = "appointments";
     const APP_BASE_URL = "https://gal-business-system.web.app/index.html";
     const API_BASE_URL = "https://api-sjchnvsuhq-uc.a.run.app";
+    const MANAGER_STABILITY_VERSION = "2026-05-12-business-id-guard";
 
     const DEFAULT_WORKING_HOURS = {
       sunday:{start:"10:00",end:"20:00",closed:false},
@@ -540,10 +541,22 @@
       return data;
     }
     function waLink(id,phone,mode="off"){
+      const cleanBusiness = cleanId(id);
       const currentMode = String(mode || "off").toLowerCase();
-      const target = currentMode === "central" ? CENTRAL_BOT_WHATSAPP_NUMBER : phone;
+      const target = currentMode === "central" ? CENTRAL_BOT_WHATSAPP_NUMBER : cleanPhone(phone);
+      if(!cleanBusiness || !/^972\d{9}$/.test(target)) return "";
       const base = "https://wa.me/"+target;
-      return currentMode === "central" || currentMode === "private" ? base+"?text="+encodeURIComponent("start_"+id) : base;
+      return currentMode === "central" || currentMode === "private" ? base+"?text="+encodeURIComponent("start_"+cleanBusiness) : base;
+    }
+    function canonicalBusinessId(id){return cleanId(id)}
+    function normalizeBusinessDoc(doc){
+      const data = doc && typeof doc.data === "function" ? (doc.data() || {}) : (doc || {});
+      const id = canonicalBusinessId((doc && doc.id) || data.businessId || data.businessID || data.id || "");
+      return {id, businessId:id, businessID:id, ...data};
+    }
+    function normalizeAppointmentDoc(doc){
+      const data = doc && typeof doc.data === "function" ? (doc.data() || {}) : (doc || {});
+      return {id:(doc && doc.id) || data.id || "", ...data};
     }
     function isBusinessFrozen(b){return b && (b.isFrozen === true || b.appFrozen === true || b.active === false || b.status === "frozen")}
     function frozenLabel(b){return isBusinessFrozen(b) ? "מוקפא" : "פעיל"}
@@ -1004,6 +1017,9 @@
 
       if(!businessName){showToast("חסר שם עסק",true);return}
       if(!businessId){showToast("חסר businessId תקין",true);return}
+      if(editingId && businessId !== editingId){showToast("אי אפשר לשנות businessId בזמן עריכה",true);return}
+      if(!editingId && businesses.some(b=>canonicalBusinessId(b.id) === businessId)){showToast("כבר קיים עסק עם businessId הזה",true);return}
+      if(ownerCode === statsSettingsCode){showToast("קוד תורים/לקוחות וקוד סטטיסטיקה/הגדרות חייבים להיות שונים",true);return}
       if(!validPhone(whatsappNumber)){showToast("מספר וואטסאפ חייב להתחיל ב־972 ולהיות 12 ספרות",true);return}
       if(whatsappBotMode === "private" && !whatsappPhoneNumberId){showToast("במצב בעל עסק חייבים למלא Phone Number ID",true);return}
 
@@ -1013,6 +1029,9 @@
       try{
         await apiPost("/business/save", {
           businessId,
+          businessID: businessId,
+          id: businessId,
+          managerVersion: MANAGER_STABILITY_VERSION,
           businessName,
           name: businessName,
           whatsappNumber,
@@ -1134,7 +1153,8 @@
       const whatsappMode=whatsappBotModeForBusiness(b);
       const ownerOpen=ownerAccessForBusiness(b);
       const app=appLink(id);
-      const wa=validPhone(phone)?waLink(id,phone,whatsappMode):"מספר וואטסאפ לא תקין";
+      const waUrl=validPhone(phone)?waLink(id,phone,whatsappMode):"";
+      const wa=waUrl || "מספר וואטסאפ לא תקין";
       const badgeClass=whatsappOn ? "premium" : "";
       el.businessDetails.innerHTML=`
         <div class="detail-card">
@@ -1149,7 +1169,7 @@
           <div class="link-label">קישור לאפליקציה</div>
           <div class="link-row"><div class="link-box">${html(app)}</div><button class="mini-btn" onclick="copyText('${js(app)}')">העתק</button></div>
           <div class="link-label">קישור וואטסאפ</div>
-          <div class="link-row"><div class="link-box">${html(wa)}</div><button class="mini-btn" onclick="copyText('${js(wa)}')">העתק</button></div>
+          <div class="link-row"><div class="link-box">${html(wa)}</div><button class="mini-btn" ${waUrl ? `onclick="copyText('${js(waUrl)}')"` : `disabled style="opacity:.45;cursor:not-allowed"`}>העתק</button></div>
           <div class="actions">
             <button class="btn ghost small" onclick="fillForm('${js(id)}')">ערוך</button>
             <button class="btn ghost small" onclick="window.open('${js(app)}','_blank')">פתח אפליקציה</button>
@@ -1186,7 +1206,7 @@
     function subscribeAppointments(){
       if(unsubscribeAppointments) unsubscribeAppointments();
       unsubscribeAppointments=db.collection(APPOINTMENTS_COLLECTION).onSnapshot(snap=>{
-        appointments=snap.docs.map(d=>({id:d.id,...d.data()}));
+        appointments=snap.docs.map(d=>normalizeAppointmentDoc(d));
         if(selectedId) renderDetails();
       },err=>{
         console.error(err);
@@ -1198,7 +1218,7 @@
       if(unsubscribe) unsubscribe();
       el.businessList.innerHTML='<div class="empty">טוען עסקים...</div>';
       unsubscribe=db.collection(COLLECTION).orderBy("updatedAtMs","desc").onSnapshot(snap=>{
-        businesses=snap.docs.map(d=>({id:d.id,...d.data()}));
+        businesses=snap.docs.map(d=>normalizeBusinessDoc(d)).filter(b=>b.id);
         render();
       },err=>{
         console.error(err);
@@ -1217,7 +1237,7 @@
     el.statsSettingsCode.addEventListener("input",()=>el.statsSettingsCode.value=digits(el.statsSettingsCode.value).slice(0,4));
     el.saveBtn.addEventListener("click",saveBusiness);
     el.resetBtn.addEventListener("click",resetForm);
-    el.refreshBtn.addEventListener("click",subscribe);
+    el.refreshBtn.addEventListener("click",()=>{subscribe();subscribeAppointments();});
     el.searchInput.addEventListener("input",render);
 
     resetForm();
