@@ -1395,20 +1395,45 @@ async function handleAskName(from, text, business, session) {
     return;
   }
 
-  await db.collection(APPOINTMENTS_COLLECTION).add({
+  const whatsappAppointmentRef = db.collection(APPOINTMENTS_COLLECTION).doc();
+  await db.runTransaction(async (tx) => {
+    const slotQuery = db.collection(APPOINTMENTS_COLLECTION)
+      .where("businessId", "==", business.businessId)
+      .where("date", "==", session.selectedDate)
+      .where("time", "==", session.selectedTime);
+
+    const slotSnap = await tx.get(slotQuery);
+    if (slotSnap.docs.some((doc) => isActiveAppointment(doc.data() || {}))) {
+      throw new Error("slot_taken");
+    }
+
+    tx.set(whatsappAppointmentRef, {
+      businessId: business.businessId,
+      businessName: business.businessName || business.name || "",
+      name,
+      phone: normalizePhone(from),
+      service: session.selectedService || "",
+      date: session.selectedDate,
+      time: session.selectedTime,
+      status: "נקבע",
+      source: "whatsapp",
+      notes: "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    });
+  });
+
+  await db.collection("logs").add({
     businessId: business.businessId,
-    businessName: business.businessName || business.name || "",
-    name,
+    type: "appointment_created",
+    source: "whatsapp",
+    appointmentId: whatsappAppointmentRef.id,
     phone: normalizePhone(from),
-    service: session.selectedService || "",
     date: session.selectedDate,
     time: session.selectedTime,
-    status: "נקבע",
-    source: "whatsapp",
-    notes: "",
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     createdAtMs: Date.now(),
-  });
+  }).catch((err) => console.warn("whatsapp appointment log failed", getErrorPayload(err)));
 
   await saveSession(from, {
     step: "main_menu",
@@ -1462,7 +1487,27 @@ async function handleCancelConfirm(from, text, business, session) {
       return;
     }
 
-    await db.collection(APPOINTMENTS_COLLECTION).doc(appointment.id).delete();
+    const appointmentRef = db.collection(APPOINTMENTS_COLLECTION).doc(appointment.id);
+    const appointmentSnap = await appointmentRef.get();
+    if (!appointmentSnap.exists || String((appointmentSnap.data() || {}).businessId || '') !== business.businessId) {
+      await clearSession(from);
+      await sendWhatsAppMessage(from, "לא מצאתי את התור לביטול 🙏");
+      return;
+    }
+
+    await appointmentRef.delete();
+    await db.collection("logs").add({
+      businessId: business.businessId,
+      type: "appointment_cancelled",
+      source: "whatsapp",
+      appointmentId: appointment.id,
+      phone: normalizePhone(from),
+      date: appointment.date || "",
+      time: appointment.time || "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    }).catch((err) => console.warn("whatsapp cancel log failed", getErrorPayload(err)));
+
     await saveSession(from, {
       step: "main_menu",
       businessId: business.businessId,
@@ -1916,9 +1961,12 @@ async function getSession(from) {
 }
 
 async function saveSession(from, data) {
+  const cleanData = { ...data };
+  if (cleanData.businessId) cleanData.businessId = cleanBusinessId(cleanData.businessId);
+
   await db.collection(SESSIONS_COLLECTION).doc(from).set(
     {
-      ...data,
+      ...cleanData,
       phone: from,
       updatedAtMs: Date.now(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
