@@ -2695,17 +2695,25 @@ body.business-frozen{overflow:hidden;}
     async function deleteWaitlistEntry(entryId){
       const entry = waitlistEntries.find(item => item.id === entryId);
       if(!entry) return showToast('לא נמצא ממתין למחיקה.', true);
-      if(String(entry.businessId || '') && String(entry.businessId) !== getActiveBusinessId()) return showToast('הרשומה לא שייכת לעסק הזה.', true);
+      const businessId = getActiveBusinessId();
+      if(String(entry.businessId || '') && String(entry.businessId) !== businessId) return showToast('הרשומה לא שייכת לעסק הזה.', true);
       const ok = confirm(`למחוק את ${entry.name || 'הלקוח'} מרשימת ההמתנה?`);
       if(!ok) return;
       try{
-        const ref = db.collection(WAITLIST_COLLECTION).doc(entryId);
-        const snap = await ref.get();
-        if(!snap.exists) return showToast('הרשומה כבר לא קיימת.', true);
-        if(String((snap.data() || {}).businessId || '') !== getActiveBusinessId()) return showToast('הרשומה לא שייכת לעסק הזה.', true);
-        await ref.delete();
-        showToast('נמחק מרשימת ההמתנה.');
-      }catch(err){ console.error(err); showToast('שגיאה במחיקת הממתין.', true); }
+        const response = await fetch(`${BACKEND_API_BASE_URL}/waitlist/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ businessId, waitlistId: entryId })
+        });
+        const data = await response.json().catch(() => ({}));
+        if(!response.ok || data.ok === false){
+          throw new Error(data.message || data.error || 'waitlist_delete_failed');
+        }
+        showToast(data.message || 'נמחק מרשימת ההמתנה.');
+      }catch(err){
+        console.error(err);
+        showToast(err.message || 'שגיאה במחיקת הממתין.', true);
+      }
     }
     function whatsappLinkFor(phone, text){ const international = toWhatsappPhone(phone); return `https://wa.me/${international}?text=${encodeURIComponent(text)}`; }
     async function createWaitlistEntry(payload){
