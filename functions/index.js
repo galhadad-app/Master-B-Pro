@@ -829,7 +829,7 @@ app.post("/business/settings/save", async (req, res) => {
     const allowedKeys = [
       "businessName", "businessSubtitle", "businessDescription", "importantNotice",
       "whatsappNumber", "businessAddress", "ownerCode", "statsSettingsCode",
-      "services", "workingHours", "logoSrc", "heroBgSrc", "logoUrl", "heroBgUrl",
+      "services", "workingHours", "logoSrc", "heroBg", "heroBgSrc", "logoUrl", "heroBgUrl",
       "phoneNumber", "wazeAddress", "address", "bookingTitle", "businessTypeLabel",
       "ownerBadge", "frozenMessage", "freezeMessage"
     ];
