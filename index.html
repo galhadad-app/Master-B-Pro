@@ -1843,11 +1843,15 @@ body.business-frozen{overflow:hidden;}
     }
 
     function mergeBusinessSettings(saved = {}){
+      const normalizedLogo = saved.logoSrc || saved.logoUrl || BUSINESS_TEMPLATE.logoSrc;
+      const normalizedHeroBg = saved.heroBg || saved.heroBgSrc || saved.heroBgUrl || BUSINESS_TEMPLATE.heroBg;
       return {
         ...BUSINESS_TEMPLATE,
         ...saved,
         // לעולם לא נותנים למסמך/LocalStorage להחליף את העסק שהגיע מהקישור.
         businessId: BUSINESS_ID,
+        logoSrc: normalizedLogo,
+        heroBg: normalizedHeroBg,
         sounds: { ...BUSINESS_TEMPLATE.sounds, ...(saved.sounds || {}) },
         workingHours: mergeWorkingHours(saved.workingHours || {}),
         services: normalizeServices(saved.services)
