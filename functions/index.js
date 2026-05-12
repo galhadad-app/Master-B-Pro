@@ -470,6 +470,73 @@ app.post("/waitlist/join", async (req, res) => {
 });
 
 
+
+// =======================
+// Frontend endpoint: delete waitlist entry
+// =======================
+app.post("/waitlist/delete", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const businessId = cleanBusinessId(body.businessId || "");
+    const waitlistId = String(body.waitlistId || body.id || "").trim();
+
+    if (!businessId || !waitlistId) {
+      return res.status(400).json({
+        ok: false,
+        error: "missing_business_or_waitlist_id",
+        message: "חסרים פרטים למחיקת הממתין",
+      });
+    }
+
+    const waitlistRef = db.collection(WAITLIST_COLLECTION).doc(waitlistId);
+    const waitlistSnap = await waitlistRef.get();
+
+    if (!waitlistSnap.exists) {
+      return res.status(404).json({
+        ok: false,
+        error: "waitlist_not_found",
+        message: "הממתין לא נמצא",
+      });
+    }
+
+    const entry = waitlistSnap.data() || {};
+    if (String(entry.businessId || "") !== businessId) {
+      return res.status(403).json({
+        ok: false,
+        error: "business_mismatch",
+        message: "הממתין לא שייך לעסק הזה",
+      });
+    }
+
+    await waitlistRef.delete();
+
+    await db.collection("logs").add({
+      businessId,
+      type: "waitlist_deleted",
+      waitlistId,
+      phone: entry.phone || entry.phoneDisplay || entry.customerPhone || "",
+      date: entry.date || "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    }).catch((err) => console.warn("waitlist delete log failed", getErrorPayload(err)));
+
+    return res.status(200).json({
+      ok: true,
+      waitlistId,
+      message: "הממתין נמחק בהצלחה",
+    });
+  } catch (err) {
+    const payload = getErrorPayload(err);
+    console.error("waitlist/delete error:", payload);
+    return res.status(500).json({
+      ok: false,
+      error: "waitlist_delete_failed",
+      message: "שגיאה במחיקת הממתין",
+      details: payload,
+    });
+  }
+});
+
 // =======================
 // Manager endpoints: business status and deletion
 // =======================
