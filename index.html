@@ -4210,7 +4210,8 @@ body.business-frozen{overflow:hidden;}
       bookBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
     }
 
-    async function bookAppointment(){
+    async function window.__bookingFromWaitlist = true;
+bookAppointment(){
       if(isWaitlistClaimRequest()) return claimWaitlistFromUrl();
       playBookSound();
       const firstName = document.getElementById('clientFirstName').value.trim();
