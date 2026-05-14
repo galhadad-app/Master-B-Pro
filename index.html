@@ -1293,24 +1293,28 @@ body.business-frozen{overflow:hidden;}
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1016">
 
-<style id="slot-size-override">
-.slots-grid{
-  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-}
-.time-chip{
-  min-height:58px !important;
-  font-size:28px !important;
-  font-weight:900 !important;
-  padding:0 !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  line-height:1 !important;
-}
-@media(max-width:420px){
+
+
+
+<style id="slot-font-fix">
+@media (max-width:640px){
   .time-chip{
-    min-height:56px !important;
-    font-size:30px !important;
+    font-size:18px !important;
+    font-weight:900 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    line-height:1 !important;
+  }
+}
+@media (max-width:420px){
+  .time-chip{
+    font-size:20px !important;
+    font-weight:900 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    line-height:1 !important;
   }
 }
 </style>
