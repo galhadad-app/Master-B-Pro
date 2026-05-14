@@ -2763,55 +2763,6 @@ body.business-frozen{overflow:hidden;}
         claimedAtMs: Date.now()
       })));
     }
-
-    async function closeAllMatchingWaitlistEntriesForPhone(phone, bookedTime){
-      const normalizedPhone = normalizePhone(phone);
-      const matches = waitlistEntries.filter(entry =>
-        normalizePhone(entry.phone) === normalizedPhone &&
-        String(entry.status || 'ממתין') === 'ממתין'
-      );
-      if(!matches.length) return;
-      await Promise.all(matches.map(entry => updateWaitlistEntry(entry.id, {
-        status:'נקבע',
-        offeredTime: bookedTime || entry.offeredTime || '',
-        claimedAtMs: Date.now()
-      })));
-    }
-
-    function hasActiveWaitlistEntryForPhoneAndDate(phone, dateKey){
-      const normalizedPhone = normalizePhone(phone);
-      return waitlistEntries.some(entry =>
-        normalizePhone(entry.phone) === normalizedPhone &&
-        entry.date === dateKey &&
-        String(entry.status || 'ממתין') === 'ממתין'
-      );
-    }
-
-    function formatAppointmentForReplacement(item){
-      if(!item) return '';
-      const dateText = item.date ? formatDatePrettyFromKey(item.date) : '-';
-      const timeText = item.time || '-';
-      const serviceText = item.service || '';
-      return `${dateText} בשעה ${timeText}${serviceText ? `\nשירות: ${serviceText}` : ''}`;
-    }
-
-    async function cleanupExpiredWaitlistEntries(){
-      const todayKey = formatDateKey(new Date());
-      const expired = waitlistEntries.filter(entry =>
-        entry.date &&
-        entry.date < todayKey &&
-        String(entry.status || 'ממתין') === 'ממתין'
-      );
-      if(!expired.length) return;
-      try{
-        await Promise.all(expired.map(entry => updateWaitlistEntry(entry.id, {
-          status:'פג תוקף',
-          expiredAtMs: Date.now()
-        })));
-      }catch(err){
-        console.error('waitlist expiry cleanup failed:', err);
-      }
-    }
     function subscribeWaitlistRealtime(){ if(waitlistUnsubscribe) waitlistUnsubscribe(); waitlistUnsubscribe = db.collection(WAITLIST_COLLECTION).where('businessId', '==', getActiveBusinessId()).onSnapshot(snapshot => { waitlistEntries.length = 0; snapshot.forEach(doc => waitlistEntries.push(normalizeWaitlistRecord(doc.data(), doc.id))); cleanupExpiredWaitlistEntries(); renderOwnerWaitlist(); renderDays(); renderSlots(); }, err => { console.error(err); showToast('שגיאה בטעינת רשימת ההמתנה.', true); }); }
     function getWaitlistAutoNotifyApiUrl(){
       const DEFAULT_WAITLIST_NOTIFY_API_URL = `${BACKEND_API_BASE_URL}/waitlist/notify`;
@@ -4107,6 +4058,51 @@ body.business-frozen{overflow:hidden;}
       return appointments.filter(item => normalizePhone(item.phone) === normalizedPhone && isFutureOrTodayAppointment(item) && isActiveAppointment(item) && !isClosedDateKey(item.date)).sort((a,b) => appointmentDateTime(a) - appointmentDateTime(b))[0] || null;
     }
 
+
+    function formatAppointmentForReplacePrompt(item){
+      if(!item) return '';
+      const dateText = item.date ? formatDatePrettyFromKey(item.date) : '-';
+      const timeText = item.time || '-';
+      const serviceText = item.service ? `
+שירות: ${item.service}` : '';
+      return `יש לך כבר תור בתאריך ${dateText} בשעה ${timeText}${serviceText}.
+
+האם להחליף אותו בתור החדש?`;
+    }
+
+    async function closeAllActiveWaitlistEntriesForPhone(phone, bookedTime = ''){
+      const normalizedPhone = normalizePhone(phone);
+      if(!normalizedPhone) return;
+      const matches = waitlistEntries.filter(entry =>
+        normalizePhone(entry.phone || entry.customerPhone || entry.phoneDisplay) === normalizedPhone &&
+        String(entry.status || 'ממתין') === 'ממתין'
+      );
+      if(!matches.length) return;
+      await Promise.all(matches.map(entry => updateWaitlistEntry(entry.id, {
+        status:'נסגר',
+        offeredTime: bookedTime || entry.offeredTime || '',
+        closedAtMs: Date.now()
+      })));
+    }
+
+    async function cleanupExpiredWaitlistEntries(){
+      try{
+        const todayKey = formatDateKey(new Date());
+        const expired = waitlistEntries.filter(entry =>
+          entry.date &&
+          entry.date < todayKey &&
+          String(entry.status || 'ממתין') === 'ממתין'
+        );
+        if(!expired.length) return;
+        await Promise.all(expired.map(entry => updateWaitlistEntry(entry.id, {
+          status:'פג תוקף',
+          closedAtMs: Date.now()
+        })));
+      }catch(err){
+        console.warn('Expired waitlist cleanup failed:', err);
+      }
+    }
+
     function findAppointmentByPhoneAndDate(phone, dateKey){
       const normalizedPhone = normalizePhone(phone);
       return appointments.find(item =>
@@ -4275,19 +4271,15 @@ body.business-frozen{overflow:hidden;}
       if(!/^05\d{8}$/.test(phone)) return showToast('יש להזין מספר פלאפון מלא שמתחיל ב-05.');
       if(!service) return showToast('יש לבחור שירות.');
 
-      const dateKey = formatDateKey(selectedDate);
       const existingFutureAppointment = findFutureAppointmentByPhone(phone);
-      const isWaitlistReplacement = existingFutureAppointment && hasActiveWaitlistEntryForPhoneAndDate(phone, dateKey);
-      if(existingFutureAppointment && !isWaitlistReplacement) return showToast('למספר הזה כבר קיים תור עתידי.', true);
-      if(isWaitlistReplacement){
-        const existingText = formatAppointmentForReplacement(existingFutureAppointment);
-        const ok = confirm(`יש לך כבר תור עתידי:
-${existingText}
-
-האם להחליף אותו בתור החדש?`);
-        if(!ok) return;
+      let appointmentToReplace = null;
+      if(existingFutureAppointment){
+        const shouldReplace = confirm(formatAppointmentForReplacePrompt(existingFutureAppointment));
+        if(!shouldReplace) return;
+        appointmentToReplace = existingFutureAppointment;
       }
 
+      const dateKey = formatDateKey(selectedDate);
       if(busyMap[dateKey]?.includes(selectedTime)) return showToast('השעה הזו כבר נתפסה.', true);
 
       const bookedTime = selectedTime;
@@ -4296,16 +4288,13 @@ ${existingText}
       try{
         const slotTaken = await isSlotTakenInFirebase(dateKey, bookedTime);
         if(slotTaken) return showToast('השעה הזו כבר נתפסה.', true);
-        if(isWaitlistReplacement && existingFutureAppointment?.id){
-          await deleteAppointmentFromFirebase(existingFutureAppointment.id, { source:'waitlist_replacement', notifyWaitlist:false });
+        if(appointmentToReplace?.id){
+          await deleteAppointmentFromFirebase(appointmentToReplace.id, { source:'replace_future_appointment', notifyWaitlist:false });
         }
-        await createAppointmentInFirebase({ name, phone, service: bookedService, date: dateKey, time: bookedTime, status: 'נקבע', source: isWaitlistReplacement ? 'רשימת המתנה' : 'אפליקציה', notes: '' });
+        await createAppointmentInFirebase({ name, phone, service: bookedService, date: dateKey, time: bookedTime, status: 'נקבע', source: appointmentToReplace ? 'החלפת תור מרשימת המתנה' : 'אפליקציה', notes: '' });
         try{
-          if(isWaitlistReplacement){
-            await closeAllMatchingWaitlistEntriesForPhone(phone, bookedTime);
-          }else{
-            await closeMatchingWaitlistEntries(phone, dateKey, bookedTime);
-          }
+          await closeMatchingWaitlistEntries(phone, dateKey, bookedTime);
+          if(appointmentToReplace) await closeAllActiveWaitlistEntriesForPhone(phone, bookedTime);
         }catch(waitErr){
           console.error('waitlist cleanup failed:', waitErr);
         }
