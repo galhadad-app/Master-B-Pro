@@ -2625,17 +2625,14 @@ body.business-frozen{overflow:hidden;}
       });
     }
 
-    async function createAppointmentInFirebase(payload, options = {}){
+    async function createAppointmentInFirebase(payload){
       const response = await fetch(`${BACKEND_API_BASE_URL}/appointments/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...payload,
           businessId: getActiveBusinessId(),
-          businessName: currentBusinessSettings.businessName,
-          allowAdditionalFutureAppointment: options.allowAdditionalFutureAppointment === true,
-          replaceExistingFutureAppointment: options.replaceExistingFutureAppointment === true,
-          existingAppointmentId: options.existingAppointmentId || null
+          businessName: currentBusinessSettings.businessName
         })
       });
 
@@ -4383,7 +4380,7 @@ function findAppointmentByPhoneAndDate(phone, dateKey){
       if(!service) return showToast('יש לבחור שירות.');
 
       const dateKey = formatDateKey(selectedDate);
-      const existingFutureAppointment = await findFutureAppointmentByPhoneFromFirebase(phone);
+      const existingFutureAppointment = findFutureAppointmentByPhone(phone);
       let existingAppointmentAction = 'none';
       if(existingFutureAppointment){
         existingAppointmentAction = askExistingAppointmentAction(existingFutureAppointment, formatDatePretty(selectedDate), selectedTime);
@@ -4400,14 +4397,7 @@ function findAppointmentByPhoneAndDate(phone, dateKey){
         if(existingAppointmentAction === 'replace'){
           await replaceExistingAppointmentIfNeeded(existingFutureAppointment);
         }
-        await createAppointmentInFirebase(
-          { name, phone, service: bookedService, date: dateKey, time: bookedTime, status: 'נקבע', source: 'אפליקציה', notes: '' },
-          {
-            allowAdditionalFutureAppointment: existingAppointmentAction === 'add',
-            replaceExistingFutureAppointment: existingAppointmentAction === 'replace',
-            existingAppointmentId: existingFutureAppointment?.id || null
-          }
-        );
+        await createAppointmentInFirebase({ name, phone, service: bookedService, date: dateKey, time: bookedTime, status: 'נקבע', source: 'אפליקציה', notes: '' });
         try{
           await closeMatchingWaitlistEntries(phone, dateKey, bookedTime);
         }catch(waitErr){
@@ -4423,7 +4413,7 @@ function findAppointmentByPhoneAndDate(phone, dateKey){
       }catch(err){
         console.error(err);
         if(err?.code === 'slot_taken') return showToast('השעה הזו כבר נתפסה.', true);
-        if(err?.code === 'duplicate_future_appointment') return showToast('המסך מאפשר תור נוסף, אבל השרת עדיין חוסם כפילות. צריך לעדכן גם את פונקציית השרת appointments/create.', true);
+        if(err?.code === 'duplicate_future_appointment') return showToast('כבר קיים תור עתידי למספר הזה. כדי לאפשר תור נוסף צריך לעדכן גם את השרת.', true);
         if(err?.code === 'business_frozen') return showToast('האפליקציה לא פעילה כרגע.', true);
         if(err?.code === 'outside_working_hours') return showToast('השעה שנבחרה לא זמינה ביום זה.', true);
         showToast(err?.message || 'שגיאה בשמירת התור. נסה שוב בעוד רגע.', true);
