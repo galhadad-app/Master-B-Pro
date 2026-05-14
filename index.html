@@ -4247,8 +4247,7 @@ body.business-frozen{overflow:hidden;}
       bookBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
     }
 
-    async function window.__bookingFromWaitlist = true;
-bookAppointment(){
+    async function bookAppointment(){
       if(isWaitlistClaimRequest()) return claimWaitlistFromUrl();
       playBookSound();
       const firstName = document.getElementById('clientFirstName').value.trim();
