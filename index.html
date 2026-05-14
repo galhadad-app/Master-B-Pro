@@ -2675,74 +2675,6 @@ body.business-frozen{overflow:hidden;}
         return getWaitingEntriesForDate(dateKey);
       }
     }
-
-    function hasActiveAppointmentForPhoneOnDate(phone, dateKey){
-      const normalizedPhone = normalizePhone(phone);
-      return appointments.some(item =>
-        item.date === dateKey &&
-        normalizePhone(item.phone) === normalizedPhone &&
-        isActiveAppointment(item)
-      );
-    }
-
-    async function fetchActiveAppointmentForPhoneOnDate(phone, dateKey){
-      const normalizedPhone = normalizePhone(phone);
-      if(hasActiveAppointmentForPhoneOnDate(phone, dateKey)) return true;
-      try{
-        const snap = await db.collection(APPOINTMENTS_COLLECTION)
-          .where('businessId', '==', getActiveBusinessId())
-          .where('date', '==', dateKey)
-          .get();
-        return snap.docs.some(doc => {
-          const item = normalizeAppointmentRecord(doc.data() || {}, doc.id);
-          return normalizePhone(item.phone) === normalizedPhone && isActiveAppointment(item);
-        });
-      }catch(err){
-        console.warn('Fresh appointment check failed:', err);
-        return hasActiveAppointmentForPhoneOnDate(phone, dateKey);
-      }
-    }
-
-    function hasWaitingEntryForPhoneOnDate(phone, dateKey, entries = waitlistEntries){
-      const normalizedPhone = normalizePhone(phone);
-      return entries.some(entry =>
-        entry.date === dateKey &&
-        normalizePhone(entry.phone || entry.customerPhone || entry.phoneDisplay) === normalizedPhone &&
-        String(entry.status || 'ממתין') === 'ממתין'
-      );
-    }
-
-    async function fetchWaitingEntryForPhoneOnDate(phone, dateKey){
-      const normalizedPhone = normalizePhone(phone);
-      const localExisting = waitlistEntries.find(entry =>
-        entry.date === dateKey &&
-        normalizePhone(entry.phone || entry.customerPhone || entry.phoneDisplay) === normalizedPhone &&
-        String(entry.status || 'ממתין') === 'ממתין'
-      );
-      if(localExisting) return localExisting;
-      const freshEntries = await fetchWaitingEntriesForDate(dateKey);
-      return freshEntries.find(entry =>
-        normalizePhone(entry.phone || entry.customerPhone || entry.phoneDisplay) === normalizedPhone &&
-        String(entry.status || 'ממתין') === 'ממתין'
-      ) || null;
-    }
-
-    async function cleanupPastWaitlistEntries(){
-      const todayKey = formatDateKey(new Date());
-      const staleEntries = waitlistEntries.filter(entry =>
-        entry.date &&
-        entry.date < todayKey &&
-        String(entry.status || 'ממתין') === 'ממתין'
-      );
-      if(!staleEntries.length) return;
-      try{
-        await Promise.all(staleEntries.map(entry =>
-          db.collection(WAITLIST_COLLECTION).doc(entry.id).delete()
-        ));
-      }catch(err){
-        console.warn('Past waitlist cleanup failed:', err);
-      }
-    }
     function getFirstServiceForWaitlist(){ const services = currentBusinessSettings.services || []; const first = services.find(s => s?.value || s?.label || s?.text); return first?.value || first?.label || first?.text || 'לא נבחר'; }
     function isWaitlistClaimRequest(){ const params = new URLSearchParams(window.location.search); return !!(params.get('claimWaitlist') && params.get('time')); }
     function buildClaimUrl(entry, time){
@@ -2831,22 +2763,7 @@ body.business-frozen{overflow:hidden;}
         claimedAtMs: Date.now()
       })));
     }
-    function subscribeWaitlistRealtime(){
-      if(waitlistUnsubscribe) waitlistUnsubscribe();
-      waitlistUnsubscribe = db.collection(WAITLIST_COLLECTION)
-        .where('businessId', '==', getActiveBusinessId())
-        .onSnapshot(snapshot => {
-          waitlistEntries.length = 0;
-          snapshot.forEach(doc => waitlistEntries.push(normalizeWaitlistRecord(doc.data(), doc.id)));
-          cleanupPastWaitlistEntries();
-          renderOwnerWaitlist();
-          renderDays();
-          renderSlots();
-        }, err => {
-          console.error(err);
-          showToast('שגיאה בטעינת רשימת ההמתנה.', true);
-        });
-    }
+    function subscribeWaitlistRealtime(){ if(waitlistUnsubscribe) waitlistUnsubscribe(); waitlistUnsubscribe = db.collection(WAITLIST_COLLECTION).where('businessId', '==', getActiveBusinessId()).onSnapshot(snapshot => { waitlistEntries.length = 0; const todayKey = formatDateKey(new Date()); const oldWaitlistDeletes = []; snapshot.forEach(doc => { const entry = normalizeWaitlistRecord(doc.data(), doc.id); if(entry.date < todayKey){ oldWaitlistDeletes.push(doc.ref.delete().catch(err => console.error('שגיאה במחיקת רשימת המתנה ישנה:', err))); return; } waitlistEntries.push(entry); }); if(oldWaitlistDeletes.length) Promise.all(oldWaitlistDeletes); renderOwnerWaitlist(); renderDays(); renderSlots(); }, err => { console.error(err); showToast('שגיאה בטעינת רשימת ההמתנה.', true); }); }
     function getWaitlistAutoNotifyApiUrl(){
       const DEFAULT_WAITLIST_NOTIFY_API_URL = `${BACKEND_API_BASE_URL}/waitlist/notify`;
       const savedUrl = String(
@@ -2989,37 +2906,30 @@ body.business-frozen{overflow:hidden;}
 
     function openWaitlistModal(date){ renderWaitlistFormModal(); activeWaitlistDate = new Date(date); const dateText = `${getDayLabel(activeWaitlistDate)} • ${formatDatePretty(activeWaitlistDate)}`; document.getElementById('waitlistModalDate').textContent = `ליום ${dateText}`; document.getElementById('waitFirstName').value = ''; document.getElementById('waitLastName').value = ''; document.getElementById('waitPhone').value = ''; const waitService = document.getElementById('waitService'); if(waitService){ const hasServices = (currentBusinessSettings.services || []).length; if(!waitService.options.length){ waitService.innerHTML = `<option value="">בחר שירות</option>` + (currentBusinessSettings.services || []).map(service => `<option value="${escapeHtml(service.value)}">${escapeHtml(service.label)}</option>`).join(''); } waitService.value = hasServices ? '' : 'לא נבחר'; } document.getElementById('waitlistModal').classList.add('show'); setTimeout(() => document.getElementById('waitFirstName').focus(), 50); }
     function closeWaitlistModal(){ document.getElementById('waitlistModal').classList.remove('show'); activeWaitlistDate = null; }
-    async function joinWaitlist(){
-      if(!activeWaitlistDate) return;
+    async function joinWaitlist(){ if(!activeWaitlistDate) return; const firstName = document.getElementById('waitFirstName').value.trim(); const lastName = document.getElementById('waitLastName').value.trim(); const phone = formatDisplayPhone(document.getElementById('waitPhone').value.trim()); const service = document.getElementById('waitService')?.value || ''; if(!firstName || !lastName || !phone) return showToast('יש למלא שם, שם משפחה ופלאפון.', true); if(!/^05\d{8}$/.test(phone)) return showToast('יש להזין מספר פלאפון מלא שמתחיל ב-05.', true); saveReturningCustomer(firstName, lastName, phone); applyReturningCustomer(); /* שירות ברשימת המתנה לא חובה */ const dateKey = formatDateKey(activeWaitlistDate);
 
-      const firstName = document.getElementById('waitFirstName').value.trim();
-      const lastName = document.getElementById('waitLastName').value.trim();
-      const phone = formatDisplayPhone(document.getElementById('waitPhone').value.trim());
-      const service = document.getElementById('waitService')?.value || '';
-      const dateKey = formatDateKey(activeWaitlistDate);
+      const normalizedPhone = normalizePhone(phone);
 
-      if(!firstName || !lastName || !phone) return showToast('יש למלא שם, שם משפחה ופלאפון.', true);
-      if(!/^05\d{8}$/.test(phone)) return showToast('יש להזין מספר פלאפון מלא שמתחיל ב-05.', true);
+      const hasAppointmentSameDay = appointments.some(appointment =>
+        appointment.date === dateKey &&
+        normalizePhone(appointment.phone || '') === normalizedPhone
+      );
 
-      const joinBtn = document.getElementById('joinWaitlistBtn');
-      if(joinBtn){
-        joinBtn.disabled = true;
-        joinBtn.textContent = 'בודק...';
+      if(hasAppointmentSameDay){
+        return showToast('כבר קיים עבורך תור ביום זה.', true);
+      }
+
+      const existing = waitlistEntries.find(entry =>
+        entry.date === dateKey &&
+        normalizePhone(entry.phone) === normalizedPhone &&
+        String(entry.status || 'ממתין') === 'ממתין'
+      );
+
+      if(existing){
+        return showToast('כבר הצטרפת לרשימת ההמתנה ליום זה.', true);
       }
 
       try{
-        const alreadyHasAppointment = await fetchActiveAppointmentForPhoneOnDate(phone, dateKey);
-        if(alreadyHasAppointment){
-          return showToast('כבר קיים עבורך תור ביום זה, לכן לא ניתן להצטרף לרשימת ההמתנה.', true);
-        }
-
-        const existing = await fetchWaitingEntryForPhoneOnDate(phone, dateKey);
-        if(existing){
-          return showToast('כבר הצטרפת לרשימת ההמתנה ליום זה.', true);
-        }
-
-        saveReturningCustomer(firstName, lastName, phone);
-        applyReturningCustomer();
         await createWaitlistEntry({
           firstName,
           lastName,
@@ -3030,20 +2940,18 @@ body.business-frozen{overflow:hidden;}
         });
 
         const dateText = `${getDayLabel(activeWaitlistDate)} • ${formatDatePretty(activeWaitlistDate)}`;
-        showWaitlistSuccessModal({ dateText, firstName, lastName, phone, service: service || 'לא נבחר' });
+
+        showWaitlistSuccessModal({
+          dateText,
+          firstName,
+          lastName,
+          phone,
+          service: service || 'לא נבחר'
+        });
+
       }catch(err){
         console.error(err);
-        const msg = String(err.message || '').toLowerCase();
-        if(msg.includes('already') || msg.includes('duplicate') || msg.includes('exists')){
-          showToast('כבר הצטרפת לרשימת ההמתנה ליום זה.', true);
-        }else{
-          showToast('שגיאה בשמירת רשימת ההמתנה.', true);
-        }
-      }finally{
-        if(joinBtn && document.body.contains(joinBtn)){
-          joinBtn.disabled = false;
-          joinBtn.textContent = 'אישור';
-        }
+        showToast('שגיאה בשמירת רשימת ההמתנה.', true);
       }
     }
     let waitlistClaimInProgress = false;
@@ -3482,16 +3390,13 @@ body.business-frozen{overflow:hidden;}
       const body = document.getElementById('ownerWaitlistBody');
       const empty = document.getElementById('ownerWaitlistEmpty');
       if(!body || !empty) return;
-      const todayKey = formatDateKey(new Date());
       const rows = waitlistEntries
-        .filter(entry =>
-          String(entry.status || 'ממתין') === 'ממתין' &&
-          (!entry.date || entry.date >= todayKey)
-        )
+        .filter(entry => String(entry.status || 'ממתין') === 'ממתין')
         .sort((a,b) => (a.date || '').localeCompare(b.date || '') || (a.createdAtMs || 0) - (b.createdAtMs || 0));
       body.innerHTML = '';
       if(!rows.length){ empty.style.display = 'block'; return; }
       empty.style.display = 'none';
+      const todayKey = formatDateKey(new Date());
       body.innerHTML = rows.map(entry => {
         const dateDisplay = entry.date === todayKey ? '<span class="today-badge">היום</span>' : formatDatePrettyFromKey(entry.date);
         const phone = formatDisplayPhone(entry.customerPhone || entry.phoneDisplay || entry.phone);
@@ -4342,7 +4247,8 @@ body.business-frozen{overflow:hidden;}
       bookBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
     }
 
-    async function bookAppointment(){
+    async function window.__bookingFromWaitlist = true;
+bookAppointment(){
       if(isWaitlistClaimRequest()) return claimWaitlistFromUrl();
       playBookSound();
       const firstName = document.getElementById('clientFirstName').value.trim();
