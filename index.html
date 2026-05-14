@@ -4178,6 +4178,35 @@ body.business-frozen{overflow:hidden;}
       return appointments.filter(item => normalizePhone(item.phone) === normalizedPhone && isFutureOrTodayAppointment(item) && isActiveAppointment(item) && !isClosedDateKey(item.date)).sort((a,b) => appointmentDateTime(a) - appointmentDateTime(b))[0] || null;
     }
 
+
+    function formatAppointmentChoiceText(item){
+      if(!item) return '';
+      const d = parseDateKey(item.date);
+      const dateText = d ? formatDatePretty(d) : (item.date || '');
+      return `${dateText} בשעה ${item.time || ''}`;
+    }
+
+    async function chooseAdditionalOrReplace(existingAppointment, newDatePretty, newTime){
+      const existingText = formatAppointmentChoiceText(existingAppointment);
+
+      const addAnother = window.confirm(
+        `כבר יש לך תור:\n${existingText}\n\n` +
+        `בחרת עכשיו תור חדש:\n${newDatePretty} בשעה ${newTime}\n\n` +
+        `אישור = לקבוע תור נוסף\n` +
+        `ביטול = לבחור אם להחליף את התור הקיים`
+      );
+
+      if(addAnother) return 'add';
+
+      const replaceIt = window.confirm(
+        `להחליף את התור הקיים בתור החדש שבחרת?\n\n` +
+        `אישור = להחליף\n` +
+        `ביטול = לא לקבוע כרגע`
+      );
+
+      return replaceIt ? 'replace' : 'cancel';
+    }
+
 function findAppointmentByPhoneAndDate(phone, dateKey){
       const normalizedPhone = normalizePhone(phone);
       return appointments.find(item =>
@@ -4347,7 +4376,15 @@ function findAppointmentByPhoneAndDate(phone, dateKey){
       if(!service) return showToast('יש לבחור שירות.');
 
       const dateKey = formatDateKey(selectedDate);
-if(busyMap[dateKey]?.includes(selectedTime)) return showToast('השעה הזו כבר נתפסה.', true);
+
+      const existingFutureAppointment = findFutureAppointmentByPhone(phone);
+      let duplicateChoice = 'none';
+      if(existingFutureAppointment){
+        duplicateChoice = await chooseAdditionalOrReplace(existingFutureAppointment, formatDatePretty(selectedDate), selectedTime);
+        if(duplicateChoice === 'cancel') return showToast('הפעולה בוטלה. התור הקיים נשאר כמו שהוא.');
+      }
+
+      if(busyMap[dateKey]?.includes(selectedTime)) return showToast('השעה הזו כבר נתפסה.', true);
 
       const bookedTime = selectedTime;
       const bookedDatePretty = formatDatePretty(selectedDate);
@@ -4355,7 +4392,12 @@ if(busyMap[dateKey]?.includes(selectedTime)) return showToast('השעה הזו �
       try{
         const slotTaken = await isSlotTakenInFirebase(dateKey, bookedTime);
         if(slotTaken) return showToast('השעה הזו כבר נתפסה.', true);
-await createAppointmentInFirebase({ name, phone, service: bookedService, date: dateKey, time: bookedTime, status: 'נקבע', source: 'אפליקציה', notes: '' });
+
+        if(duplicateChoice === 'replace' && existingFutureAppointment?.id){
+          await deleteAppointmentFromFirebase(existingFutureAppointment.id, { source:'app_replace', notifyWaitlist:false });
+        }
+
+        await createAppointmentInFirebase({ name, phone, service: bookedService, date: dateKey, time: bookedTime, status: 'נקבע', source: 'אפליקציה', notes: '' });
         try{
           await closeMatchingWaitlistEntries(phone, dateKey, bookedTime);
         }catch(waitErr){
@@ -4371,7 +4413,7 @@ await createAppointmentInFirebase({ name, phone, service: bookedService, date: d
       }catch(err){
         console.error(err);
         if(err?.code === 'slot_taken') return showToast('השעה הזו כבר נתפסה.', true);
-        if(err?.code === 'duplicate_future_appointment') return showToast('השרת עדיין חוסם תור נוסף. צריך לוודא שה-functions עלו בדיפלוי.', true);
+        if(err?.code === 'duplicate_future_appointment') return showToast('השרת עדיין חוסם תור נוסף. צריך להעלות את קובץ ה-functions המתוקן בדיפלוי.', true);
         if(err?.code === 'business_frozen') return showToast('האפליקציה לא פעילה כרגע.', true);
         if(err?.code === 'outside_working_hours') return showToast('השעה שנבחרה לא זמינה ביום זה.', true);
         showToast(err?.message || 'שגיאה בשמירת התור. נסה שוב בעוד רגע.', true);
