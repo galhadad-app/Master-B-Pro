@@ -2751,17 +2751,17 @@ body.business-frozen{overflow:hidden;}
     }
     async function closeMatchingWaitlistEntries(phone, dateKey, bookedTime){
       const normalizedPhone = normalizePhone(phone);
+
       const matches = waitlistEntries.filter(entry =>
         normalizePhone(entry.phone) === normalizedPhone &&
-        entry.date === dateKey &&
-        String(entry.status || 'ממתין') === 'ממתין'
+        entry.date === dateKey
       );
+
       if(!matches.length) return;
-      await Promise.all(matches.map(entry => updateWaitlistEntry(entry.id, {
-        status:'נקבע',
-        offeredTime: bookedTime || entry.offeredTime || '',
-        claimedAtMs: Date.now()
-      })));
+
+      await Promise.all(matches.map(entry =>
+        db.collection(WAITLIST_COLLECTION).doc(entry.id).delete()
+      ));
     }
     function subscribeWaitlistRealtime(){ if(waitlistUnsubscribe) waitlistUnsubscribe(); waitlistUnsubscribe = db.collection(WAITLIST_COLLECTION).where('businessId', '==', getActiveBusinessId()).onSnapshot(snapshot => { waitlistEntries.length = 0; const todayKey = formatDateKey(new Date()); const oldWaitlistDeletes = []; snapshot.forEach(doc => { const entry = normalizeWaitlistRecord(doc.data(), doc.id); if(entry.date < todayKey){ oldWaitlistDeletes.push(doc.ref.delete().catch(err => console.error('שגיאה במחיקת רשימת המתנה ישנה:', err))); return; } waitlistEntries.push(entry); }); if(oldWaitlistDeletes.length) Promise.all(oldWaitlistDeletes); renderOwnerWaitlist(); renderDays(); renderSlots(); }, err => { console.error(err); showToast('שגיאה בטעינת רשימת ההמתנה.', true); }); }
     function getWaitlistAutoNotifyApiUrl(){
