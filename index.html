@@ -4178,7 +4178,40 @@ body.business-frozen{overflow:hidden;}
       return appointments.filter(item => normalizePhone(item.phone) === normalizedPhone && isFutureOrTodayAppointment(item) && isActiveAppointment(item) && !isClosedDateKey(item.date)).sort((a,b) => appointmentDateTime(a) - appointmentDateTime(b))[0] || null;
     }
 
-    function findAppointmentByPhoneAndDate(phone, dateKey){
+    
+    function formatExistingAppointmentForConfirm(item){
+      if(!item) return '';
+      const d = parseDateKey(item.date);
+      const dateText = d ? formatDatePretty(d) : (item.date || '');
+      const timeText = item.time || '';
+      return `${dateText} בשעה ${timeText}`;
+    }
+
+    function askExistingAppointmentAction(existingAppointment, newDatePretty, newTime){
+      const existingText = formatExistingAppointmentForConfirm(existingAppointment);
+      const addAnother = window.confirm(
+        `יש לך כבר תור בתאריך ${existingText}.\n\n` +
+        `התור שבחרת עכשיו: ${newDatePretty} בשעה ${newTime}.\n\n` +
+        `אישור = לקבוע תור נוסף\n` +
+        `ביטול = לבחור אם להחליף או לעצור`
+      );
+      if(addAnother) return 'add';
+
+      const replaceExisting = window.confirm(
+        `רוצה להחליף את התור הקיים בתור החדש?\n\n` +
+        `אישור = להחליף תור\n` +
+        `ביטול = לא לקבוע כרגע`
+      );
+      if(replaceExisting) return 'replace';
+      return 'cancel';
+    }
+
+    async function replaceExistingAppointmentIfNeeded(existingAppointment){
+      if(!existingAppointment?.id) return;
+      await deleteAppointmentFromFirebase(existingAppointment.id, { source:'app_replace', notifyWaitlist:false });
+    }
+
+function findAppointmentByPhoneAndDate(phone, dateKey){
       const normalizedPhone = normalizePhone(phone);
       return appointments.find(item =>
         normalizePhone(item.phone) === normalizedPhone &&
@@ -4346,10 +4379,13 @@ body.business-frozen{overflow:hidden;}
       if(!/^05\d{8}$/.test(phone)) return showToast('יש להזין מספר פלאפון מלא שמתחיל ב-05.');
       if(!service) return showToast('יש לבחור שירות.');
 
-      const existingFutureAppointment = findFutureAppointmentByPhone(phone);
-      if(existingFutureAppointment) return showToast('למספר הזה כבר קיים תור עתידי.', true);
-
       const dateKey = formatDateKey(selectedDate);
+      const existingFutureAppointment = findFutureAppointmentByPhone(phone);
+      let existingAppointmentAction = 'none';
+      if(existingFutureAppointment){
+        existingAppointmentAction = askExistingAppointmentAction(existingFutureAppointment, formatDatePretty(selectedDate), selectedTime);
+        if(existingAppointmentAction === 'cancel') return showToast('הפעולה בוטלה. התור הקיים נשאר כמו שהוא.');
+      }
       if(busyMap[dateKey]?.includes(selectedTime)) return showToast('השעה הזו כבר נתפסה.', true);
 
       const bookedTime = selectedTime;
@@ -4358,6 +4394,9 @@ body.business-frozen{overflow:hidden;}
       try{
         const slotTaken = await isSlotTakenInFirebase(dateKey, bookedTime);
         if(slotTaken) return showToast('השעה הזו כבר נתפסה.', true);
+        if(existingAppointmentAction === 'replace'){
+          await replaceExistingAppointmentIfNeeded(existingFutureAppointment);
+        }
         await createAppointmentInFirebase({ name, phone, service: bookedService, date: dateKey, time: bookedTime, status: 'נקבע', source: 'אפליקציה', notes: '' });
         try{
           await closeMatchingWaitlistEntries(phone, dateKey, bookedTime);
@@ -4374,7 +4413,7 @@ body.business-frozen{overflow:hidden;}
       }catch(err){
         console.error(err);
         if(err?.code === 'slot_taken') return showToast('השעה הזו כבר נתפסה.', true);
-        if(err?.code === 'duplicate_future_appointment') return showToast('למספר הזה כבר קיים תור עתידי.', true);
+        if(err?.code === 'duplicate_future_appointment') return showToast('כבר קיים תור עתידי למספר הזה. נסה לרענן את העמוד ולבחור שוב.', true);
         if(err?.code === 'business_frozen') return showToast('האפליקציה לא פעילה כרגע.', true);
         if(err?.code === 'outside_working_hours') return showToast('השעה שנבחרה לא זמינה ביום זה.', true);
         showToast(err?.message || 'שגיאה בשמירת התור. נסה שוב בעוד רגע.', true);
