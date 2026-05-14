@@ -2752,16 +2752,25 @@ body.business-frozen{overflow:hidden;}
     async function closeMatchingWaitlistEntries(phone, dateKey, bookedTime){
       const normalizedPhone = normalizePhone(phone);
 
-      const matches = waitlistEntries.filter(entry =>
-        normalizePhone(entry.phone) === normalizedPhone &&
-        entry.date === dateKey
-      );
+      const snapshot = await db.collection(WAITLIST_COLLECTION)
+        .where('businessId', '==', getActiveBusinessId())
+        .where('date', '==', dateKey)
+        .get();
 
-      if(!matches.length) return;
+      const deletePromises = [];
 
-      await Promise.all(matches.map(entry =>
-        db.collection(WAITLIST_COLLECTION).doc(entry.id).delete()
-      ));
+      snapshot.forEach(doc => {
+        const data = doc.data() || {};
+        const waitPhone = normalizePhone(data.phone || '');
+
+        if(waitPhone === normalizedPhone){
+          deletePromises.push(doc.ref.delete());
+        }
+      });
+
+      if(deletePromises.length){
+        await Promise.all(deletePromises);
+      }
     }
     function subscribeWaitlistRealtime(){ if(waitlistUnsubscribe) waitlistUnsubscribe(); waitlistUnsubscribe = db.collection(WAITLIST_COLLECTION).where('businessId', '==', getActiveBusinessId()).onSnapshot(snapshot => { waitlistEntries.length = 0; const todayKey = formatDateKey(new Date()); const oldWaitlistDeletes = []; snapshot.forEach(doc => { const entry = normalizeWaitlistRecord(doc.data(), doc.id); if(entry.date < todayKey){ oldWaitlistDeletes.push(doc.ref.delete().catch(err => console.error('שגיאה במחיקת רשימת המתנה ישנה:', err))); return; } waitlistEntries.push(entry); }); if(oldWaitlistDeletes.length) Promise.all(oldWaitlistDeletes); renderOwnerWaitlist(); renderDays(); renderSlots(); }, err => { console.error(err); showToast('שגיאה בטעינת רשימת ההמתנה.', true); }); }
     function getWaitlistAutoNotifyApiUrl(){
