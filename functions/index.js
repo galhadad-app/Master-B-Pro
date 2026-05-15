@@ -202,9 +202,18 @@ app.post("/appointments/create", async (req, res) => {
       const slotTaken = slotSnap.docs.some((doc) => isActiveAppointment(doc.data() || {}));
       if (slotTaken) throw new Error("slot_taken");
 
-      // מאפשרים כמה תורים עתידיים לאותו מספר.
-      // עדיין נשארת חסימה לשעה תפוסה באותו עסק/תאריך/שעה.
+      const businessAppointmentsQuery = db.collection(APPOINTMENTS_COLLECTION)
+        .where("businessId", "==", businessId);
+      const businessAppointmentsSnap = await tx.get(businessAppointmentsQuery);
+      const duplicateFuture = businessAppointmentsSnap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .some((appt) => {
+          if (!isActiveAppointment(appt)) return false;
+          if (normalizePhone(appt.phone) !== normalizedPhone) return false;
+          return appointmentDateTime(appt) >= new Date();
+        });
 
+      if (duplicateFuture) throw new Error("duplicate_future_appointment");
 
       tx.set(appointmentRef, {
         businessId,
@@ -243,9 +252,10 @@ app.post("/appointments/create", async (req, res) => {
   } catch (err) {
     const payload = getErrorPayload(err);
     const code = String(err?.message || payload || "create_appointment_failed");
-    const status = ["slot_taken", "outside_working_hours"].includes(code) ? 409 : 500;
+    const status = ["slot_taken", "duplicate_future_appointment", "outside_working_hours"].includes(code) ? 409 : 500;
     const messages = {
       slot_taken: "השעה הזו כבר נתפסה",
+      duplicate_future_appointment: "למספר הזה כבר קיים תור עתידי",
       outside_working_hours: "השעה שנבחרה לא זמינה",
     };
     console.error("appointments/create error:", payload);
