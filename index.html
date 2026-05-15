@@ -763,8 +763,25 @@
       .settings-two-col{grid-template-columns:1fr;}
     }
 
-    @media (max-width:640px){.slots-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}.time-chip{min-height:40px;font-size:13px;border-radius:13px;}.hour-times,.settings-actions{grid-template-columns:1fr;}.service-row{grid-template-columns:minmax(0,1fr) 46px 28px 48px;gap:5px;}.service-row input{padding:12px 9px;font-size:13px}.service-row input[data-role="servicePrice"]{padding-inline:3px;max-width:46px}.service-price-label{font-size:12px}.service-row button{padding:11px 8px;font-size:12px}.hour-row{padding:14px;gap:12px;}.hour-row-top{justify-items:center;}.closed-toggle{justify-content:center;width:100%;max-width:180px;}}
-    @media (max-width:420px){.slots-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}.time-chip{min-height:38px;padding:7px 5px;font-size:20px;border-radius:12px;}.day-chip{min-width:84px;padding:11px 8px}.success-btn{width:100%}.owner-shell-head{gap:8px}.owner-shell-title h2{font-size:16px}.owner-shell-title p{font-size:12px}.owner-back-btn{padding:10px 12px!important;font-size:12px!important}.owner-tab{padding:12px 8px;font-size:13px}}
+    @media (max-width:640px){.slots-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}.time-chip{
+  min-height:52px;
+  font-size:22px;
+  font-weight:900;
+  border-radius:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}.hour-times,.settings-actions{grid-template-columns:1fr;}.service-row{grid-template-columns:minmax(0,1fr) 46px 28px 48px;gap:5px;}.service-row input{padding:12px 9px;font-size:13px}.service-row input[data-role="servicePrice"]{padding-inline:3px;max-width:46px}.service-price-label{font-size:12px}.service-row button{padding:11px 8px;font-size:12px}.hour-row{padding:14px;gap:12px;}.hour-row-top{justify-items:center;}.closed-toggle{justify-content:center;width:100%;max-width:180px;}}
+    @media (max-width:420px){.slots-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}.time-chip{
+  min-height:50px;
+  padding:8px 6px;
+  font-size:24px;
+  font-weight:900;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}.day-chip{min-width:84px;padding:11px 8px}.success-btn{width:100%}.owner-shell-head{gap:8px}.owner-shell-title h2{font-size:16px}.owner-shell-title p{font-size:12px}.owner-back-btn{padding:10px 12px!important;font-size:12px!important}.owner-tab{padding:12px 8px;font-size:13px}}
   
 .premium-donut-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
 .premium-donut-card{background:linear-gradient(180deg,#151c27 0%,#0f141d 100%);border:1px solid rgba(255,255,255,.06);border-radius:24px;padding:18px;text-align:center}
@@ -1242,9 +1259,66 @@ body.business-frozen{overflow:hidden;}
   .stats-impact-card small{font-size:10.5px}
 }
 
+
+
+/* ===== Compact 3-column time selection ===== */
+.slots-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:8px !important;
+}
+.time-chip{
+  min-height:40px !important;
+  padding:7px 6px !important;
+  border-radius:13px !important;
+  font-size:14px !important;
+  line-height:1 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-align:center !important;
+}
+@media (max-width:420px){
+  .slots-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:7px !important;
+  }
+  .time-chip{
+    min-height:38px !important;
+    padding:6px 5px !important;
+    border-radius:12px !important;
+    font-size:14px !important;
+  }
+}
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1016">
+
+
+
+
+<style id="slot-font-fix">
+@media (max-width:640px){
+  .time-chip{
+    font-size:18px !important;
+    font-weight:900 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    line-height:1 !important;
+  }
+}
+@media (max-width:420px){
+  .time-chip{
+    font-size:20px !important;
+    font-weight:900 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    line-height:1 !important;
+  }
+}
+</style>
+
 </head>
 <body>
   <div id="loader"><img id="loaderLogo" src="logo.png" alt="לוגו"></div>
@@ -2751,19 +2825,28 @@ body.business-frozen{overflow:hidden;}
     }
     async function closeMatchingWaitlistEntries(phone, dateKey, bookedTime){
       const normalizedPhone = normalizePhone(phone);
-      const matches = waitlistEntries.filter(entry =>
-        normalizePhone(entry.phone) === normalizedPhone &&
-        entry.date === dateKey &&
-        String(entry.status || 'ממתין') === 'ממתין'
-      );
-      if(!matches.length) return;
-      await Promise.all(matches.map(entry => updateWaitlistEntry(entry.id, {
-        status:'נקבע',
-        offeredTime: bookedTime || entry.offeredTime || '',
-        claimedAtMs: Date.now()
-      })));
+
+      const snapshot = await db.collection(WAITLIST_COLLECTION)
+        .where('businessId', '==', getActiveBusinessId())
+        .where('date', '==', dateKey)
+        .get();
+
+      const deletePromises = [];
+
+      snapshot.forEach(doc => {
+        const data = doc.data() || {};
+        const waitPhone = normalizePhone(data.phone || '');
+
+        if(waitPhone === normalizedPhone){
+          deletePromises.push(doc.ref.delete());
+        }
+      });
+
+      if(deletePromises.length){
+        await Promise.all(deletePromises);
+      }
     }
-    function subscribeWaitlistRealtime(){ if(waitlistUnsubscribe) waitlistUnsubscribe(); waitlistUnsubscribe = db.collection(WAITLIST_COLLECTION).where('businessId', '==', getActiveBusinessId()).onSnapshot(snapshot => { waitlistEntries.length = 0; snapshot.forEach(doc => waitlistEntries.push(normalizeWaitlistRecord(doc.data(), doc.id))); renderOwnerWaitlist(); renderDays(); renderSlots(); }, err => { console.error(err); showToast('שגיאה בטעינת רשימת ההמתנה.', true); }); }
+    function subscribeWaitlistRealtime(){ if(waitlistUnsubscribe) waitlistUnsubscribe(); waitlistUnsubscribe = db.collection(WAITLIST_COLLECTION).where('businessId', '==', getActiveBusinessId()).onSnapshot(snapshot => { waitlistEntries.length = 0; const todayKey = formatDateKey(new Date()); const oldWaitlistDeletes = []; snapshot.forEach(doc => { const entry = normalizeWaitlistRecord(doc.data(), doc.id); if(entry.date < todayKey){ oldWaitlistDeletes.push(doc.ref.delete().catch(err => console.error('שגיאה במחיקת רשימת המתנה ישנה:', err))); return; } waitlistEntries.push(entry); }); if(oldWaitlistDeletes.length) Promise.all(oldWaitlistDeletes); renderOwnerWaitlist(); renderDays(); renderSlots(); }, err => { console.error(err); showToast('שגיאה בטעינת רשימת ההמתנה.', true); }); }
     function getWaitlistAutoNotifyApiUrl(){
       const DEFAULT_WAITLIST_NOTIFY_API_URL = `${BACKEND_API_BASE_URL}/waitlist/notify`;
       const savedUrl = String(
@@ -2906,17 +2989,54 @@ body.business-frozen{overflow:hidden;}
 
     function openWaitlistModal(date){ renderWaitlistFormModal(); activeWaitlistDate = new Date(date); const dateText = `${getDayLabel(activeWaitlistDate)} • ${formatDatePretty(activeWaitlistDate)}`; document.getElementById('waitlistModalDate').textContent = `ליום ${dateText}`; document.getElementById('waitFirstName').value = ''; document.getElementById('waitLastName').value = ''; document.getElementById('waitPhone').value = ''; const waitService = document.getElementById('waitService'); if(waitService){ const hasServices = (currentBusinessSettings.services || []).length; if(!waitService.options.length){ waitService.innerHTML = `<option value="">בחר שירות</option>` + (currentBusinessSettings.services || []).map(service => `<option value="${escapeHtml(service.value)}">${escapeHtml(service.label)}</option>`).join(''); } waitService.value = hasServices ? '' : 'לא נבחר'; } document.getElementById('waitlistModal').classList.add('show'); setTimeout(() => document.getElementById('waitFirstName').focus(), 50); }
     function closeWaitlistModal(){ document.getElementById('waitlistModal').classList.remove('show'); activeWaitlistDate = null; }
-    async function joinWaitlist(){ if(!activeWaitlistDate) return; const firstName = document.getElementById('waitFirstName').value.trim(); const lastName = document.getElementById('waitLastName').value.trim(); const phone = formatDisplayPhone(document.getElementById('waitPhone').value.trim()); const service = document.getElementById('waitService')?.value || ''; if(!firstName || !lastName || !phone) return showToast('יש למלא שם, שם משפחה ופלאפון.', true); if(!/^05\d{8}$/.test(phone)) return showToast('יש להזין מספר פלאפון מלא שמתחיל ב-05.', true); saveReturningCustomer(firstName, lastName, phone); applyReturningCustomer(); /* שירות ברשימת המתנה לא חובה */ const dateKey = formatDateKey(activeWaitlistDate); const existing = waitlistEntries.find(entry => entry.date === dateKey && normalizePhone(entry.phone) === normalizePhone(phone) && String(entry.status || 'ממתין') === 'ממתין'); if(existing){
-        const dateText = `${getDayLabel(activeWaitlistDate)} • ${formatDatePretty(activeWaitlistDate)}`;
-        closeWaitlistModal();
-        return showWaitlistSuccessModal({
-          dateText,
-          firstName: existing.firstName || firstName,
-          lastName: existing.lastName || lastName,
-          phone: toIsraeliDisplayPhone(existing.phone || phone),
-          service: existing.service || service || 'לא נבחר'
+    async function joinWaitlist(){ if(!activeWaitlistDate) return; const firstName = document.getElementById('waitFirstName').value.trim(); const lastName = document.getElementById('waitLastName').value.trim(); const phone = formatDisplayPhone(document.getElementById('waitPhone').value.trim()); const service = document.getElementById('waitService')?.value || ''; if(!firstName || !lastName || !phone) return showToast('יש למלא שם, שם משפחה ופלאפון.', true); if(!/^05\d{8}$/.test(phone)) return showToast('יש להזין מספר פלאפון מלא שמתחיל ב-05.', true); saveReturningCustomer(firstName, lastName, phone); applyReturningCustomer(); /* שירות ברשימת המתנה לא חובה */ const dateKey = formatDateKey(activeWaitlistDate);
+
+      const normalizedPhone = normalizePhone(phone);
+
+      const hasAppointmentSameDay = appointments.some(appointment =>
+        appointment.date === dateKey &&
+        normalizePhone(appointment.phone || '') === normalizedPhone
+      );
+
+      if(hasAppointmentSameDay){
+        return showToast('כבר קיים עבורך תור ביום זה.', true);
+      }
+
+      const existing = waitlistEntries.find(entry =>
+        entry.date === dateKey &&
+        normalizePhone(entry.phone) === normalizedPhone &&
+        String(entry.status || 'ממתין') === 'ממתין'
+      );
+
+      if(existing){
+        return showToast('כבר הצטרפת לרשימת ההמתנה ליום זה.', true);
+      }
+
+      try{
+        await createWaitlistEntry({
+          firstName,
+          lastName,
+          name: `${firstName} ${lastName}`.trim(),
+          phone,
+          service: service || 'לא נבחר',
+          date: dateKey
         });
-      } try{ await createWaitlistEntry({ firstName, lastName, name: `${firstName} ${lastName}`.trim(), phone, service: service || 'לא נבחר', date: dateKey }); const dateText = `${getDayLabel(activeWaitlistDate)} • ${formatDatePretty(activeWaitlistDate)}`; showWaitlistSuccessModal({ dateText, firstName, lastName, phone, service: service || 'לא נבחר' }); }catch(err){ console.error(err); showToast('שגיאה בשמירת רשימת ההמתנה.', true); } }
+
+        const dateText = `${getDayLabel(activeWaitlistDate)} • ${formatDatePretty(activeWaitlistDate)}`;
+
+        showWaitlistSuccessModal({
+          dateText,
+          firstName,
+          lastName,
+          phone,
+          service: service || 'לא נבחר'
+        });
+
+      }catch(err){
+        console.error(err);
+        showToast('שגיאה בשמירת רשימת ההמתנה.', true);
+      }
+    }
     let waitlistClaimInProgress = false;
 
     function clearWaitlistClaimParams(){
@@ -4210,8 +4330,7 @@ body.business-frozen{overflow:hidden;}
       bookBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
     }
 
-    async function window.__bookingFromWaitlist = true;
-bookAppointment(){
+    async function bookAppointment(){
       if(isWaitlistClaimRequest()) return claimWaitlistFromUrl();
       playBookSound();
       const firstName = document.getElementById('clientFirstName').value.trim();
