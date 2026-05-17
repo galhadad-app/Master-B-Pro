@@ -229,6 +229,18 @@ app.post("/appointments/create", async (req, res) => {
         throw duplicateError;
       }
 
+      if (replaceExisting) {
+        const idToReplace = existingAppointmentId || duplicateFuture?.id || "";
+        if (!idToReplace) throw new Error("existing_appointment_not_found");
+        const existingRef = db.collection(APPOINTMENTS_COLLECTION).doc(idToReplace);
+        const existingSnap = await tx.get(existingRef);
+        if (!existingSnap.exists) throw new Error("existing_appointment_not_found");
+        const existingData = existingSnap.data() || {};
+        if (String(existingData.businessId || "") !== businessId) throw new Error("existing_appointment_mismatch");
+        if (normalizePhone(existingData.phone || "") !== normalizedPhone) throw new Error("existing_appointment_mismatch");
+        tx.delete(existingRef);
+      }
+
       tx.set(appointmentRef, {
         businessId,
         businessName: business.businessName || business.name || String(body.businessName || ""),
@@ -243,10 +255,6 @@ app.post("/appointments/create", async (req, res) => {
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         createdAtMs: Date.now(),
       });
-
-      if (replaceExisting && existingAppointmentId && duplicateFuture?.id === existingAppointmentId) {
-        tx.delete(db.collection(APPOINTMENTS_COLLECTION).doc(existingAppointmentId));
-      }
     });
 
     await db.collection("logs").add({
@@ -278,11 +286,13 @@ app.post("/appointments/create", async (req, res) => {
   } catch (err) {
     const payload = getErrorPayload(err);
     const code = String(err?.message || payload || "create_appointment_failed");
-    const status = ["slot_taken", "duplicate_future_appointment", "outside_working_hours"].includes(code) ? 409 : 500;
+    const status = ["slot_taken", "duplicate_future_appointment", "outside_working_hours", "existing_appointment_not_found", "existing_appointment_mismatch"].includes(code) ? 409 : 500;
     const messages = {
       slot_taken: "השעה הזו כבר נתפסה",
       duplicate_future_appointment: "למספר הזה כבר קיים תור עתידי",
       outside_working_hours: "השעה שנבחרה לא זמינה",
+      existing_appointment_not_found: "התור הקודם לא נמצא",
+      existing_appointment_mismatch: "התור הקודם לא תואם למספר הזה",
     };
     console.error("appointments/create error:", payload);
     return res.status(status).json({ 
