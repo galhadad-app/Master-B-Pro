@@ -4414,10 +4414,23 @@ body.business-frozen{overflow:hidden;}
       const bookedTime = selectedTime;
       const bookedDatePretty = formatDatePretty(selectedDate);
       const bookedService = service;
+
+      let createOptions = {};
+      if(existingFutureAppointment){
+        const choice = await showExistingAppointmentChoiceModal(existingFutureAppointment);
+        if(choice === 'cancel') return;
+        if(choice === 'replace'){
+          createOptions = { replaceExisting: true, existingAppointmentId: existingFutureAppointment.id || '' };
+        }
+        if(choice === 'additional'){
+          createOptions = { forceCreate: true };
+        }
+      }
+
       try{
         const slotTaken = await isSlotTakenInFirebase(dateKey, bookedTime);
         if(slotTaken) return showToast('השעה הזו כבר נתפסה.', true);
-        await createAppointmentInFirebase({ name, phone, service: bookedService, date: dateKey, time: bookedTime, status: 'נקבע', source: 'אפליקציה', notes: '' });
+        await createAppointmentInFirebase({ name, phone, service: bookedService, date: dateKey, time: bookedTime, status: 'נקבע', source: 'אפליקציה', notes: '', ...createOptions });
         try{
           await closeMatchingWaitlistEntries(phone, dateKey, bookedTime);
         }catch(waitErr){
