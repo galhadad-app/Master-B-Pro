@@ -2823,8 +2823,39 @@ body.business-frozen{overflow:hidden;}
       if(String((snap.data() || {}).businessId || '') !== getActiveBusinessId()) throw new Error('waitlist_business_mismatch');
       await ref.update({ ...updates, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     }
+    function buildPhoneMatchSet(phone){
+      const raw = String(phone || '');
+      const display = formatDisplayPhone(raw);
+      const intl = toWhatsappPhone(raw);
+      return new Set([
+        normalizePhone(raw),
+        normalizePhone(display),
+        normalizePhone(intl),
+        normalizePhone(display ? `972${display.replace(/^0/, '')}` : ''),
+        normalizePhone(raw.startsWith('972') ? formatDisplayPhone(raw) : '')
+      ].filter(Boolean));
+    }
+
+    function waitlistEntryMatchesPhone(data, phoneSet){
+      const values = [
+        data.phone,
+        data.phoneDisplay,
+        data.customerPhone,
+        data.clientPhone,
+        data.displayPhone,
+        data.customerWhatsapp,
+        data.clientWhatsapp,
+        data.whatsapp
+      ];
+      return values.some(value => {
+        const itemSet = buildPhoneMatchSet(value);
+        return [...itemSet].some(item => phoneSet.has(item));
+      });
+    }
+
     async function closeMatchingWaitlistEntries(phone, dateKey, bookedTime){
-      const normalizedPhone = normalizePhone(phone);
+      const phoneSet = buildPhoneMatchSet(phone);
+      if(!phoneSet.size || !dateKey) return 0;
 
       const snapshot = await db.collection(WAITLIST_COLLECTION)
         .where('businessId', '==', getActiveBusinessId())
@@ -2832,19 +2863,30 @@ body.business-frozen{overflow:hidden;}
         .get();
 
       const deletePromises = [];
+      const deletedIds = [];
 
       snapshot.forEach(doc => {
         const data = doc.data() || {};
-        const waitPhone = normalizePhone(data.phone || '');
+        const status = String(data.status || 'ממתין');
+        if(status !== 'ממתין') return;
 
-        if(waitPhone === normalizedPhone){
+        if(waitlistEntryMatchesPhone(data, phoneSet)){
+          deletedIds.push(doc.id);
           deletePromises.push(doc.ref.delete());
         }
       });
 
       if(deletePromises.length){
         await Promise.all(deletePromises);
+        for(let i = waitlistEntries.length - 1; i >= 0; i--){
+          if(deletedIds.includes(waitlistEntries[i].id)) waitlistEntries.splice(i, 1);
+        }
+        renderOwnerWaitlist();
+        renderDays();
+        renderSlots();
       }
+
+      return deletedIds.length;
     }
     function subscribeWaitlistRealtime(){ if(waitlistUnsubscribe) waitlistUnsubscribe(); waitlistUnsubscribe = db.collection(WAITLIST_COLLECTION).where('businessId', '==', getActiveBusinessId()).onSnapshot(snapshot => { waitlistEntries.length = 0; const todayKey = formatDateKey(new Date()); const oldWaitlistDeletes = []; snapshot.forEach(doc => { const entry = normalizeWaitlistRecord(doc.data(), doc.id); if(entry.date < todayKey){ oldWaitlistDeletes.push(doc.ref.delete().catch(err => console.error('שגיאה במחיקת רשימת המתנה ישנה:', err))); return; } waitlistEntries.push(entry); }); if(oldWaitlistDeletes.length) Promise.all(oldWaitlistDeletes); renderOwnerWaitlist(); renderDays(); renderSlots(); }, err => { console.error(err); showToast('שגיאה בטעינת רשימת ההמתנה.', true); }); }
     function getWaitlistAutoNotifyApiUrl(){
@@ -3091,6 +3133,12 @@ body.business-frozen{overflow:hidden;}
 
         const waiting = waitlistEntries.find(item => item.id === data.waitlistId);
         if(waiting) waiting.status = 'נקבע';
+
+        try{
+          await closeMatchingWaitlistEntries(createdAppointment.phone || waiting?.phone || '', dateKey, time);
+        }catch(waitErr){
+          console.error('waitlist cleanup after claim failed:', waitErr);
+        }
 
         saveReturningCustomerFromKnownData('', '', createdAppointment.name || '', formatDisplayPhone(createdAppointment.phone || ''));
         applyReturningCustomer();
