@@ -1,3 +1,4 @@
+// V3 REAL FIX: waitlist cleanup + existing appointment choice support
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
@@ -289,7 +290,7 @@ app.post("/appointments/create", async (req, res) => {
     const status = ["slot_taken", "duplicate_future_appointment", "outside_working_hours", "existing_appointment_not_found", "existing_appointment_mismatch"].includes(code) ? 409 : 500;
     const messages = {
       slot_taken: "השעה הזו כבר נתפסה",
-      duplicate_future_appointment: "למספר הזה כבר קיים תור עתידי",
+      duplicate_future_appointment: "נמצא תור קיים - יש לבחור החלפה או תור נוסף",
       outside_working_hours: "השעה שנבחרה לא זמינה",
       existing_appointment_not_found: "התור הקודם לא נמצא",
       existing_appointment_mismatch: "התור הקודם לא תואם למספר הזה",
