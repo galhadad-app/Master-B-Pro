@@ -5188,16 +5188,12 @@ function formatCancelledAppointmentDateText(appt = {}){
   const rawTime = String(appt?.time || '').trim();
 
   if(!rawDate || !/^\d{4}-\d{2}-\d{2}$/.test(rawDate)){
-    return [String(appt?.datePretty || rawDate || '').trim(), rawTime].filter(Boolean).join(' | ');
+    return [String(appt?.datePretty || rawDate || '').trim(), rawTime].filter(Boolean).join(' • ');
   }
 
   const [year, month, day] = rawDate.split('-');
-  const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-  const dayNamesHe = ['יום ראשון','יום שני','יום שלישי','יום רביעי','יום חמישי','יום שישי','שבת'];
-  const dayName = dayNamesHe[dateObj.getDay()] || '';
-  const formattedDate = `${day}/${month}/${year}`;
-
-  return [dayName, formattedDate, rawTime].filter(Boolean).join(' | ');
+  const shortDate = `${day}.${month}`;
+  return [shortDate, rawTime].filter(Boolean).join(' • ');
 }
 
 function showCancelledAppointmentModal(appt = {}){
