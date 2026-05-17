@@ -1575,7 +1575,7 @@ body.business-frozen{overflow:hidden;}
             <div class="table-wrap">
               <table class="appointments-table">
                 <thead>
-                  <tr><th>שם</th><th>תאריך</th><th>שעה</th><th>פלאפון</th></tr>
+                  <tr class="clickable-row" onclick="openWaitlistDetails(waiting)"><th>שם</th><th>תאריך</th><th>שעה</th><th>פלאפון</th></tr>
                 </thead>
                 <tbody id="ownerAppointmentsBody"></tbody>
               </table>
@@ -5041,6 +5041,58 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
     });
+
+
+function openWaitlistDetails(waitingCustomer){
+  if(!waitingCustomer) return;
+
+  const details = [
+    ['שם', waitingCustomer.name || '-'],
+    ['טלפון', waitingCustomer.phone || '-'],
+    ['תאריך', waitingCustomer.date || '-'],
+    ['שעה', waitingCustomer.time || '-'],
+    ['שירות', waitingCustomer.service || '-'],
+    ['סטטוס', 'ברשימת המתנה']
+  ];
+
+  const detailsHtml = details.map(([label,value]) => `
+    <div class="detail-box">
+      <div class="detail-label">${label}</div>
+      <div class="detail-value">${value}</div>
+    </div>
+  `).join('');
+
+  const modalHtml = `
+    <div class="modal-backdrop show" id="waitlistDetailsModal">
+      <div class="modal">
+        <h3>פרטי לקוח</h3>
+
+        <div class="details-grid">
+          ${detailsHtml}
+        </div>
+
+        <div class="booking-actions">
+          <button class="danger-btn" onclick="deleteWaitlistEntry('${waitingCustomer.id || ''}')">
+            מחק מרשימת המתנה
+          </button>
+
+          <button class="secondary-btn" onclick="closeWaitlistDetailsModal()">
+            סגור
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const existing = document.getElementById('waitlistDetailsModal');
+  if(existing) existing.remove();
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeWaitlistDetailsModal(){
+  document.getElementById('waitlistDetailsModal')?.remove();
+}
 
 </script>
 
