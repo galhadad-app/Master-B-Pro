@@ -3159,19 +3159,7 @@ body.business-frozen{overflow:hidden;}
       const y = date.getFullYear();
       const m = String(date.getMonth()+1).padStart(2,'0');
       const d = String(date.getDate()).padStart(2,'0');
-      return `${y}
-
-function formatDisplayDate(dateStr){
-  try{
-    const parts = String(dateStr || '').split('-');
-    if(parts.length !== 3) return dateStr || '';
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
-  }catch(e){
-    return dateStr || '';
-  }
-}
-
--${m}-${d}`;
+      return `${y}-${m}-${d}`;
     }
 
     function timeToMinutes(time){
@@ -4350,12 +4338,30 @@ function formatDisplayDate(dateStr){
     }
 
 
+
+    function formatExistingAppointmentDateText(existing = {}){
+      const rawDate = String(existing?.date || existing?.dateKey || '').trim();
+      const rawTime = String(existing?.time || '').trim();
+
+      if(!rawDate || !/^\d{4}-\d{2}-\d{2}$/.test(rawDate)){
+        return String(existing?.datePretty || rawDate || '').trim();
+      }
+
+      const [year, month, day] = rawDate.split('-');
+      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+      const dayNamesHe = ['יום ראשון','יום שני','יום שלישי','יום רביעי','יום חמישי','יום שישי','שבת'];
+      const dayName = dayNamesHe[dateObj.getDay()] || '';
+      const formattedDate = `${day}/${month}/${year}`;
+
+      return [dayName, formattedDate, rawTime].filter(Boolean).join(' | ');
+    }
+
     function showExistingAppointmentChoiceModal(existing = {}){
       return new Promise(resolve => {
         const old = document.getElementById('existingAppointmentChoiceBackdrop');
         if(old) old.remove();
 
-        const dateText = existing?.datePretty || existing?.date || '';
+        const dateText = formatExistingAppointmentDateText(existing);
         const timeText = existing?.time || '';
         const serviceText = existing?.service || '';
 
@@ -4369,7 +4375,6 @@ function formatDisplayDate(dateStr){
               <div>מצאנו תור קיים בתאריך:</div>
               <div style="display:inline-flex;gap:8px;align-items:center;justify-content:center;margin-top:6px;padding:9px 12px;border-radius:15px;background:rgba(215,180,109,.08);border:1px solid rgba(215,180,109,.16);color:#f1d18f;font-weight:900;">
                 <span>${escapeHtml(dateText)}</span>
-                ${timeText ? `<span>|</span><span>${escapeHtml(timeText)}</span>` : ''}
               </div>
               ${serviceText ? `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${escapeHtml(serviceText)}</div>` : ''}
             </div>
