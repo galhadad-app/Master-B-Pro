@@ -62,7 +62,7 @@ const SESSIONS_COLLECTION = "wa_sessions";
 const SLOT_STEP_MINUTES = 30;
 const MAX_DAYS_TO_SHOW = 7;
 const WAITLIST_CLAIM_TTL_MS = 10 * 60 * 1000; // 10 דקות לתפיסת תור מרשימת המתנה
-const EXISTING_POPUP_FIX_VERSION = 'existing-popup-v4-2026-05-17';
+const EXISTING_POPUP_FIX_VERSION = 'existing-popup-v5-2026-05-17-html-clean';
 console.log('✅ Server build:', EXISTING_POPUP_FIX_VERSION);
 
 const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
