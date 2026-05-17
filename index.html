@@ -375,6 +375,50 @@
     .success-btn-row{display:flex;justify-content:center}
     .success-btn{padding:11px 20px;border:none;border-radius:999px;background:#e6c27a;color:#1a1409;font-weight:700;font-size:15px;cursor:pointer;transition:.2s opacity;}
 
+    .cancel-modal{
+      text-align:center;
+      width:min(92vw,360px);
+      background:#0f1115;
+      color:#f5f5f5;
+      border:none;
+      border-radius:28px;
+      box-shadow:0 24px 60px rgba(0,0,0,.42);
+      padding:26px 22px;
+      overflow:hidden;
+      transform-origin:center center;
+    }
+    .modal-backdrop.show .cancel-modal{animation:successPop .32s ease}
+    .cancel-icon{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      margin:0 auto 14px;
+      width:54px;
+      height:54px;
+      border-radius:50%;
+      font-size:34px;
+      font-weight:900;
+      color:#ff8a8a;
+      background:rgba(255,123,123,.10);
+      border:1px solid rgba(255,123,123,.24);
+      animation:popIn .4s ease;
+      line-height:1;
+    }
+    .cancel-modal h3{margin:0 0 8px;font-size:18px;line-height:1.4;color:#f5f5f5;font-weight:600;}
+    .cancel-modal .success-details:first-of-type{
+      display:table;
+      width:auto;
+      max-width:max-content;
+      margin:0 auto 16px;
+      padding:7px 10px;
+      border:1px solid rgba(255,123,123,.20);
+      border-radius:12px;
+      background:rgba(255,123,123,.055);
+    }
+    .cancel-datetime{display:block;font-size:16px;font-weight:600;margin:0;letter-spacing:.35px;color:#ffb5b5;line-height:1.25;white-space:nowrap;}
+    .cancel-btn{padding:11px 20px;border:none;border-radius:999px;background:#ff8a8a;color:#230b0b;font-weight:800;font-size:15px;cursor:pointer;transition:.2s opacity;}
+
+
     .owner-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
     .owner-badge{display:inline-flex;align-items:center;padding:8px 12px;border-radius:999px;color:#f3ddb0;border:1px solid rgba(215,180,109,.18);background:rgba(215,180,109,.08);font-size:12px}
     .owner-shell{background:linear-gradient(180deg,#151922 0%,#111621 100%);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);padding:16px;margin-top:14px;}
@@ -3631,7 +3675,7 @@ body.business-frozen{overflow:hidden;}
         }else if(waitlist && waitlist.disabled){
           showToast('התור בוטל. הווצאפ כבוי לעסק הזה.');
         }else{
-          showToast('התור בוטל והשעה חזרה להיות זמינה.');
+          showCancelledAppointmentModal(appointment || appt || currentAppointment || selectedAppointment || {});
         }
         return true;
       }
@@ -4044,7 +4088,7 @@ body.business-frozen{overflow:hidden;}
       }
     }
 
-    async function cancelAppointmentByOwner(){ if(!activeDetailsItem) return; const removed = await removeAppointment(activeDetailsItem, { source:'owner' }); closeDetailsModal(); if(removed) showToast('התור בוטל והשעה חזרה להיות זמינה.'); }
+    async function cancelAppointmentByOwner(){ if(!activeDetailsItem) return; const removed = await removeAppointment(activeDetailsItem, { source:'owner' }); closeDetailsModal(); if(removed) showCancelledAppointmentModal(appointment || appt || currentAppointment || selectedAppointment || {}); }
 
     function openMyAppointmentModal(){
       const savedCustomer = getSavedReturningCustomer();
@@ -4112,7 +4156,7 @@ body.business-frozen{overflow:hidden;}
       helper.textContent = "זהו התור העתידי הקרוב שלך.";
     }
 
-    async function cancelClientAppointment(){ if(!activeClientAppointment) return; const removed = await removeAppointment(activeClientAppointment, { source:'client' }); if(removed){ showToast('התור בוטל והשעה חזרה להיות זמינה.'); closeMyAppointmentModal(); } }
+    async function cancelClientAppointment(){ if(!activeClientAppointment) return; const removed = await removeAppointment(activeClientAppointment, { source:'client' }); if(removed){ showCancelledAppointmentModal(appointment || appt || currentAppointment || selectedAppointment || {}); closeMyAppointmentModal(); } }
 
     function openSuccessModal(dateText, timeText, serviceText){
       const safeDate = String(dateText || '').replace(/\//g,'.').slice(0,5);
@@ -5095,6 +5139,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
     });
+
+
+
+function formatCancelledAppointmentDateText(appt = {}){
+  const rawDate = String(appt?.date || appt?.dateKey || '').trim();
+  const rawTime = String(appt?.time || '').trim();
+
+  if(!rawDate || !/^\d{4}-\d{2}-\d{2}$/.test(rawDate)){
+    return [String(appt?.datePretty || rawDate || '').trim(), rawTime].filter(Boolean).join(' | ');
+  }
+
+  const [year, month, day] = rawDate.split('-');
+  const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+  const dayNamesHe = ['יום ראשון','יום שני','יום שלישי','יום רביעי','יום חמישי','יום שישי','שבת'];
+  const dayName = dayNamesHe[dateObj.getDay()] || '';
+  const formattedDate = `${day}/${month}/${year}`;
+
+  return [dayName, formattedDate, rawTime].filter(Boolean).join(' | ');
+}
+
+function showCancelledAppointmentModal(appt = {}){
+  const dateText = formatCancelledAppointmentDateText(appt);
+  const serviceText = String(appt?.service || '').trim();
+  const nameText = String(appt?.name || '').trim();
+
+  const existing = document.getElementById('cancelAppointmentSuccessModal');
+  if(existing) existing.remove();
+
+  const html = `
+    <div class="modal-backdrop show" id="cancelAppointmentSuccessModal">
+      <div class="cancel-modal">
+        <div class="cancel-icon">×</div>
+        <h3>התור בוטל בהצלחה</h3>
+
+        <div class="success-details">
+          <span class="cancel-datetime">${escapeHtml(dateText)}</span>
+        </div>
+
+        <p class="success-note">
+          ${nameText ? `שם: ${escapeHtml(nameText)}<br>` : ''}
+          ${serviceText ? `שירות: ${escapeHtml(serviceText)}<br>` : ''}
+          השעה חזרה להיות זמינה לקביעת תור.
+        </p>
+
+        <div class="success-btn-row">
+          <button class="cancel-btn" onclick="closeCancelledAppointmentModal()">אישור</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function closeCancelledAppointmentModal(){
+  document.getElementById('cancelAppointmentSuccessModal')?.remove();
+}
 
 </script>
 
