@@ -588,7 +588,7 @@
     @keyframes logoIntro{0%{opacity:0;transform:scale(.82)}60%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
     @keyframes logoFloat{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
 
-    .my-appointment-modal{width:min(92vw,258px);padding:12px;border-radius:18px;}
+    .my-appointment-modal{width:min(92vw,360px);padding:16px;border-radius:22px;}
     .my-appt-head{display:flex;justify-content:center;align-items:center;margin-bottom:8px;text-align:center;}
     .my-appt-head h3{margin:0;font-size:15px;color:#f7e7c3;font-weight:800;line-height:1.2}
     .my-appt-field-label{display:block;font-size:10px;color:#8e97a8;margin:0 4px 6px}
@@ -1575,7 +1575,7 @@ body.business-frozen{overflow:hidden;}
             <div class="table-wrap">
               <table class="appointments-table">
                 <thead>
-                  <tr class="clickable-row" onclick="openWaitlistDetails(waiting)"><th>שם</th><th>תאריך</th><th>שעה</th><th>פלאפון</th></tr>
+                  <tr><th>שם</th><th>תאריך</th><th>שעה</th><th>פלאפון</th></tr>
                 </thead>
                 <tbody id="ownerAppointmentsBody"></tbody>
               </table>
@@ -3491,17 +3491,71 @@ body.business-frozen{overflow:hidden;}
         const dateDisplay = entry.date === todayKey ? '<span class="today-badge">היום</span>' : formatDatePrettyFromKey(entry.date);
         const phone = formatDisplayPhone(entry.customerPhone || entry.phoneDisplay || entry.phone);
         const phoneDisplay = phone ? `<a class="phone-link" href="tel:${phone}" onclick="event.stopPropagation()">${phone}</a>` : '-';
-        return `<tr>
+        return `<tr class="clickable-row" data-waitlist-id="${escapeHtml(entry.id || '')}">
           <td>${escapeHtml(entry.name || '-')}</td>
           <td>${dateDisplay}</td>
           <td>${phoneDisplay}</td>
           <td>
             <div class="waitlist-actions">
-              <button type="button" class="waitlist-action-btn waitlist-delete-btn" data-waitlist-delete="${entry.id}">מחק</button>
+              <button type="button" class="waitlist-action-btn waitlist-delete-btn" data-waitlist-delete="${escapeHtml(entry.id || '')}">מחק</button>
             </div>
           </td>
         </tr>`;
       }).join('');
+
+      body.querySelectorAll('tr[data-waitlist-id]').forEach((row) => {
+        row.addEventListener('click', (event) => {
+          if(event.target.closest('button, a')) return;
+          const entry = rows.find(item => String(item.id || '') === String(row.dataset.waitlistId || ''));
+          if(entry) openWaitlistDetailsModal(entry);
+        });
+      });
+    }
+
+
+
+    function openWaitlistDetailsModal(entry){
+      if(!entry) return;
+      const existing = document.getElementById('waitlistDetailsModal');
+      if(existing) existing.remove();
+
+      const dateText = entry.date === formatDateKey(new Date()) ? 'היום' : formatDatePrettyFromKey(entry.date || '');
+      const phone = formatDisplayPhone(entry.customerPhone || entry.phoneDisplay || entry.phone) || '-';
+      const timeText = entry.offeredTime || entry.time || 'ממתין לתור פנוי';
+      const statusText = entry.status || 'ממתין';
+
+      const html = `
+        <div class="modal-backdrop show" id="waitlistDetailsModal">
+          <div class="modal">
+            <h3>פרטי רשימת המתנה</h3>
+            <div class="details-grid">
+              <div class="detail-box"><div class="detail-label">שם</div><div class="detail-value">${escapeHtml(entry.name || '-')}</div></div>
+              <div class="detail-box"><div class="detail-label">תאריך</div><div class="detail-value">${dateText}</div></div>
+              <div class="detail-box"><div class="detail-label">שעה</div><div class="detail-value">${escapeHtml(timeText)}</div></div>
+              <div class="detail-box"><div class="detail-label">מספר פלאפון</div><div class="detail-value">${escapeHtml(phone)}</div></div>
+              <div class="detail-box"><div class="detail-label">שירות</div><div class="detail-value">${escapeHtml(entry.service || 'לא נבחר')}</div></div>
+              <div class="detail-box"><div class="detail-label">סטטוס</div><div class="detail-value">${escapeHtml(statusText)}</div></div>
+            </div>
+            <div class="modal-actions">
+              <button class="danger-btn" id="deleteWaitlistFromDetailsBtn">מחק מרשימת המתנה</button>
+              <button class="secondary-btn" id="closeWaitlistDetailsBtn">סגור</button>
+            </div>
+          </div>
+        </div>`;
+
+      document.body.insertAdjacentHTML('beforeend', html);
+      document.getElementById('closeWaitlistDetailsBtn')?.addEventListener('click', closeWaitlistDetailsModal);
+      document.getElementById('waitlistDetailsModal')?.addEventListener('click', (event) => {
+        if(event.target.id === 'waitlistDetailsModal') closeWaitlistDetailsModal();
+      });
+      document.getElementById('deleteWaitlistFromDetailsBtn')?.addEventListener('click', async () => {
+        closeWaitlistDetailsModal();
+        await deleteWaitlistEntry(entry.id);
+      });
+    }
+
+    function closeWaitlistDetailsModal(){
+      document.getElementById('waitlistDetailsModal')?.remove();
     }
 
     function getCustomerByPhone(phone){ const normalizedPhone = normalizePhone(phone); return getUniqueCustomers().find(customer => customer.phone === normalizedPhone) || null; }
@@ -4686,7 +4740,7 @@ document.getElementById('bookBtn').addEventListener('click', bookAppointment);
     document.getElementById('clientService').addEventListener('change', updateBookButtonState);
     document.getElementById('clientFirstName').addEventListener('input', (e)=>allowHebrewOnly(e.target));
     document.getElementById('clientLastName').addEventListener('input', (e)=>allowHebrewOnly(e.target));
-    document.getElementById('ownerWaitlistBody')?.addEventListener('click', (e) => { const deleteBtn = e.target.closest('[data-waitlist-delete]'); if(deleteBtn){ deleteWaitlistEntry(deleteBtn.dataset.waitlistDelete); } });
+    document.getElementById('ownerWaitlistBody')?.addEventListener('click', (e) => { const deleteBtn = e.target.closest('[data-waitlist-delete]'); if(deleteBtn){ e.stopPropagation(); deleteWaitlistEntry(deleteBtn.dataset.waitlistDelete); } });
     document.getElementById('customerSearchInput')?.addEventListener('input', renderOwnerCustomers);
     document.getElementById('ownerCodeInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') submitOwnerCode(); });
     document.getElementById('ownerCodeInput').addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); if(e.target.value.length === 4) submitOwnerCode(); });
@@ -5041,58 +5095,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
     });
-
-
-function openWaitlistDetails(waitingCustomer){
-  if(!waitingCustomer) return;
-
-  const details = [
-    ['שם', waitingCustomer.name || '-'],
-    ['טלפון', waitingCustomer.phone || '-'],
-    ['תאריך', waitingCustomer.date || '-'],
-    ['שעה', waitingCustomer.time || '-'],
-    ['שירות', waitingCustomer.service || '-'],
-    ['סטטוס', 'ברשימת המתנה']
-  ];
-
-  const detailsHtml = details.map(([label,value]) => `
-    <div class="detail-box">
-      <div class="detail-label">${label}</div>
-      <div class="detail-value">${value}</div>
-    </div>
-  `).join('');
-
-  const modalHtml = `
-    <div class="modal-backdrop show" id="waitlistDetailsModal">
-      <div class="modal">
-        <h3>פרטי לקוח</h3>
-
-        <div class="details-grid">
-          ${detailsHtml}
-        </div>
-
-        <div class="booking-actions">
-          <button class="danger-btn" onclick="deleteWaitlistEntry('${waitingCustomer.id || ''}')">
-            מחק מרשימת המתנה
-          </button>
-
-          <button class="secondary-btn" onclick="closeWaitlistDetailsModal()">
-            סגור
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  const existing = document.getElementById('waitlistDetailsModal');
-  if(existing) existing.remove();
-
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
-
-function closeWaitlistDetailsModal(){
-  document.getElementById('waitlistDetailsModal')?.remove();
-}
 
 </script>
 
