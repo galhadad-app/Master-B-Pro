@@ -394,16 +394,16 @@
       justify-content:center;
       align-items:center;
       margin:0 auto 14px;
-      width:54px;
-      height:54px;
-      border-radius:50%;
-      font-size:34px;
+      font-size:42px;
       font-weight:900;
-      color:#ff8a8a;
-      background:rgba(255,123,123,.10);
-      border:1px solid rgba(255,123,123,.24);
+      color:#ff6f6f;
       animation:popIn .4s ease;
       line-height:1;
+      background:transparent !important;
+      border:none !important;
+      width:auto !important;
+      height:auto !important;
+      border-radius:0 !important;
     }
     .cancel-modal h3{margin:0 0 8px;font-size:18px;line-height:1.4;color:#f5f5f5;font-weight:600;}
     .cancel-modal .success-details:first-of-type{
@@ -412,12 +412,31 @@
       max-width:max-content;
       margin:0 auto 16px;
       padding:7px 10px;
-      border:1px solid rgba(255,123,123,.20);
+      border:1px solid rgba(230,194,122,.18);
       border-radius:12px;
-      background:rgba(255,123,123,.055);
+      background:rgba(230,194,122,.05);
     }
-    .cancel-datetime{display:block;font-size:16px;font-weight:600;margin:0;letter-spacing:.35px;color:#ffb5b5;line-height:1.25;white-space:nowrap;}
-    .cancel-btn{padding:11px 20px;border:none;border-radius:999px;background:#ff8a8a;color:#230b0b;font-weight:800;font-size:15px;cursor:pointer;transition:.2s opacity;}
+    .cancel-datetime{
+      display:block;
+      font-size:16px;
+      font-weight:600;
+      margin:0;
+      letter-spacing:.35px;
+      color:#e6c27a;
+      line-height:1.25;
+      white-space:nowrap;
+    }
+    .cancel-btn{
+      padding:11px 20px;
+      border:none;
+      border-radius:999px;
+      background:#e6c27a;
+      color:#1a1409;
+      font-weight:700;
+      font-size:15px;
+      cursor:pointer;
+      transition:.2s opacity;
+    }
 
 
     .owner-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
@@ -5184,7 +5203,6 @@ function formatCancelledAppointmentDateText(appt = {}){
 function showCancelledAppointmentModal(appt = {}){
   const dateText = formatCancelledAppointmentDateText(appt);
   const serviceText = String(appt?.service || '').trim();
-  const nameText = String(appt?.name || '').trim();
 
   const existing = document.getElementById('cancelAppointmentSuccessModal');
   if(existing) existing.remove();
@@ -5200,7 +5218,6 @@ function showCancelledAppointmentModal(appt = {}){
         </div>
 
         <p class="success-note">
-          ${nameText ? `שם: ${escapeHtml(nameText)}<br>` : ''}
           ${serviceText ? `שירות: ${escapeHtml(serviceText)}<br>` : ''}
           השעה חזרה להיות זמינה לקביעת תור.
         </p>
