@@ -375,6 +375,7 @@
     .success-btn-row{display:flex;justify-content:center}
     .success-btn{padding:11px 20px;border:none;border-radius:999px;background:#e6c27a;color:#1a1409;font-weight:700;font-size:15px;cursor:pointer;transition:.2s opacity;}
 
+    #cancelAppointmentSuccessModal{z-index:999999;}
     .cancel-modal{
       text-align:center;
       width:min(92vw,360px);
@@ -3665,21 +3666,28 @@ body.business-frozen{overflow:hidden;}
     }
 
     async function removeAppointment(item, options = {}){
-      if(!item?.id) return false;
+      if(!item?.id) return { ok:false };
       const source = options.source || 'owner';
+      const cancelledItem = { ...item };
+
       try{
         const result = await deleteAppointmentFromFirebase(item.id, { source, notifyWaitlist: true });
         const waitlist = result?.waitlist || null;
+
+        // הביטול עצמו הצליח. הודעות וואטסאפ / רשימת המתנה לא אמורות לשבור את המסך.
         if(waitlist && typeof waitlist.sent === 'number' && waitlist.sent > 0){
-          showToast(`התור בוטל ונשלחה הודעה אוטומטית ל-${waitlist.sent} ממתינים.`);
+          console.log(`התור בוטל ונשלחה הודעה אוטומטית ל-${waitlist.sent} ממתינים.`);
         }else if(waitlist && waitlist.disabled){
-          showToast('התור בוטל. הווצאפ כבוי לעסק הזה.');
-        }else{
-          showCancelledAppointmentModal(appointment || appt || currentAppointment || selectedAppointment || {});
+          console.log('התור בוטל. הווצאפ כבוי לעסק הזה.');
         }
-        return true;
+
+        return { ok:true, appointment: cancelledItem, waitlist };
       }
-      catch(err){ console.error(err); showToast(err.message || 'שגיאה בביטול התור.', true); return false; }
+      catch(err){
+        console.error(err);
+        showToast(err.message || 'שגיאה בביטול התור.', true);
+        return { ok:false };
+      }
     }
 
     function getActiveAppointments(){
@@ -4088,7 +4096,14 @@ body.business-frozen{overflow:hidden;}
       }
     }
 
-    async function cancelAppointmentByOwner(){ if(!activeDetailsItem) return; const removed = await removeAppointment(activeDetailsItem, { source:'owner' }); closeDetailsModal(); if(removed) showCancelledAppointmentModal(appointment || appt || currentAppointment || selectedAppointment || {}); }
+    async function cancelAppointmentByOwner(){
+      if(!activeDetailsItem) return;
+      const result = await removeAppointment(activeDetailsItem, { source:'owner' });
+      if(result?.ok){
+        closeDetailsModal();
+        showCancelledAppointmentModal(result.appointment);
+      }
+    }
 
     function openMyAppointmentModal(){
       const savedCustomer = getSavedReturningCustomer();
@@ -4156,7 +4171,14 @@ body.business-frozen{overflow:hidden;}
       helper.textContent = "זהו התור העתידי הקרוב שלך.";
     }
 
-    async function cancelClientAppointment(){ if(!activeClientAppointment) return; const removed = await removeAppointment(activeClientAppointment, { source:'client' }); if(removed){ showCancelledAppointmentModal(appointment || appt || currentAppointment || selectedAppointment || {}); closeMyAppointmentModal(); } }
+    async function cancelClientAppointment(){
+      if(!activeClientAppointment) return;
+      const result = await removeAppointment(activeClientAppointment, { source:'client' });
+      if(result?.ok){
+        closeMyAppointmentModal();
+        showCancelledAppointmentModal(result.appointment);
+      }
+    }
 
     function openSuccessModal(dateText, timeText, serviceText){
       const safeDate = String(dateText || '').replace(/\//g,'.').slice(0,5);
