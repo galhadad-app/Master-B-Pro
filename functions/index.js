@@ -157,6 +157,9 @@ app.post("/appointments/create", async (req, res) => {
     const time = String(body.time || "").trim();
     const notes = String(body.notes || "").trim();
     const source = String(body.source || "אפליקציה").trim() || "אפליקציה";
+    const forceCreate = body.forceCreate === true;
+    const replaceExisting = body.replaceExisting === true;
+    const existingAppointmentId = String(body.existingAppointmentId || "").trim();
 
     if (!businessId || !name || !phoneDisplay || !service || !date || !isValidTime(time)) {
       return res.status(400).json({ ok: false, error: "missing_required_fields", message: "חסרים פרטים לקביעת התור" });
@@ -207,13 +210,24 @@ app.post("/appointments/create", async (req, res) => {
       const businessAppointmentsSnap = await tx.get(businessAppointmentsQuery);
       const duplicateFuture = businessAppointmentsSnap.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .some((appt) => {
+        .find((appt) => {
           if (!isActiveAppointment(appt)) return false;
           if (normalizePhone(appt.phone) !== normalizedPhone) return false;
+          if (replaceExisting && existingAppointmentId && appt.id === existingAppointmentId) return false;
           return appointmentDateTime(appt) >= new Date();
         });
 
-      if (duplicateFuture) throw new Error("duplicate_future_appointment");
+      if (duplicateFuture && !forceCreate && !replaceExisting) {
+        const duplicateError = new Error("duplicate_future_appointment");
+        duplicateError.existingAppointment = {
+          id: duplicateFuture.id,
+          date: duplicateFuture.date || "",
+          datePretty: formatDatePrettyFromKey(duplicateFuture.date || ""),
+          time: duplicateFuture.time || "",
+          service: duplicateFuture.service || "",
+        };
+        throw duplicateError;
+      }
 
       tx.set(appointmentRef, {
         businessId,
@@ -229,14 +243,6 @@ app.post("/appointments/create", async (req, res) => {
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         createdAtMs: Date.now(),
       });
-    });
-
-    await removeMatchingWaitlistEntries({
-      businessId,
-      date,
-      phone: phoneDisplay,
-      appointmentId: appointmentRef.id,
-      source: "appointment_created",
     });
 
     await db.collection("logs").add({
@@ -267,7 +273,12 @@ app.post("/appointments/create", async (req, res) => {
       outside_working_hours: "השעה שנבחרה לא זמינה",
     };
     console.error("appointments/create error:", payload);
-    return res.status(status).json({ ok: false, error: code, message: messages[code] || "שגיאה בשמירת התור" });
+    return res.status(status).json({ 
+      ok: false, 
+      error: code, 
+      existingAppointment: err?.existingAppointment || null,
+      message: messages[code] || "שגיאה בשמירת התור" 
+    });
   }
 
 });
@@ -1006,7 +1017,15 @@ app.post("/waitlist/claim", async (req, res) => {
       }, { merge: true });
 
       tx.set(appointmentRef, appointment);
-      tx.delete(waitDoc.ref);
+      tx.update(waitDoc.ref, {
+        status: "נקבע",
+        offeredTime: time,
+        claimStatus: "claimed",
+        claimedAppointmentId: appointmentId,
+        claimedAt: admin.firestore.FieldValue.serverTimestamp(),
+        claimedAtMs: Date.now(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
 
       txResult = { alreadyCreated: false, appointment: { id: appointmentId, ...appointment }, waitlistId: entry.id, offerToken: offerToken || "" };
     });
@@ -1490,14 +1509,6 @@ async function handleAskName(from, text, business, session) {
     });
   });
 
-  await removeMatchingWaitlistEntries({
-    businessId: business.businessId,
-    date: session.selectedDate,
-    phone: normalizePhone(from),
-    appointmentId: whatsappAppointmentRef.id,
-    source: "whatsapp_appointment_created",
-  });
-
   await db.collection("logs").add({
     businessId: business.businessId,
     type: "appointment_created",
@@ -1605,61 +1616,6 @@ async function handleCancelConfirm(from, text, business, session) {
 // =======================
 // Waitlist automation
 // =======================
-async function removeMatchingWaitlistEntries({ businessId, date, phone, appointmentId = "", source = "appointment_created" }) {
-  try {
-    const cleanBusiness = cleanBusinessId(businessId || "");
-    const cleanDate = String(date || "").trim();
-    const normalizedPhone = normalizePhone(phone || "");
-
-    if (!cleanBusiness || !cleanDate || !normalizedPhone) {
-      return { deleted: 0 };
-    }
-
-    const snap = await db.collection(WAITLIST_COLLECTION)
-      .where("businessId", "==", cleanBusiness)
-      .where("date", "==", cleanDate)
-      .get();
-
-    const docsToDelete = snap.docs.filter((doc) => {
-      const entry = normalizeWaitlistEntry({ id: doc.id, ...doc.data() });
-      if (String(entry.status || "ממתין") !== "ממתין") return false;
-      return normalizePhone(entry.phone) === normalizedPhone;
-    });
-
-    if (!docsToDelete.length) return { deleted: 0 };
-
-    const batch = db.batch();
-    docsToDelete.forEach((doc) => batch.delete(doc.ref));
-    await batch.commit();
-
-    await db.collection("logs").add({
-      businessId: cleanBusiness,
-      type: "waitlist_auto_removed_after_booking",
-      source,
-      appointmentId,
-      phone: normalizedPhone,
-      date: cleanDate,
-      deletedCount: docsToDelete.length,
-      waitlistIds: docsToDelete.map((doc) => doc.id),
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      createdAtMs: Date.now(),
-    }).catch((err) => console.warn("waitlist auto remove log failed", getErrorPayload(err)));
-
-    console.log("✅ Removed matching waitlist entries after appointment", {
-      businessId: cleanBusiness,
-      date: cleanDate,
-      phone: normalizedPhone,
-      deleted: docsToDelete.length,
-      source,
-    });
-
-    return { deleted: docsToDelete.length };
-  } catch (err) {
-    console.error("removeMatchingWaitlistEntries error:", getErrorPayload(err));
-    return { deleted: 0, error: getErrorPayload(err) };
-  }
-}
-
 async function notifyWaitlistForFreedSlot(business, date, time) {
   try {
     if (!business?.businessId || !date || !isValidTime(time)) return { sent: 0, failed: 0 };
