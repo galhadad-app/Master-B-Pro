@@ -4334,6 +4334,62 @@ body.business-frozen{overflow:hidden;}
       bookBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
     }
 
+
+    function showExistingAppointmentChoiceModal(existing = {}){
+      return new Promise(resolve => {
+        const old = document.getElementById('existingAppointmentChoiceBackdrop');
+        if(old) old.remove();
+
+        const dateText = existing?.datePretty || existing?.date || '';
+        const timeText = existing?.time || '';
+        const serviceText = existing?.service || '';
+
+        const backdrop = document.createElement('div');
+        backdrop.id = 'existingAppointmentChoiceBackdrop';
+        backdrop.className = 'modal-backdrop show';
+        backdrop.innerHTML = `
+          <div class="modal" style="width:min(92vw,390px);text-align:center;">
+            <h3 style="margin-bottom:8px;color:#f7e7c3;">כבר קיים לך תור</h3>
+            <div style="line-height:1.8;color:var(--text);font-size:14px;margin-bottom:12px;">
+              <div>מצאנו תור קיים בתאריך:</div>
+              <div style="display:inline-flex;gap:8px;align-items:center;justify-content:center;margin-top:6px;padding:9px 12px;border-radius:15px;background:rgba(215,180,109,.08);border:1px solid rgba(215,180,109,.16);color:#f1d18f;font-weight:900;">
+                <span>${escapeHtml(dateText)}</span>
+                ${timeText ? `<span>|</span><span>${escapeHtml(timeText)}</span>` : ''}
+              </div>
+              ${serviceText ? `<div style="color:var(--muted);font-size:12px;margin-top:6px;">${escapeHtml(serviceText)}</div>` : ''}
+            </div>
+            <div style="color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:12px;">מה תרצה לעשות?</div>
+            <button id="existingReplaceBtn" class="primary-btn" style="margin-top:0;">החלף לתור החדש</button>
+            <button id="existingAdditionalBtn" class="secondary-btn" style="margin-top:9px;">קבע תור נוסף</button>
+            <button id="existingCancelBtn" class="secondary-action-btn" style="margin-top:9px;">ביטול</button>
+          </div>
+        `;
+        document.body.appendChild(backdrop);
+
+        const close = (choice) => {
+          backdrop.remove();
+          resolve(choice);
+        };
+
+        backdrop.querySelector('#existingReplaceBtn')?.addEventListener('click', () => close('replace'));
+        backdrop.querySelector('#existingAdditionalBtn')?.addEventListener('click', () => close('additional'));
+        backdrop.querySelector('#existingCancelBtn')?.addEventListener('click', () => close('cancel'));
+        backdrop.addEventListener('click', (event) => {
+          if(event.target === backdrop) close('cancel');
+        });
+      });
+    }
+
+    function resetBookingFormAfterSuccess(){
+      applyReturningCustomer();
+      const serviceEl = document.getElementById('clientService');
+      if(serviceEl) serviceEl.value = '';
+      selectedTime = null;
+      const selectedTimeText = document.getElementById('selectedTimeText');
+      if(selectedTimeText) selectedTimeText.textContent = 'עדיין לא נבחרה שעה';
+      updateBookButtonState();
+    }
+
     async function bookAppointment(){
       if(isWaitlistClaimRequest()) return claimWaitlistFromUrl();
       playBookSound();
@@ -4351,7 +4407,6 @@ body.business-frozen{overflow:hidden;}
       if(!service) return showToast('יש לבחור שירות.');
 
       const existingFutureAppointment = findFutureAppointmentByPhone(phone);
-      if(existingFutureAppointment) return showToast('למספר הזה כבר קיים תור עתידי.', true);
 
       const dateKey = formatDateKey(selectedDate);
       if(busyMap[dateKey]?.includes(selectedTime)) return showToast('השעה הזו כבר נתפסה.', true);
@@ -4370,54 +4425,58 @@ body.business-frozen{overflow:hidden;}
         }
         saveReturningCustomer(firstName, lastName, phone);
         openSuccessModal(bookedDatePretty, bookedTime, bookedService);
-        applyReturningCustomer();
-        document.getElementById('clientService').value = '';
-        selectedTime = null;
-        document.getElementById('selectedTimeText').textContent = 'עדיין לא נבחרה שעה';
-        updateBookButtonState();
+        resetBookingFormAfterSuccess();
       }catch(err){
         console.error(err);
         if(err?.code === 'slot_taken') return showToast('השעה הזו כבר נתפסה.', true);
         if(err?.code === 'duplicate_future_appointment'){
-          const existing = err?.existingAppointment || {};
-          const existingDate = existing?.datePretty || existing?.date || '';
-          const existingTime = existing?.time || '';
-          const replaceCurrent = confirm(`כבר קיים לך תור עתידי בתאריך ${existingDate} ${existingTime ? 'בשעה ' + existingTime : ''}\n\nלחץ אישור כדי להחליף לתור החדש.\nלחץ ביטול כדי לבחור האם לקבוע תור נוסף.`);
+          const existing = err?.existingAppointment || existingFutureAppointment || {};
+          const choice = await showExistingAppointmentChoiceModal(existing);
+          if(choice === 'cancel') return;
 
-          if(replaceCurrent){
-            await createAppointmentInFirebase({
-              name,
-              phone,
-              service: bookedService,
-              date: dateKey,
-              time: bookedTime,
-              status: 'נקבע',
-              source: 'אפליקציה',
-              notes: '',
-              replaceExisting: true,
-              existingAppointmentId: existing?.id || ''
-            });
-            if(existing?.id){
-              try{ await deleteAppointmentFromFirebase(existing.id, { notifyWaitlist:false }); }catch(delErr){ console.error(delErr); }
+          try{
+            if(choice === 'replace'){
+              await createAppointmentInFirebase({
+                name,
+                phone,
+                service: bookedService,
+                date: dateKey,
+                time: bookedTime,
+                status: 'נקבע',
+                source: 'אפליקציה',
+                notes: '',
+                replaceExisting: true,
+                existingAppointmentId: existing?.id || ''
+              });
             }
-            openSuccessModal(bookedDatePretty, bookedTime, bookedService);
-            return;
-          }
 
-          const createAdditional = confirm('האם תרצה לקבוע תור נוסף בנוסף לתור הקיים?');
-          if(createAdditional){
-            await createAppointmentInFirebase({
-              name,
-              phone,
-              service: bookedService,
-              date: dateKey,
-              time: bookedTime,
-              status: 'נקבע',
-              source: 'אפליקציה',
-              notes: '',
-              forceCreate: true
-            });
+            if(choice === 'additional'){
+              await createAppointmentInFirebase({
+                name,
+                phone,
+                service: bookedService,
+                date: dateKey,
+                time: bookedTime,
+                status: 'נקבע',
+                source: 'אפליקציה',
+                notes: '',
+                forceCreate: true
+              });
+            }
+
+            try{
+              await closeMatchingWaitlistEntries(phone, dateKey, bookedTime);
+            }catch(waitErr){
+              console.error('waitlist cleanup failed:', waitErr);
+            }
+
+            saveReturningCustomer(firstName, lastName, phone);
             openSuccessModal(bookedDatePretty, bookedTime, bookedService);
+            resetBookingFormAfterSuccess();
+          }catch(choiceErr){
+            console.error(choiceErr);
+            if(choiceErr?.code === 'slot_taken') return showToast('השעה הזו כבר נתפסה.', true);
+            showToast(choiceErr?.message || 'שגיאה בשמירת התור. נסה שוב בעוד רגע.', true);
           }
           return;
         }
