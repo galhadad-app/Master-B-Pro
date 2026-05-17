@@ -2631,6 +2631,9 @@ body.business-frozen{overflow:hidden;}
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...payload,
+          forceCreate: Boolean(payload.forceCreate),
+          replaceExisting: Boolean(payload.replaceExisting),
+          existingAppointmentId: payload.existingAppointmentId || '',
           businessId: getActiveBusinessId(),
           businessName: currentBusinessSettings.businessName
         })
@@ -2646,6 +2649,7 @@ body.business-frozen{overflow:hidden;}
       if(!response.ok || !result?.ok){
         const error = new Error(result?.message || result?.error || 'CREATE_APPOINTMENT_FAILED');
         error.code = result?.error || 'CREATE_APPOINTMENT_FAILED';
+        error.existingAppointment = result?.existingAppointment || null;
         throw error;
       }
 
@@ -2823,39 +2827,8 @@ body.business-frozen{overflow:hidden;}
       if(String((snap.data() || {}).businessId || '') !== getActiveBusinessId()) throw new Error('waitlist_business_mismatch');
       await ref.update({ ...updates, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     }
-    function buildPhoneMatchSet(phone){
-      const raw = String(phone || '');
-      const display = formatDisplayPhone(raw);
-      const intl = toWhatsappPhone(raw);
-      return new Set([
-        normalizePhone(raw),
-        normalizePhone(display),
-        normalizePhone(intl),
-        normalizePhone(display ? `972${display.replace(/^0/, '')}` : ''),
-        normalizePhone(raw.startsWith('972') ? formatDisplayPhone(raw) : '')
-      ].filter(Boolean));
-    }
-
-    function waitlistEntryMatchesPhone(data, phoneSet){
-      const values = [
-        data.phone,
-        data.phoneDisplay,
-        data.customerPhone,
-        data.clientPhone,
-        data.displayPhone,
-        data.customerWhatsapp,
-        data.clientWhatsapp,
-        data.whatsapp
-      ];
-      return values.some(value => {
-        const itemSet = buildPhoneMatchSet(value);
-        return [...itemSet].some(item => phoneSet.has(item));
-      });
-    }
-
     async function closeMatchingWaitlistEntries(phone, dateKey, bookedTime){
-      const phoneSet = buildPhoneMatchSet(phone);
-      if(!phoneSet.size || !dateKey) return 0;
+      const normalizedPhone = normalizePhone(phone);
 
       const snapshot = await db.collection(WAITLIST_COLLECTION)
         .where('businessId', '==', getActiveBusinessId())
@@ -2863,30 +2836,19 @@ body.business-frozen{overflow:hidden;}
         .get();
 
       const deletePromises = [];
-      const deletedIds = [];
 
       snapshot.forEach(doc => {
         const data = doc.data() || {};
-        const status = String(data.status || 'ממתין');
-        if(status !== 'ממתין') return;
+        const waitPhone = normalizePhone(data.phone || '');
 
-        if(waitlistEntryMatchesPhone(data, phoneSet)){
-          deletedIds.push(doc.id);
+        if(waitPhone === normalizedPhone){
           deletePromises.push(doc.ref.delete());
         }
       });
 
       if(deletePromises.length){
         await Promise.all(deletePromises);
-        for(let i = waitlistEntries.length - 1; i >= 0; i--){
-          if(deletedIds.includes(waitlistEntries[i].id)) waitlistEntries.splice(i, 1);
-        }
-        renderOwnerWaitlist();
-        renderDays();
-        renderSlots();
       }
-
-      return deletedIds.length;
     }
     function subscribeWaitlistRealtime(){ if(waitlistUnsubscribe) waitlistUnsubscribe(); waitlistUnsubscribe = db.collection(WAITLIST_COLLECTION).where('businessId', '==', getActiveBusinessId()).onSnapshot(snapshot => { waitlistEntries.length = 0; const todayKey = formatDateKey(new Date()); const oldWaitlistDeletes = []; snapshot.forEach(doc => { const entry = normalizeWaitlistRecord(doc.data(), doc.id); if(entry.date < todayKey){ oldWaitlistDeletes.push(doc.ref.delete().catch(err => console.error('שגיאה במחיקת רשימת המתנה ישנה:', err))); return; } waitlistEntries.push(entry); }); if(oldWaitlistDeletes.length) Promise.all(oldWaitlistDeletes); renderOwnerWaitlist(); renderDays(); renderSlots(); }, err => { console.error(err); showToast('שגיאה בטעינת רשימת ההמתנה.', true); }); }
     function getWaitlistAutoNotifyApiUrl(){
@@ -3133,12 +3095,6 @@ body.business-frozen{overflow:hidden;}
 
         const waiting = waitlistEntries.find(item => item.id === data.waitlistId);
         if(waiting) waiting.status = 'נקבע';
-
-        try{
-          await closeMatchingWaitlistEntries(createdAppointment.phone || waiting?.phone || '', dateKey, time);
-        }catch(waitErr){
-          console.error('waitlist cleanup after claim failed:', waitErr);
-        }
 
         saveReturningCustomerFromKnownData('', '', createdAppointment.name || '', formatDisplayPhone(createdAppointment.phone || ''));
         applyReturningCustomer();
@@ -4422,7 +4378,49 @@ body.business-frozen{overflow:hidden;}
       }catch(err){
         console.error(err);
         if(err?.code === 'slot_taken') return showToast('השעה הזו כבר נתפסה.', true);
-        if(err?.code === 'duplicate_future_appointment') return showToast('למספר הזה כבר קיים תור עתידי.', true);
+        if(err?.code === 'duplicate_future_appointment'){
+          const existing = err?.existingAppointment || {};
+          const existingDate = existing?.datePretty || existing?.date || '';
+          const existingTime = existing?.time || '';
+          const replaceCurrent = confirm(`כבר קיים לך תור עתידי בתאריך ${existingDate} ${existingTime ? 'בשעה ' + existingTime : ''}\n\nלחץ אישור כדי להחליף לתור החדש.\nלחץ ביטול כדי לבחור האם לקבוע תור נוסף.`);
+
+          if(replaceCurrent){
+            await createAppointmentInFirebase({
+              name,
+              phone,
+              service: bookedService,
+              date: dateKey,
+              time: bookedTime,
+              status: 'נקבע',
+              source: 'אפליקציה',
+              notes: '',
+              replaceExisting: true,
+              existingAppointmentId: existing?.id || ''
+            });
+            if(existing?.id){
+              try{ await deleteAppointmentFromFirebase(existing.id, { notifyWaitlist:false }); }catch(delErr){ console.error(delErr); }
+            }
+            openSuccessModal(bookedDatePretty, bookedTime, bookedService);
+            return;
+          }
+
+          const createAdditional = confirm('האם תרצה לקבוע תור נוסף בנוסף לתור הקיים?');
+          if(createAdditional){
+            await createAppointmentInFirebase({
+              name,
+              phone,
+              service: bookedService,
+              date: dateKey,
+              time: bookedTime,
+              status: 'נקבע',
+              source: 'אפליקציה',
+              notes: '',
+              forceCreate: true
+            });
+            openSuccessModal(bookedDatePretty, bookedTime, bookedService);
+          }
+          return;
+        }
         if(err?.code === 'business_frozen') return showToast('האפליקציה לא פעילה כרגע.', true);
         if(err?.code === 'outside_working_hours') return showToast('השעה שנבחרה לא זמינה ביום זה.', true);
         showToast(err?.message || 'שגיאה בשמירת התור. נסה שוב בעוד רגע.', true);
