@@ -1355,18 +1355,7 @@ body.business-frozen{overflow:hidden;}
   }
 }
 </style>
-  <script>
-  (function(){
-    var API_BASE = "https://api-sjchnvsuhq-uc.a.run.app";
-    var DEFAULT_BUSINESS_ID = "G7W7VxeCdQ9XWkE7Che";
-    var params = new URLSearchParams(window.location.search);
-    var raw = (params.get("business") || params.get("biz") || DEFAULT_BUSINESS_ID).trim();
-    var businessId = (raw.replace(/[^a-zA-Z0-9_-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")) || DEFAULT_BUSINESS_ID;
-    window.__PWA_API_BASE__ = API_BASE;
-    window.__PWA_BUSINESS_ID__ = businessId;
-    document.write('<link rel="manifest" id="dynamicManifest" href="' + API_BASE + '/manifest/' + encodeURIComponent(businessId) + '?v=' + Date.now() + '">');
-  })();
-  </script>
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1016">
 
 
@@ -1911,20 +1900,9 @@ body.business-frozen{overflow:hidden;}
     }
 
     // Backend API: מכאן מתחילים להעביר פעולות רגישות מה-HTML לשרת.
-    const BUILD_VERSION_EXISTING_POPUP_FIX = 'pwa-backend-manifest-v2-2026-05-18';
+    const BUILD_VERSION_EXISTING_POPUP_FIX = 'existing-popup-v5-2026-05-17-html-clean';
     console.log('✅ HTML build:', BUILD_VERSION_EXISTING_POPUP_FIX);
-    const BACKEND_API_BASE_URL = window.__PWA_API_BASE__ || 'https://api-sjchnvsuhq-uc.a.run.app';
-
-    function setBusinessManifestLink(){
-      try{
-        const link = document.getElementById('dynamicManifest') || document.querySelector('link[rel="manifest"]');
-        if(!link) return;
-        const businessId = window.__PWA_BUSINESS_ID__ || (typeof BUSINESS_ID !== 'undefined' && BUSINESS_ID) || ACTIVE_BUSINESS_ID || requestedBusinessId || DEFAULT_BUSINESS_ID;
-        link.setAttribute('href', `${BACKEND_API_BASE_URL}/manifest/${encodeURIComponent(businessId)}?v=${Date.now()}`);
-      }catch(err){ console.warn('manifest link update failed', err); }
-    }
-    setBusinessManifestLink();
-
+    const BACKEND_API_BASE_URL = 'https://api-81941134785.us-central1.run.app';
 
     /*
       זה הלב של התבנית.
@@ -5013,7 +4991,6 @@ document.getElementById('bookBtn').addEventListener('click', bookAppointment);
 <script>
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
-  try{ if(typeof setBusinessManifestLink === 'function') setBusinessManifestLink(); }catch(err){}
   e.preventDefault();
   deferredPrompt = e;
 });
@@ -5021,7 +4998,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('installAppBtn');
   if(!btn) return;
   btn.addEventListener('click', async () => {
-    try{ if(typeof setBusinessManifestLink === 'function') setBusinessManifestLink(); }catch(err){}
     if (deferredPrompt) {
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
