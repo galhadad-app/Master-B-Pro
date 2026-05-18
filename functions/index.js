@@ -62,7 +62,7 @@ const SESSIONS_COLLECTION = "wa_sessions";
 const SLOT_STEP_MINUTES = 30;
 const MAX_DAYS_TO_SHOW = 7;
 const WAITLIST_CLAIM_TTL_MS = 10 * 60 * 1000; // 10 דקות לתפיסת תור מרשימת המתנה
-const EXISTING_POPUP_FIX_VERSION = 'existing-popup-v5-2026-05-17-html-clean';
+const EXISTING_POPUP_FIX_VERSION = 'pwa-dynamic-manifest-v1-2026-05-18';
 console.log('✅ Server build:', EXISTING_POPUP_FIX_VERSION);
 
 const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -98,6 +98,135 @@ app.get("/", (req, res) => {
 app.get("/debug/version", (req, res) => {
   res.status(200).json({ ok: true, version: EXISTING_POPUP_FIX_VERSION, time: new Date().toISOString() });
 });
+
+// =======================
+// Dynamic PWA manifest + icon per business
+// =======================
+app.get("/manifest/:businessId", async (req, res) => {
+  try {
+    const businessId = cleanBusinessId(req.params.businessId || req.query.business || "");
+    if (!businessId) return res.status(400).json({ ok: false, error: "missing_business_id" });
+
+    const business = await getBusinessSettings(businessId);
+    if (!business) return res.status(404).json({ ok: false, error: "business_not_found" });
+
+    const appBaseUrl = getAppBaseUrl().replace(/\/$/, "");
+    const appUrl = String(business.appUrl || `${appBaseUrl}/index.html?business=${encodeURIComponent(businessId)}`).trim();
+    const businessName = String(business.businessName || business.name || "מערכת תורים").trim() || "מערכת תורים";
+    const version = String(business.logoVersion || business.updatedAtMs || Date.now());
+
+    const manifest = {
+      name: businessName,
+      short_name: businessName.slice(0, 24),
+      description: `אפליקציית קביעת תורים - ${businessName}`,
+      start_url: appUrl,
+      scope: appBaseUrl + "/",
+      display: "standalone",
+      orientation: "portrait",
+      dir: "rtl",
+      lang: "he",
+      background_color: "#0d1016",
+      theme_color: "#0d1016",
+      icons: [
+        {
+          src: `${getRequestOrigin(req)}/pwa-icon/${encodeURIComponent(businessId)}/192.png?v=${encodeURIComponent(version)}`,
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any maskable"
+        },
+        {
+          src: `${getRequestOrigin(req)}/pwa-icon/${encodeURIComponent(businessId)}/512.png?v=${encodeURIComponent(version)}`,
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any maskable"
+        }
+      ]
+    };
+
+    res.set("Content-Type", "application/manifest+json; charset=utf-8");
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    return res.status(200).send(JSON.stringify(manifest));
+  } catch (err) {
+    console.error("manifest error:", getErrorPayload(err));
+    return res.status(500).json({ ok: false, error: "manifest_failed" });
+  }
+});
+
+app.get("/pwa-icon/:businessId/:size.png", async (req, res) => {
+  try {
+    const businessId = cleanBusinessId(req.params.businessId || "");
+    const size = String(req.params.size || "512").replace(/\D/g, "") === "192" ? 192 : 512;
+    const business = await getBusinessSettings(businessId);
+    if (!business) return sendFallbackSvgIcon(res, size);
+
+    const logoSource = getBusinessLogoSource(business);
+    const buffer = await getLogoBuffer(logoSource, getAppBaseUrl());
+    if (!buffer) return sendFallbackSvgIcon(res, size, business.businessName || business.name || "תורים");
+
+    // The browser accepts PNG declared icon URLs best. If the stored logo is WEBP/JPEG,
+    // it is still served here as its original bytes with no-store. Most Chromium installs accept it,
+    // but the URL stays stable and business-specific.
+    const contentType = detectImageContentType(buffer, logoSource) || "image/png";
+    res.set("Content-Type", contentType);
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    return res.status(200).send(buffer);
+  } catch (err) {
+    console.error("pwa-icon error:", getErrorPayload(err));
+    return sendFallbackSvgIcon(res, 512);
+  }
+});
+
+function getRequestOrigin(req) {
+  const proto = String(req.get("x-forwarded-proto") || req.protocol || "https").split(",")[0].trim();
+  const host = String(req.get("x-forwarded-host") || req.get("host") || "").split(",")[0].trim();
+  return host ? `${proto}://${host}` : "https://api-81941134785.us-central1.run.app";
+}
+
+function getBusinessLogoSource(business) {
+  return String(
+    business.appIconUrl ||
+    business.pwaIconUrl ||
+    business.logoUrl ||
+    business.logoSrc ||
+    business.logo ||
+    ""
+  ).trim();
+}
+
+async function getLogoBuffer(source, appBaseUrl) {
+  if (!source) return null;
+  if (/^data:image\//i.test(source)) {
+    const match = source.match(/^data:image\/[^;]+;base64,(.+)$/i);
+    return match ? Buffer.from(match[1], "base64") : null;
+  }
+  let url = source;
+  if (!/^https?:\/\//i.test(url)) {
+    url = `${String(appBaseUrl || "").replace(/\/$/, "")}/${url.replace(/^\.\//, "").replace(/^\//, "")}`;
+  }
+  const response = await axios.get(url, { responseType: "arraybuffer", timeout: 8000 });
+  return Buffer.from(response.data);
+}
+
+function detectImageContentType(buffer, source = "") {
+  const src = String(source || "");
+  const dataType = src.match(/^data:(image\/[^;]+);/i);
+  if (dataType) return dataType[1].toLowerCase();
+  if (buffer?.length >= 12) {
+    if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) return "image/png";
+    if (buffer[0] === 0xff && buffer[1] === 0xd8) return "image/jpeg";
+    if (buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP") return "image/webp";
+  }
+  return "image/png";
+}
+
+function sendFallbackSvgIcon(res, size = 512, label = "תורים") {
+  const safe = String(label || "תורים").replace(/[<>&"']/g, "").slice(0, 2) || "ת";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="${size}" height="${size}" rx="${Math.round(size * .22)}" fill="#0d1016"/><circle cx="${size/2}" cy="${size/2}" r="${Math.round(size*.32)}" fill="#d7b46d" opacity=".18"/><text x="50%" y="55%" text-anchor="middle" font-size="${Math.round(size*.20)}" font-family="Arial" font-weight="900" fill="#d7b46d">${safe}</text></svg>`;
+  res.set("Content-Type", "image/svg+xml; charset=utf-8");
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  return res.status(200).send(svg);
+}
+
 
 // =======================
 // Webhook verification
