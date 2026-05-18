@@ -1355,7 +1355,18 @@ body.business-frozen{overflow:hidden;}
   }
 }
 </style>
-  <link rel="manifest" id="dynamicManifest" href="manifest.json">
+  <script>
+  (function(){
+    var API_BASE = "https://api-sjchnvsuhq-uc.a.run.app";
+    var DEFAULT_BUSINESS_ID = "G7W7VxeCdQ9XWkE7Che";
+    var params = new URLSearchParams(window.location.search);
+    var raw = (params.get("business") || params.get("biz") || DEFAULT_BUSINESS_ID).trim();
+    var businessId = (raw.replace(/[^a-zA-Z0-9_-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")) || DEFAULT_BUSINESS_ID;
+    window.__PWA_API_BASE__ = API_BASE;
+    window.__PWA_BUSINESS_ID__ = businessId;
+    document.write('<link rel="manifest" id="dynamicManifest" href="' + API_BASE + '/manifest/' + encodeURIComponent(businessId) + '?v=' + Date.now() + '">');
+  })();
+  </script>
   <meta name="theme-color" content="#0d1016">
 
 
@@ -1900,15 +1911,15 @@ body.business-frozen{overflow:hidden;}
     }
 
     // Backend API: מכאן מתחילים להעביר פעולות רגישות מה-HTML לשרת.
-    const BUILD_VERSION_EXISTING_POPUP_FIX = 'existing-popup-v5-2026-05-17-html-clean';
+    const BUILD_VERSION_EXISTING_POPUP_FIX = 'pwa-backend-manifest-v2-2026-05-18';
     console.log('✅ HTML build:', BUILD_VERSION_EXISTING_POPUP_FIX);
-    const BACKEND_API_BASE_URL = 'https://api-81941134785.us-central1.run.app';
+    const BACKEND_API_BASE_URL = window.__PWA_API_BASE__ || 'https://api-sjchnvsuhq-uc.a.run.app';
 
     function setBusinessManifestLink(){
       try{
         const link = document.getElementById('dynamicManifest') || document.querySelector('link[rel="manifest"]');
         if(!link) return;
-        const businessId = (typeof BUSINESS_ID !== 'undefined' && BUSINESS_ID) || ACTIVE_BUSINESS_ID || requestedBusinessId || DEFAULT_BUSINESS_ID;
+        const businessId = window.__PWA_BUSINESS_ID__ || (typeof BUSINESS_ID !== 'undefined' && BUSINESS_ID) || ACTIVE_BUSINESS_ID || requestedBusinessId || DEFAULT_BUSINESS_ID;
         link.setAttribute('href', `${BACKEND_API_BASE_URL}/manifest/${encodeURIComponent(businessId)}?v=${Date.now()}`);
       }catch(err){ console.warn('manifest link update failed', err); }
     }
