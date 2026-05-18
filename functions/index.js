@@ -62,7 +62,7 @@ const SESSIONS_COLLECTION = "wa_sessions";
 const SLOT_STEP_MINUTES = 30;
 const MAX_DAYS_TO_SHOW = 7;
 const WAITLIST_CLAIM_TTL_MS = 10 * 60 * 1000; // 10 דקות לתפיסת תור מרשימת המתנה
-const EXISTING_POPUP_FIX_VERSION = 'pwa-dynamic-manifest-v1-2026-05-18';
+const EXISTING_POPUP_FIX_VERSION = 'pwa-backend-manifest-v2-2026-05-18';
 console.log('✅ Server build:', EXISTING_POPUP_FIX_VERSION);
 
 const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -179,7 +179,7 @@ app.get("/pwa-icon/:businessId/:size.png", async (req, res) => {
 function getRequestOrigin(req) {
   const proto = String(req.get("x-forwarded-proto") || req.protocol || "https").split(",")[0].trim();
   const host = String(req.get("x-forwarded-host") || req.get("host") || "").split(",")[0].trim();
-  return host ? `${proto}://${host}` : "https://api-81941134785.us-central1.run.app";
+  return host ? `${proto}://${host}` : "https://api-sjchnvsuhq-uc.a.run.app";
 }
 
 function getBusinessLogoSource(business) {
