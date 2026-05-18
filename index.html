@@ -1355,6 +1355,7 @@ body.business-frozen{overflow:hidden;}
   }
 }
 </style>
+  <link rel="manifest" id="dynamicManifest" href="manifest.json">
   <meta name="theme-color" content="#0d1016">
 
 
@@ -1382,152 +1383,6 @@ body.business-frozen{overflow:hidden;}
   }
 }
 </style>
-
-
-
-<script id="business-pwa-dynamic-manifest">
-(function(){
-  const DEFAULT_BUSINESS_ID = 'G7W7VxeCdQ9XWkE7Che';
-  let lastManifestHref = '';
-  let preparingPromise = null;
-
-  function cleanBusinessId(id){
-    return String(id || '')
-      .trim()
-      .replace(/[^a-zA-Z0-9_-]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '') || DEFAULT_BUSINESS_ID;
-  }
-
-  function getBusinessId(){
-    const params = new URLSearchParams(location.search);
-    return cleanBusinessId(params.get('business') || params.get('biz') || DEFAULT_BUSINESS_ID);
-  }
-
-  function safeParse(value){
-    try{return JSON.parse(value || '{}') || {};}catch(err){return {};}
-  }
-
-  function absoluteUrl(src){
-    const value = String(src || '').trim();
-    if(!value) return new URL('logo.png', location.href).href;
-    if(value.startsWith('data:') || value.startsWith('blob:')) return value;
-    try{return new URL(value, location.href).href;}catch(err){return new URL('logo.png', location.href).href;}
-  }
-
-  function getCachedSettings(){
-    const businessId = getBusinessId();
-    return safeParse(localStorage.getItem(`business-settings-${businessId}`));
-  }
-
-  function shortName(name){
-    const clean = String(name || '').trim() || 'מערכת תורים';
-    return clean.length > 12 ? clean.slice(0, 12) : clean;
-  }
-
-  function loadImage(src){
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      if(!String(src || '').startsWith('data:')) img.crossOrigin = 'anonymous';
-      img.src = src;
-    });
-  }
-
-  async function createInstallIcon(src){
-    const source = absoluteUrl(src || 'logo.png');
-    try{
-      const img = await loadImage(source);
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#0d1016';
-      ctx.fillRect(0, 0, 512, 512);
-      const max = 360;
-      const scale = Math.min(max / img.naturalWidth, max / img.naturalHeight, 1.4);
-      const w = Math.round(img.naturalWidth * scale);
-      const h = Math.round(img.naturalHeight * scale);
-      const x = Math.round((512 - w) / 2);
-      const y = Math.round((512 - h) / 2);
-      ctx.shadowColor = 'rgba(215,180,109,.35)';
-      ctx.shadowBlur = 34;
-      ctx.drawImage(img, x, y, w, h);
-      return canvas.toDataURL('image/png');
-    }catch(err){
-      console.warn('PWA icon canvas failed, using original logo url', err);
-      return source;
-    }
-  }
-
-  async function buildManifest(settings){
-    const safeSettings = settings || getCachedSettings() || {};
-    const businessId = getBusinessId();
-    const appName = String(safeSettings.businessName || safeSettings.name || '').trim() || 'מערכת תורים';
-    const logoSrc = safeSettings.appIconSrc || safeSettings.logoSrc || safeSettings.logoUrl || 'logo.png';
-    const icon = await createInstallIcon(logoSrc);
-    const start = new URL('index.html', location.href);
-    start.searchParams.set('business', businessId);
-    start.searchParams.set('pwa', '1');
-    start.searchParams.set('v', String(safeSettings.logoUpdatedAt || safeSettings.updatedAtMs || safeSettings.updatedAt || Date.now()));
-    return {
-      name: appName,
-      short_name: shortName(appName),
-      description: 'מערכת קביעת תורים לעסקים',
-      start_url: './' + start.pathname.split('/').pop() + start.search,
-      scope: './',
-      id: './index.html?business=' + encodeURIComponent(businessId),
-      display: 'standalone',
-      orientation: 'portrait',
-      dir: 'rtl',
-      lang: 'he',
-      background_color: '#0d1016',
-      theme_color: '#0d1016',
-      icons: [
-        { src: icon, sizes:'192x192', type:'image/png', purpose:'any maskable' },
-        { src: icon, sizes:'512x512', type:'image/png', purpose:'any maskable' }
-      ]
-    };
-  }
-
-  async function prepareManifest(settings){
-    preparingPromise = (async () => {
-      const manifest = await buildManifest(settings || getCachedSettings());
-      const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
-      const href = URL.createObjectURL(blob);
-      let link = document.querySelector('link[rel="manifest"]');
-      if(!link){
-        link = document.createElement('link');
-        link.rel = 'manifest';
-        document.head.appendChild(link);
-      }
-      link.href = href;
-      if(lastManifestHref) URL.revokeObjectURL(lastManifestHref);
-      lastManifestHref = href;
-      window.__businessPwaManifest = manifest;
-      window.__businessPwaSignature = JSON.stringify({
-        businessId:getBusinessId(),
-        name:manifest.name,
-        icon:manifest.icons && manifest.icons[0] && manifest.icons[0].src
-      });
-      window.dispatchEvent(new CustomEvent('business-pwa-manifest-ready', {detail: manifest}));
-      return manifest;
-    })();
-    return preparingPromise;
-  }
-
-  window.__prepareBusinessPwaManifest = prepareManifest;
-  window.__setBusinessPwaManifest = prepareManifest;
-  window.__getBusinessPwaReadyPromise = () => preparingPromise;
-
-  // לא יוצרים manifest ברירת מחדל מיידית. מחכים להגדרות העסק כדי ש-Chrome לא יתפוס את "תן לעבוד".
-  const cached = getCachedSettings();
-  if(cached && (cached.businessName || (cached.logoSrc && cached.logoSrc !== 'logo.png'))){
-    prepareManifest(cached);
-  }
-})();
-</script>
 
 </head>
 <body>
@@ -2049,6 +1904,17 @@ body.business-frozen{overflow:hidden;}
     console.log('✅ HTML build:', BUILD_VERSION_EXISTING_POPUP_FIX);
     const BACKEND_API_BASE_URL = 'https://api-81941134785.us-central1.run.app';
 
+    function setBusinessManifestLink(){
+      try{
+        const link = document.getElementById('dynamicManifest') || document.querySelector('link[rel="manifest"]');
+        if(!link) return;
+        const businessId = (typeof BUSINESS_ID !== 'undefined' && BUSINESS_ID) || ACTIVE_BUSINESS_ID || requestedBusinessId || DEFAULT_BUSINESS_ID;
+        link.setAttribute('href', `${BACKEND_API_BASE_URL}/manifest/${encodeURIComponent(businessId)}?v=${Date.now()}`);
+      }catch(err){ console.warn('manifest link update failed', err); }
+    }
+    setBusinessManifestLink();
+
+
     /*
       זה הלב של התבנית.
       לכל עסק חדש הנתונים נטענים לפי ACTIVE_BUSINESS_ID מהכתובת.
@@ -2236,9 +2102,6 @@ body.business-frozen{overflow:hidden;}
       updateBusinessFrozenScreen(currentBusinessSettings);
       syncSettingsTextFields();
       applyBusinessTemplate();
-      if(typeof window.__prepareBusinessPwaManifest === 'function'){
-        window.__prepareBusinessPwaManifest(currentBusinessSettings);
-      }
       rerenderAll();
     }
 
@@ -2305,9 +2168,6 @@ body.business-frozen{overflow:hidden;}
       }
       document.getElementById('bookingTitle').textContent = settings.bookingTitle;
       document.getElementById('successTitle').textContent = businessName ? `התור נקבע ב${businessName}` : 'התור נקבע';
-      if(typeof window.__setBusinessPwaManifest === 'function'){
-        window.__setBusinessPwaManifest(settings);
-      }
 
       const settingsLogoPreview = document.getElementById('settingsLogoPreview');
       const settingsHeroPreview = document.getElementById('settingsHeroPreview');
@@ -5140,39 +5000,24 @@ document.getElementById('bookBtn').addEventListener('click', bookAppointment);
 
 
 <script>
-let deferredPrompt = null;
-let installPromptSeen = false;
-
+let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
+  try{ if(typeof setBusinessManifestLink === 'function') setBusinessManifestLink(); }catch(err){}
   e.preventDefault();
   deferredPrompt = e;
-  installPromptSeen = true;
 });
-
-async function prepareInstallManifestNow(){
-  const settings = window.__lastBusinessSettings || currentBusinessSettings || {};
-  if(typeof window.__prepareBusinessPwaManifest === 'function'){
-    await window.__prepareBusinessPwaManifest(settings);
-  }
-  // נותן ל-Chrome רגע קצר לקרוא את ה-manifest החדש לפני פתיחת חלון ההתקנה.
-  await new Promise(resolve => setTimeout(resolve, 350));
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('installAppBtn');
   if(!btn) return;
-
   btn.addEventListener('click', async () => {
-    await prepareInstallManifestNow();
-
-    if(deferredPrompt){
+    try{ if(typeof setBusinessManifestLink === 'function') setBusinessManifestLink(); }catch(err){}
+    if (deferredPrompt) {
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
       deferredPrompt = null;
-      return;
+    } else {
+      alert("באייפון: לחץ שיתוף → הוסף למסך הבית");
     }
-
-    alert('חלון ההתקנה עדיין לא מוכן. רענן פעם אחת את העמוד של העסק ואז לחץ שוב על התקנת האפליקציה. אם זה אייפון: שיתוף → הוסף למסך הבית.');
   });
 });
 </script>
