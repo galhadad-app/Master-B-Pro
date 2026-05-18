@@ -1,6 +1,6 @@
 {
-  "name": "תן לעבוד!",
-  "short_name": "תן לעבוד",
+  "name": "מערכת תורים",
+  "short_name": "תורים",
   "description": "מערכת קביעת תורים לעסקים",
   "start_url": "./index.html",
   "scope": "./",
