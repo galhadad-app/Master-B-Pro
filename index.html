@@ -1384,24 +1384,53 @@ body.business-frozen{overflow:hidden;}
 </style>
 
 
-<script>
+
+<script id="business-pwa-dynamic-manifest">
 (function(){
-  function setupDynamicManifest(){
+  const DEFAULT_BUSINESS_ID = 'G7W7VxeCdQ9XWkE7Che';
+  function cleanBusinessId(id){
+    return String(id || '')
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || DEFAULT_BUSINESS_ID;
+  }
+  function getBusinessId(){
     const params = new URLSearchParams(location.search);
-    const businessId = params.get('business') || 'default';
-
-    const logoEl = document.getElementById('businessLogo');
-    const appNameEl = document.getElementById('businessName');
-
-    const logoSrc = logoEl && logoEl.src ? logoEl.src : 'logo.png';
-    const appName = (appNameEl && appNameEl.textContent.trim()) || 'מערכת תורים';
-
-    const manifest = {
+    return cleanBusinessId(params.get('business') || params.get('biz') || DEFAULT_BUSINESS_ID);
+  }
+  function safeParse(value){
+    try{return JSON.parse(value || '{}') || {};}catch(err){return {};}
+  }
+  function absoluteUrl(src){
+    const value = String(src || '').trim();
+    if(!value) return new URL('logo.png', location.href).href;
+    if(value.startsWith('data:') || value.startsWith('blob:')) return value;
+    try{return new URL(value, location.href).href;}catch(err){return new URL('logo.png', location.href).href;}
+  }
+  function getCachedSettings(){
+    const businessId = getBusinessId();
+    return safeParse(localStorage.getItem(`business-settings-${businessId}`));
+  }
+  function shortName(name){
+    const clean = String(name || '').trim() || 'מערכת תורים';
+    return clean.length > 12 ? clean.slice(0, 12) : clean;
+  }
+  function buildManifest(settings){
+    const businessId = getBusinessId();
+    const appName = String(settings.businessName || settings.name || '').trim() || 'מערכת תורים';
+    const logo = absoluteUrl(settings.appIconSrc || settings.logoSrc || settings.logoUrl || 'logo.png');
+    const version = encodeURIComponent(String(settings.logoUpdatedAt || settings.updatedAtMs || settings.updatedAt || Date.now()));
+    const start = new URL('index.html', location.href);
+    start.searchParams.set('business', businessId);
+    start.searchParams.set('pwa', '1');
+    return {
       name: appName,
-      short_name: appName,
+      short_name: shortName(appName),
       description: 'מערכת קביעת תורים לעסקים',
-      start_url: './index.html?business=' + encodeURIComponent(businessId),
+      start_url: start.pathname.split('/').pop() + start.search,
       scope: './',
+      id: './index.html?business=' + encodeURIComponent(businessId),
       display: 'standalone',
       orientation: 'portrait',
       dir: 'rtl',
@@ -1409,41 +1438,35 @@ body.business-frozen{overflow:hidden;}
       background_color: '#0d1016',
       theme_color: '#0d1016',
       icons: [
-        {
-          src: logoSrc,
-          sizes: '192x192',
-          type: 'image/png',
-          purpose: 'any maskable'
-        },
-        {
-          src: logoSrc,
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'any maskable'
-        }
+        { src: logo + (logo.includes('?') || logo.startsWith('data:') || logo.startsWith('blob:') ? '' : '?v=' + version), sizes:'192x192', type:'image/png', purpose:'any maskable' },
+        { src: logo + (logo.includes('?') || logo.startsWith('data:') || logo.startsWith('blob:') ? '' : '?v=' + version), sizes:'512x512', type:'image/png', purpose:'any maskable' }
       ]
     };
-
-    const manifestBlob = new Blob(
-      [JSON.stringify(manifest)],
-      {type:'application/json'}
-    );
-
-    const manifestURL = URL.createObjectURL(manifestBlob);
-
+  }
+  function setManifest(settings){
+    const manifest = buildManifest(settings || getCachedSettings());
+    const json = JSON.stringify(manifest);
+    const blob = new Blob([json], {type:'application/manifest+json'});
+    const href = URL.createObjectURL(blob);
     let link = document.querySelector('link[rel="manifest"]');
     if(!link){
       link = document.createElement('link');
       link.rel = 'manifest';
       document.head.appendChild(link);
     }
-
-    link.href = manifestURL;
+    if(window.__businessManifestObjectUrl) URL.revokeObjectURL(window.__businessManifestObjectUrl);
+    window.__businessManifestObjectUrl = href;
+    link.href = href;
+    window.__businessPwaManifest = manifest;
+    window.__businessPwaSignature = JSON.stringify({
+      businessId:getBusinessId(),
+      name:manifest.name,
+      icon:manifest.icons && manifest.icons[0] && manifest.icons[0].src
+    });
+    return manifest;
   }
-
-  window.addEventListener('load', () => {
-    setTimeout(setupDynamicManifest, 1200);
-  });
+  window.__setBusinessPwaManifest = setManifest;
+  setManifest(getCachedSettings());
 })();
 </script>
 
@@ -2154,6 +2177,19 @@ body.business-frozen{overflow:hidden;}
       updateBusinessFrozenScreen(currentBusinessSettings);
       syncSettingsTextFields();
       applyBusinessTemplate();
+      if(typeof window.__setBusinessPwaManifest === 'function'){
+        window.__setBusinessPwaManifest(currentBusinessSettings);
+        const sig = window.__businessPwaSignature || '';
+        const reloadKey = `pwa_manifest_ready_${BUSINESS_ID}`;
+        const alreadyStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        if(!alreadyStandalone && sig && sessionStorage.getItem(reloadKey) !== sig){
+          sessionStorage.setItem(reloadKey, sig);
+          setTimeout(() => {
+            try{ location.replace(location.href); }catch(err){ location.reload(); }
+          }, 80);
+          return;
+        }
+      }
       rerenderAll();
     }
 
@@ -2220,6 +2256,9 @@ body.business-frozen{overflow:hidden;}
       }
       document.getElementById('bookingTitle').textContent = settings.bookingTitle;
       document.getElementById('successTitle').textContent = businessName ? `התור נקבע ב${businessName}` : 'התור נקבע';
+      if(typeof window.__setBusinessPwaManifest === 'function'){
+        window.__setBusinessPwaManifest(settings);
+      }
 
       const settingsLogoPreview = document.getElementById('settingsLogoPreview');
       const settingsHeroPreview = document.getElementById('settingsHeroPreview');
@@ -5061,12 +5100,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('installAppBtn');
   if(!btn) return;
   btn.addEventListener('click', async () => {
+    if(typeof window.__setBusinessPwaManifest === 'function'){
+      window.__setBusinessPwaManifest(window.__lastBusinessSettings || currentBusinessSettings || {});
+    }
     if (deferredPrompt) {
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
       deferredPrompt = null;
     } else {
-      alert("באייפון: לחץ שיתוף → הוסף למסך הבית");
+      alert("אם מופיע עדיין הלוגו הישן: מחק את קיצור הדרך הישן, רענן את הדף, ואז לחץ שוב התקנת אפליקציה. באייפון: שיתוף → הוסף למסך הבית");
     }
   });
 });
