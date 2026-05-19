@@ -4468,6 +4468,9 @@ body.business-frozen{overflow:hidden;}
     }
 
     function findClientAppointment(phoneOverride = "", autoLookup = false){
+      if(phoneOverride && typeof phoneOverride === 'object' && 'target' in phoneOverride){
+        phoneOverride = "";
+      }
       const phoneInput = document.getElementById("myAppointmentPhoneInput");
       const lookupSection = document.getElementById("myAppointmentLookupSection");
       const phone = normalizePhone(phoneOverride || phoneInput.value);
@@ -5115,7 +5118,7 @@ body.business-frozen{overflow:hidden;}
 
 document.getElementById('bookBtn').addEventListener('click', bookAppointment);
     document.getElementById('openMyAppointmentBtn').addEventListener('click', openMyAppointmentModal);
-    document.getElementById('findMyAppointmentBtn').addEventListener('click', findClientAppointment);
+    document.getElementById('findMyAppointmentBtn').addEventListener('click', () => findClientAppointment());
     document.getElementById('clientCancelAppointmentBtn').addEventListener('click', cancelClientAppointment);
     document.getElementById('cancelSelectedMyAppointmentBtn')?.addEventListener('click', cancelClientAppointment);
     document.getElementById('closeMyAppointmentBtn').addEventListener('click', closeMyAppointmentModal);
