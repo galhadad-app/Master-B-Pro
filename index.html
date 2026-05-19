@@ -4436,10 +4436,10 @@ body.business-frozen{overflow:hidden;}
       lookupSection.classList.add("hidden");
       resultBox.classList.add("hidden");
       choicesBox.classList.remove("hidden");
-      document.getElementById("myAppointmentTitle").textContent = "בחר איזה תור לבטל";
+      document.getElementById("myAppointmentTitle").textContent = foundAppointments.length > 1 ? "בחר איזה תור לבטל" : "התור שלך";
       const cancelSelectedBtn = document.getElementById("cancelSelectedMyAppointmentBtn");
-      activeClientAppointment = null;
-      if(cancelSelectedBtn) cancelSelectedBtn.disabled = true;
+      activeClientAppointment = foundAppointments.length === 1 ? foundAppointments[0] : null;
+      if(cancelSelectedBtn) cancelSelectedBtn.disabled = foundAppointments.length !== 1;
       helper.textContent = "";
 
       choicesList.innerHTML = foundAppointments.map((item, index) => {
@@ -4465,6 +4465,11 @@ body.business-frozen{overflow:hidden;}
           if(cancelSelectedBtn) cancelSelectedBtn.disabled = !activeClientAppointment;
         });
       });
+
+      if(foundAppointments.length === 1){
+        const onlyCard = choicesList.querySelector('.my-appt-choice-card');
+        if(onlyCard) onlyCard.classList.add('is-selected');
+      }
     }
 
     function findClientAppointment(phoneOverride = "", autoLookup = false){
@@ -4502,14 +4507,10 @@ body.business-frozen{overflow:hidden;}
         return;
       }
 
-      if(foundAppointments.length > 1){
-        saveReturningCustomerFromKnownData('', '', foundAppointments[0].name || '', foundAppointments[0].phone || phone);
-        applyReturningCustomer();
-        showClientAppointmentChoices(foundAppointments);
-        return;
-      }
-
-      showClientAppointmentDetails(foundAppointments[0], "זהו התור העתידי הקרוב שלך.");
+      saveReturningCustomerFromKnownData('', '', foundAppointments[0].name || '', foundAppointments[0].phone || phone);
+      applyReturningCustomer();
+      showClientAppointmentChoices(foundAppointments);
+      return;
     }
 
     async function cancelClientAppointment(){
