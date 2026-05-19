@@ -1355,7 +1355,27 @@ body.business-frozen{overflow:hidden;}
   }
 }
 
-/* ===== SIMPLE DAY THEME ===== */
+/* ===== DAY THEME TOGGLE ===== */
+.theme-toggle-btn{
+  width:54px;
+  height:54px;
+  border:none;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:linear-gradient(180deg,#171d29,#101620);
+  color:#f7e7c3;
+  border:1px solid rgba(215,180,109,.25);
+  box-shadow:0 12px 24px rgba(0,0,0,.25);
+  transition:.2s ease;
+}
+
+.theme-toggle-btn:hover{
+  transform:translateY(-2px);
+}
+
 body.day-theme{
   background:
     radial-gradient(circle at 10% 0%, rgba(98,215,232,.28), transparent 30%),
@@ -1415,30 +1435,9 @@ body.day-theme .waitlist-table td{
   color:#17324a !important;
 }
 
-.theme-toggle-btn{
-  width:54px;
-  height:54px;
-  border:none;
-  border-radius:18px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  background:linear-gradient(180deg,#171d29,#101620);
-  color:#f7e7c3;
-  border:1px solid rgba(215,180,109,.25);
-  box-shadow:0 12px 24px rgba(0,0,0,.25);
-  transition:.2s ease;
-}
-
-.theme-toggle-btn:hover{
-  transform:translateY(-2px);
-}
-
 body.day-theme .theme-toggle-btn{
   background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
   color:#ffffff !important;
-  border-color:rgba(24,183,201,.18) !important;
 }
 
 </style>
@@ -1470,7 +1469,27 @@ body.day-theme .theme-toggle-btn{
   }
 }
 
-/* ===== SIMPLE DAY THEME ===== */
+/* ===== DAY THEME TOGGLE ===== */
+.theme-toggle-btn{
+  width:54px;
+  height:54px;
+  border:none;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:linear-gradient(180deg,#171d29,#101620);
+  color:#f7e7c3;
+  border:1px solid rgba(215,180,109,.25);
+  box-shadow:0 12px 24px rgba(0,0,0,.25);
+  transition:.2s ease;
+}
+
+.theme-toggle-btn:hover{
+  transform:translateY(-2px);
+}
+
 body.day-theme{
   background:
     radial-gradient(circle at 10% 0%, rgba(98,215,232,.28), transparent 30%),
@@ -1530,30 +1549,9 @@ body.day-theme .waitlist-table td{
   color:#17324a !important;
 }
 
-.theme-toggle-btn{
-  width:54px;
-  height:54px;
-  border:none;
-  border-radius:18px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  background:linear-gradient(180deg,#171d29,#101620);
-  color:#f7e7c3;
-  border:1px solid rgba(215,180,109,.25);
-  box-shadow:0 12px 24px rgba(0,0,0,.25);
-  transition:.2s ease;
-}
-
-.theme-toggle-btn:hover{
-  transform:translateY(-2px);
-}
-
 body.day-theme .theme-toggle-btn{
   background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
   color:#ffffff !important;
-  border-color:rgba(24,183,201,.18) !important;
 }
 
 </style>
@@ -1800,15 +1798,15 @@ body.day-theme .theme-toggle-btn{
                     <path d="M20 20h-2"/>
                   </svg>
                 </button>
-
+              
 <button class="theme-toggle-btn" id="themeToggleBtn" type="button" onclick="toggleThemeMode()" title="מצב יום / לילה">
 <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
 <path d="M21 14.7A8.5 8.5 0 0 1 9.3 3a7.1 7.1 0 1 0 11.7 11.7Z"
 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
 </button>
+</div>
 
-              </div>
 
               </div>
               <div class="helper">דף הלקוח נשאר בנאמנות לגרסה המקורית, ורק מסך בעל העסק קיבל את לשונית ההגדרות המורחבת.</div>
@@ -5431,32 +5429,18 @@ function closeCancelledAppointmentModal(){
 
 
 <script>
-(function(){
-  const KEY = 'themeMode';
+function applyThemeMode(){
+  const mode = localStorage.getItem('themeMode') || 'dark';
+  document.body.classList.toggle('day-theme', mode === 'day');
+}
 
-  function applyTheme(){
-    const mode = localStorage.getItem(KEY) || 'dark';
-    document.body.classList.toggle('day-theme', mode === 'day');
-  }
+function toggleThemeMode(){
+  const isDay = document.body.classList.contains('day-theme');
+  localStorage.setItem('themeMode', isDay ? 'dark' : 'day');
+  applyThemeMode();
+}
 
-  window.toggleThemeMode = function(){
-    const isDay = document.body.classList.contains('day-theme');
-    localStorage.setItem(KEY, isDay ? 'dark' : 'day');
-    applyTheme();
-  };
-
-  document.addEventListener('DOMContentLoaded', function(){
-    applyTheme();
-
-    const btn = document.getElementById('themeToggleBtn');
-    if(btn){
-      btn.addEventListener('click', function(e){
-        e.preventDefault();
-        toggleThemeMode();
-      });
-    }
-  });
-})();
+document.addEventListener('DOMContentLoaded', applyThemeMode);
 </script>
 
 </body>
