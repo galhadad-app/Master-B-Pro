@@ -674,34 +674,52 @@
       width:100%;
       border:none;
       text-align:right;
-      border-radius:16px;
-      padding:11px 12px;
-      background:linear-gradient(180deg,rgba(215,180,109,.09),rgba(255,255,255,.025));
-      border:1px solid rgba(215,180,109,.16);
-      color:var(--text);
       cursor:pointer;
-      transition:.18s transform,.18s border-color,.18s background;
+      border-radius:16px;
+      padding:12px 13px;
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.08);
+      color:var(--text);
       font-family:inherit;
+      transition:.18s ease;
     }
     .my-appt-choice-card:hover{
+      background:rgba(215,180,109,.06);
+      border-color:rgba(215,180,109,.18);
       transform:translateY(-1px);
-      border-color:rgba(215,180,109,.32);
-      background:linear-gradient(180deg,rgba(215,180,109,.13),rgba(255,255,255,.035));
     }
     .my-appt-choice-main{
       display:flex;
+      align-items:center;
       justify-content:space-between;
       gap:10px;
-      align-items:center;
+      margin-bottom:5px;
+      line-height:1.2;
+    }
+    .my-appt-choice-date{
+      font-size:13px;
+      font-weight:800;
+      color:#f4f1ea;
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .my-appt-choice-time{
       font-size:14px;
       font-weight:900;
-      color:#f7e7c3;
+      color:var(--gold);
+      direction:ltr;
+      white-space:nowrap;
+      flex:0 0 auto;
     }
     .my-appt-choice-sub{
-      margin-top:5px;
       font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
+      color:rgba(184,177,163,.86);
+      line-height:1.5;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .animated-panel{position:relative;overflow:hidden;background:linear-gradient(180deg, #171c26 0%, #10151d 100%);border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.04), inset 0 -1px 0 rgba(0,0,0,.32), 0 18px 36px rgba(0,0,0,.28);}
@@ -4240,12 +4258,12 @@ body.business-frozen{overflow:hidden;}
 
       choicesList.innerHTML = foundAppointments.map((item, index) => {
         const dateText = item.date === formatDateKey(today) ? "היום" : formatDatePrettyFromKey(item.date);
-        const serviceText = item.service ? `שירות: ${escapeHtml(item.service)}` : 'שירות לא צוין';
+        const serviceText = item.service ? escapeHtml(item.service) : 'לא צוין';
         return `
           <button type="button" class="my-appt-choice-card" data-index="${index}">
             <div class="my-appt-choice-main">
-              <span>${escapeHtml(dateText)}</span>
-              <span>${escapeHtml(item.time || '-')}</span>
+              <span class="my-appt-choice-date">${escapeHtml(dateText)}</span>
+              <span class="my-appt-choice-time">${escapeHtml(item.time || '-')}</span>
             </div>
             <div class="my-appt-choice-sub">${serviceText}</div>
           </button>
