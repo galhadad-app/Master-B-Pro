@@ -1355,68 +1355,78 @@ body.business-frozen{overflow:hidden;}
   }
 }
 
-/* ===== Day / Night Theme Toggle ===== */
-.qr-mini-row{
+/* ===== Day / Night Theme Toggle - GUARANTEED VERSION ===== */
+.theme-top-switch{
+  display:flex;
+  justify-content:center;
+  align-items:center;
   gap:10px;
+  margin:0 0 14px;
+  padding:10px;
+  border-radius:20px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.08);
 }
 
 .theme-toggle-btn{
-  width:54px;
-  height:54px;
+  min-width:132px;
+  height:46px;
   border:none;
-  border-radius:17px;
+  border-radius:999px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
+  gap:8px;
   cursor:pointer;
-  background:
-    radial-gradient(circle at 30% 18%, rgba(215,180,109,.20), transparent 38%),
-    linear-gradient(180deg,#171d29 0%,#0f151f 100%);
-  color:#f7e7c3;
-  border:1px solid rgba(215,180,109,.28);
-  box-shadow:
-    0 12px 28px rgba(0,0,0,.26),
-    inset 0 1px 0 rgba(255,255,255,.05);
-  transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease, color .2s ease;
+  background:linear-gradient(135deg,#d7b46d,#c99540);
+  color:#17120a;
+  font-weight:900;
+  font-size:13px;
+  border:1px solid rgba(215,180,109,.30);
+  box-shadow:0 12px 26px rgba(201,149,64,.20);
+  transition:.2s ease;
   -webkit-tap-highlight-color:transparent;
 }
 .theme-toggle-btn:hover,
 .theme-toggle-btn:active{
-  transform:translateY(-2px);
-  color:#ffffff;
-  border-color:rgba(215,180,109,.46);
-  box-shadow:
-    0 16px 34px rgba(0,0,0,.34),
-    0 0 0 3px rgba(215,180,109,.06),
-    inset 0 1px 0 rgba(255,255,255,.07);
+  transform:translateY(-1px);
 }
-.theme-toggle-btn svg{width:25px;height:25px;display:block}
-.theme-toggle-btn .sun-icon{display:block}
-.theme-toggle-btn .moon-icon{display:none}
+.theme-toggle-btn svg{
+  width:19px;
+  height:19px;
+  display:block;
+}
+.theme-toggle-btn .night-label{display:none}
+.theme-toggle-btn .day-label{display:inline-flex;align-items:center;gap:7px}
+body.day-theme .theme-toggle-btn .night-label{display:inline-flex;align-items:center;gap:7px}
+body.day-theme .theme-toggle-btn .day-label{display:none}
 
-body.day-theme .theme-toggle-btn{
-  background:linear-gradient(180deg,#ffffff,#eef9ff) !important;
-  color:#18b7c9 !important;
-  border:1px solid rgba(24,183,201,.22) !important;
-  box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85) !important;
+body.day-theme .theme-top-switch{
+  background:rgba(255,255,255,.74);
+  border:1px solid rgba(79,140,255,.14);
+  box-shadow:0 8px 18px rgba(39,92,148,.06);
 }
-body.day-theme .theme-toggle-btn .sun-icon{display:none}
-body.day-theme .theme-toggle-btn .moon-icon{display:block}
+body.day-theme .theme-toggle-btn{
+  background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
+  color:#ffffff !important;
+  border-color:rgba(24,183,201,.18) !important;
+  box-shadow:0 14px 30px rgba(24,183,201,.22) !important;
+}
 
 body.day-theme{
-  --bg:#f7fbff;
-  --panel:#ffffff;
-  --panel-2:#f3f8ff;
-  --line:rgba(30,64,175,.12);
-  --text:#17324a;
-  --muted:#60788e;
-  --gold:#f4b740;
-  --gold-2:#ee8f2f;
-  --danger:#ef6464;
-  --danger-bg:rgba(239,100,100,.10);
-  --ok:#30c48d;
-  --ok-bg:rgba(48,196,141,.10);
-  --shadow:0 16px 36px rgba(39,92,148,.12),0 4px 14px rgba(39,92,148,.06);
+  --bg:#f7fbff !important;
+  --panel:#ffffff !important;
+  --panel-2:#f3f8ff !important;
+  --line:rgba(30,64,175,.12) !important;
+  --text:#17324a !important;
+  --muted:#60788e !important;
+  --gold:#f4b740 !important;
+  --gold-2:#ee8f2f !important;
+  --danger:#ef6464 !important;
+  --danger-bg:rgba(239,100,100,.10) !important;
+  --ok:#30c48d !important;
+  --ok-bg:rgba(48,196,141,.10) !important;
+  --shadow:0 16px 36px rgba(39,92,148,.12),0 4px 14px rgba(39,92,148,.06) !important;
   background:
     radial-gradient(circle at 12% 0%, rgba(98,215,232,.30), transparent 28%),
     radial-gradient(circle at 92% 10%, rgba(244,183,64,.24), transparent 26%),
@@ -1442,7 +1452,7 @@ body.day-theme .success-modal,
 body.day-theme .cancel-modal{
   background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(245,251,255,.92)) !important;
   color:var(--text) !important;
-  border:1px solid rgba(79,140,255,.13) !important;
+  border-color:rgba(79,140,255,.13) !important;
   box-shadow:var(--shadow) !important;
 }
 
@@ -1451,7 +1461,7 @@ body.day-theme .animated-panel{
   background:
     linear-gradient(rgba(255,255,255,.58),rgba(255,255,255,.72)),
     var(--hero-bg, url("background-behind-logo.png") center/cover no-repeat) !important;
-  border:1px solid rgba(79,140,255,.14) !important;
+  border-color:rgba(79,140,255,.14) !important;
   box-shadow:var(--shadow) !important;
 }
 
@@ -1484,7 +1494,8 @@ body.day-theme .secondary-btn,
 body.day-theme .secondary-action-btn,
 body.day-theme .returning-customer-change,
 body.day-theme .mini-reset-btn,
-body.day-theme .clear-media-btn{
+body.day-theme .clear-media-btn,
+body.day-theme .qr-icon-btn{
   background:linear-gradient(180deg,#ffffff,#f2f9ff) !important;
   color:var(--text) !important;
   border:1px solid rgba(79,140,255,.14) !important;
@@ -1583,13 +1594,6 @@ body.day-theme .contact-action{
   background:linear-gradient(180deg,#ffffff,#eef9ff) !important;
   color:#18b7c9 !important;
   border:1px solid rgba(24,183,201,.20) !important;
-  box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85) !important;
-}
-
-body.day-theme .qr-icon-btn{
-  background:linear-gradient(180deg,#ffffff,#eef9ff) !important;
-  color:#18b7c9 !important;
-  border:1px solid rgba(24,183,201,.22) !important;
   box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85) !important;
 }
 
@@ -1710,6 +1714,32 @@ body.day-theme .frozen-card{
   }
 }
 </style>
+
+
+<script>
+(function(){
+  window.applyGalTheme = function(mode){
+    var isDay = mode === 'day';
+    if(document.body){
+      document.body.classList.toggle('day-theme', isDay);
+    }
+    try{ localStorage.setItem('galAppThemeMode', mode); }catch(e){}
+  };
+
+  window.toggleGalTheme = function(){
+    var isDay = document.body && document.body.classList.contains('day-theme');
+    window.applyGalTheme(isDay ? 'dark' : 'day');
+  };
+
+  try{
+    if(localStorage.getItem('galAppThemeMode') === 'day'){
+      document.addEventListener('DOMContentLoaded', function(){
+        document.body.classList.add('day-theme');
+      });
+    }
+  }catch(e){}
+})();
+</script>
 
 </head>
 <body>
@@ -1868,35 +1898,8 @@ body.day-theme .frozen-card{
         </div>
 
         <div id="settingsPanel" class="owner-panel active-settings-panel">
-          <div class="settings-stack">
-              <div class="settings-two-col">
-                <div class="settings-box">
-                  <div class="section-title"><h2>מיתוג העסק</h2><span class="section-sub">מה שישפיע על דף הלקוח</span></div>
-                  <div class="settings-field">
-                    <input id="settingsBusinessName" placeholder="שם העסק" />
-                  </div>
-                  <div class="settings-field">
-                    <input id="settingsBusinessSubtitle" placeholder="כותרת משנה" />
-                  </div>
-                  <div class="settings-field">
-                    <input id="settingsWhatsapp" inputmode="numeric" placeholder="מספר וואטסאפ" />
-                  </div>
-                  <div class="settings-field">
-                    <input id="settingsBusinessAddress" placeholder="כתובת העסק" />
-                  </div>
-                  <div class="settings-field">
-                    <input id="settingsOwnerCode" inputmode="numeric" maxlength="4" placeholder="קוד לתורים ולקוחות" />
-                  </div>
-                  <div class="settings-field">
-                    <input id="settingsStatsCode" inputmode="numeric" maxlength="4" placeholder="קוד לסטטיסטיקה והגדרות" />
-                  </div>
-                  <div class="settings-field">
-                    <textarea id="settingsBusinessDescription" placeholder="תיאור קצר"></textarea>
-                  </div>
-                  <div class="settings-field">
-                    <textarea id="settingsImportantNotice" placeholder="הודעות חשובות ללקוח (לא חובה)"></textarea>
-                  </div>
-                </div>
+
+
 
                 <div class="settings-box">
                   <div class="section-title"><h2>לוגו ותמונת רקע</h2><span class="section-sub">אפשר להעלות מהטלפון</span></div>
@@ -1941,33 +1944,36 @@ body.day-theme .frozen-card{
               <div class="settings-actions">
                 <button class="primary-btn" id="saveSettingsBtn">שמור הגדרות</button>
                 <button class="danger-btn" id="resetSettingsBtn">איפוס הגדרות</button>
-              <div class="qr-mini-row">
-                <button class="qr-icon-btn" id="openQrBtn" type="button" onclick="openQrModal()" aria-label="יצירת QR" title="יצירת QR">
-                  <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 4h6v6H4z"/>
-                    <path d="M14 4h6v6h-6z"/>
-                    <path d="M4 14h6v6H4z"/>
-                    <path d="M14 14h2"/>
-                    <path d="M18 14h2v2"/>
-                    <path d="M14 18h2v2"/>
-                    <path d="M20 20h-2"/>
-                  </svg>
-                </button>
+              
+<div class="qr-mini-row">
+  <button class="qr-icon-btn" id="openQrBtn" type="button" onclick="openQrModal()" aria-label="יצירת QR" title="יצירת QR">
+    <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 4h6v6H4z"/>
+      <path d="M14 4h6v6h-6z"/>
+      <path d="M4 14h6v6H4z"/>
+      <path d="M14 14h2"/>
+      <path d="M18 14h2v2"/>
+      <path d="M14 18h2v2"/>
+      <path d="M20 20h-2"/>
+    </svg>
+  </button>
 
-                <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="מעבר למצב יום" title="מעבר למצב יום">
-                  <span class="sun-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"/>
-                      <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                  </span>
-                  <span class="moon-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <path d="M21 14.7A8.5 8.5 0 0 1 9.3 3a7.1 7.1 0 1 0 11.7 11.7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </span>
-                </button>
-              </div>
+  <button class="theme-toggle-btn" id="themeToggleBtn" type="button" onclick="window.toggleGalTheme && window.toggleGalTheme()" aria-label="מצב יום / לילה" title="מצב יום / לילה">
+    <span class="day-label">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </span>
+
+    <span class="night-label">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M21 14.7A8.5 8.5 0 0 1 9.3 3a7.1 7.1 0 1 0 11.7 11.7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </button>
+</div>
+
 
               </div>
               <div class="helper">דף הלקוח נשאר בנאמנות לגרסה המקורית, ורק מסך בעל העסק קיבל את לשונית ההגדרות המורחבת.</div>
@@ -5591,41 +5597,31 @@ function closeCancelledAppointmentModal(){
 
 <script>
 (function(){
-  const KEY = 'galAppThemeMode';
+  function initTheme(){
+    try{
+      var saved = localStorage.getItem('galAppThemeMode') || 'dark';
+      window.applyGalTheme(saved);
+    }catch(e){
+      window.applyGalTheme('dark');
+    }
 
-  function applyTheme(mode){
-    const isDay = mode === 'day';
-    document.body.classList.toggle('day-theme', isDay);
-
-    const btn = document.getElementById('themeToggleBtn');
-    if(btn){
-      btn.setAttribute('aria-label', isDay ? 'מעבר למצב לילה' : 'מעבר למצב יום');
-      btn.setAttribute('title', isDay ? 'מעבר למצב לילה' : 'מעבר למצב יום');
+    var btn = document.getElementById('themeToggleBtn');
+    if(btn && !btn.dataset.themeReady){
+      btn.dataset.themeReady = '1';
+      btn.addEventListener('click', function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        window.toggleGalTheme();
+      });
     }
   }
 
-  function initThemeToggle(){
-    const saved = localStorage.getItem(KEY) || 'dark';
-    applyTheme(saved);
-
-    const btn = document.getElementById('themeToggleBtn');
-    if(!btn || btn.dataset.ready === '1') return;
-    btn.dataset.ready = '1';
-
-    btn.addEventListener('click', function(){
-      const next = document.body.classList.contains('day-theme') ? 'dark' : 'day';
-      localStorage.setItem(KEY, next);
-      applyTheme(next);
-    });
-  }
-
   if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', initThemeToggle);
+    document.addEventListener('DOMContentLoaded', initTheme);
   }else{
-    initThemeToggle();
+    initTheme();
   }
-
-  window.addEventListener('load', initThemeToggle);
+  window.addEventListener('load', initTheme);
 })();
 </script>
 
