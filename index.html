@@ -1354,9 +1354,177 @@ body.business-frozen{overflow:hidden;}
     font-size:14px !important;
   }
 }
+
+/* ===== Day / Night mode button + true day palette ===== */
+.theme-mini-btn{
+  width:54px;
+  height:54px;
+  border-radius:17px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  color:#f7e7c3;
+  background:
+    radial-gradient(circle at 30% 18%, rgba(215,180,109,.20), transparent 38%),
+    linear-gradient(180deg,#171d29 0%,#0f151f 100%);
+  border:1px solid rgba(215,180,109,.28);
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease, color .2s ease, background .2s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.theme-mini-btn:hover,
+.theme-mini-btn:active{
+  transform:translateY(-2px);
+  color:#ffffff;
+  border-color:rgba(215,180,109,.46);
+  box-shadow:
+    0 16px 34px rgba(0,0,0,.34),
+    0 0 0 3px rgba(215,180,109,.06),
+    inset 0 1px 0 rgba(255,255,255,.07);
+}
+.theme-mini-btn svg{width:25px;height:25px;display:block}
+html.day-mode{
+  --bg:#f7fbff;
+  --panel:#ffffff;
+  --panel-2:#f1f7ff;
+  --line:rgba(30,64,175,.10);
+  --text:#18324a;
+  --muted:#668096;
+  --gold:#f4b740;
+  --gold-2:#ee8f2f;
+  --accent:#18b7c9;
+  --accent-2:#62d7e8;
+  --blue:#4f8cff;
+  --green:#30c48d;
+  --danger:#ef6464;
+  --danger-bg:rgba(239,100,100,.10);
+  --ok:#30c48d;
+  --ok-bg:rgba(48,196,141,.10);
+  --shadow:0 16px 36px rgba(39,92,148,.12),0 4px 14px rgba(39,92,148,.06);
+}
+html.day-mode body{
+  background:
+    radial-gradient(circle at 15% 0%, rgba(98,215,232,.28), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(244,183,64,.22), transparent 26%),
+    linear-gradient(180deg,#f9fdff 0%, #eef8ff 54%, #f8fbf6 100%);
+  color:var(--text);
+}
+html.day-mode .card,
+html.day-mode .owner-shell{
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(246,252,255,.88));
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(79,140,255,.12);
+  box-shadow:var(--shadow);
+}
+html.day-mode .owner-panel-card{
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(246,252,255,.88));
+  border:1px solid rgba(79,140,255,.12);
+  box-shadow:0 8px 18px rgba(39,92,148,.06);
+}
+html.day-mode .logo-wrap{
+  background:
+    linear-gradient(rgba(255,255,255,.48), rgba(255,255,255,.64)),
+    var(--hero-bg, url("background-behind-logo.png") center/cover no-repeat);
+  border:1px solid rgba(79,140,255,.12);
+  box-shadow:var(--shadow);
+}
+html.day-mode .booking-title,
+html.day-mode .day-chip .day-name,
+html.day-mode .owner-shell-title h2,
+html.day-mode .reports-block-title,
+html.day-mode .stats-chart-card h3,
+html.day-mode .vip-row strong{
+  color:#1f5f78;
+}
+html.day-mode input,
+html.day-mode select,
+html.day-mode textarea,
+html.day-mode .secondary-btn,
+html.day-mode .day-chip,
+html.day-mode .time-chip,
+html.day-mode .owner-tab{
+  background:linear-gradient(180deg,#ffffff,#f2f9ff);
+  color:var(--text);
+  border:1px solid rgba(79,140,255,.14);
+  box-shadow:0 8px 18px rgba(39,92,148,.06);
+}
+html.day-mode .primary-btn{
+  background:linear-gradient(135deg,#18b7c9,#4f8cff);
+  color:#ffffff;
+  box-shadow:0 14px 30px rgba(24,183,201,.24);
+}
+html.day-mode .day-chip.selected{
+  background:linear-gradient(135deg,#62d7e8,#4f8cff);
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 12px 26px rgba(79,140,255,.24);
+}
+html.day-mode .day-chip.selected .day-name,
+html.day-mode .day-chip.selected .day-date{color:#fff}
+html.day-mode .time-chip.selected{
+  background:linear-gradient(135deg,#f4b740,#ee8f2f);
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 12px 24px rgba(238,143,47,.24);
+}
+html.day-mode .owner-tab.active{
+  background:rgba(215,180,109,.12);
+  color:#1f5f78;
+  border-color:rgba(215,180,109,.18);
+}
+html.day-mode .toast{
+  background:#ffffff;
+  border:1px solid rgba(79,140,255,.14);
+  color:var(--text);
+  box-shadow:var(--shadow);
+}
+html.day-mode .modal{
+  background:rgba(255,255,255,.86);
+  backdrop-filter:blur(18px);
+  color:var(--text);
+}
+html.day-mode .qr-link-field{
+  color:#18324a;
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(79,140,255,.14);
+}
+html.day-mode .qr-icon-btn,
+html.day-mode .theme-mini-btn{
+  color:#1f5f78;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(98,215,232,.38), transparent 42%),
+    linear-gradient(180deg,#ffffff 0%,#eef8ff 100%);
+  border:1px solid rgba(79,140,255,.16);
+  box-shadow:0 12px 26px rgba(39,92,148,.12), inset 0 1px 0 rgba(255,255,255,.75);
+}
+html.day-mode .qr-icon-btn:hover,
+html.day-mode .theme-mini-btn:hover,
+html.day-mode .qr-icon-btn:active,
+html.day-mode .theme-mini-btn:active{
+  color:#ffffff;
+  border-color:rgba(24,183,201,.32);
+  background:linear-gradient(135deg,#18b7c9,#4f8cff);
+  box-shadow:0 14px 30px rgba(24,183,201,.20);
+}
+@media(max-width:420px){
+  .theme-mini-btn{width:50px;height:50px;border-radius:16px;}
+}
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1016">
+  <script>
+    (function(){
+      try{
+        if(localStorage.getItem('businessAppThemeMode') === 'day'){
+          document.documentElement.classList.add('day-mode');
+        }
+      }catch(e){}
+    })();
+  </script>
 
 
 
@@ -1614,7 +1782,7 @@ body.business-frozen{overflow:hidden;}
               <div class="settings-actions">
                 <button class="primary-btn" id="saveSettingsBtn">שמור הגדרות</button>
                 <button class="danger-btn" id="resetSettingsBtn">איפוס הגדרות</button>
-              <div class="qr-mini-row">
+              <div class="qr-mini-row" style="gap:10px">
                 <button class="qr-icon-btn" id="openQrBtn" type="button" onclick="openQrModal()" aria-label="יצירת QR" title="יצירת QR">
                   <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M4 4h6v6H4z"/>
@@ -1624,6 +1792,19 @@ body.business-frozen{overflow:hidden;}
                     <path d="M18 14h2v2"/>
                     <path d="M14 18h2v2"/>
                     <path d="M20 20h-2"/>
+                  </svg>
+                </button>
+                <button class="theme-mini-btn" id="themeModeBtn" type="button" onclick="toggleThemeMode()" aria-label="מצב יום / לילה" title="מצב יום / לילה">
+                  <svg id="themeModeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v2"/>
+                    <path d="M12 20v2"/>
+                    <path d="M4.93 4.93l1.41 1.41"/>
+                    <path d="M17.66 17.66l1.41 1.41"/>
+                    <path d="M2 12h2"/>
+                    <path d="M20 12h2"/>
+                    <path d="M4.93 19.07l1.41-1.41"/>
+                    <path d="M17.66 6.34l1.41-1.41"/>
                   </svg>
                 </button>
               </div>
@@ -5230,6 +5411,35 @@ function showCancelledAppointmentModal(appt = {}){
 function closeCancelledAppointmentModal(){
   document.getElementById('cancelAppointmentSuccessModal')?.remove();
 }
+
+
+function updateThemeModeButton(){
+  const isDay = document.documentElement.classList.contains('day-mode');
+  const btn = document.getElementById('themeModeBtn');
+  const icon = document.getElementById('themeModeIcon');
+  const meta = document.querySelector('meta[name="theme-color"]');
+
+  if(meta) meta.setAttribute('content', isDay ? '#f7fbff' : '#0d1016');
+  if(btn){
+    btn.setAttribute('aria-pressed', isDay ? 'true' : 'false');
+    btn.setAttribute('title', isDay ? 'מצב לילה' : 'מצב יום');
+  }
+  if(icon){
+    icon.innerHTML = isDay
+      ? '<path d="M21 12.79A8.5 8.5 0 1 1 11.21 3 6.7 6.7 0 0 0 21 12.79z"/>'
+      : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M4.93 19.07l1.41-1.41"/><path d="M17.66 6.34l1.41-1.41"/>';
+  }
+}
+
+function toggleThemeMode(){
+  const isDay = !document.documentElement.classList.contains('day-mode');
+  document.documentElement.classList.toggle('day-mode', isDay);
+  try{ localStorage.setItem('businessAppThemeMode', isDay ? 'day' : 'night'); }catch(e){}
+  updateThemeModeButton();
+  if(typeof showToast === 'function') showToast(isDay ? 'מצב יום הופעל.' : 'מצב לילה הופעל.');
+}
+
+window.addEventListener('DOMContentLoaded', updateThemeModeButton);
 
 </script>
 
