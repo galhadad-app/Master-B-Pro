@@ -1384,216 +1384,8 @@ body.business-frozen{overflow:hidden;}
 }
 </style>
 
-
-
-<style id="day-night-theme-style">
-/* ===== Day / Night toggle near QR ===== */
-.theme-qr-row{
-  grid-column:1 / -1;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:10px;
-  margin-top:12px;
-  margin-bottom:10px;
-}
-.qr-mini-row{
-  margin:0 !important;
-}
-.theme-toggle-btn{
-  width:54px;
-  height:54px;
-  border-radius:17px;
-  border:1px solid rgba(215,180,109,.28);
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:0;
-  color:#f7e7c3;
-  background:
-    radial-gradient(circle at 30% 18%, rgba(215,180,109,.20), transparent 38%),
-    linear-gradient(180deg,#171d29 0%,#0f151f 100%);
-  box-shadow:
-    0 12px 28px rgba(0,0,0,.26),
-    inset 0 1px 0 rgba(255,255,255,.05);
-  transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease, color .2s ease, background .2s ease;
-  -webkit-tap-highlight-color:transparent;
-}
-.theme-toggle-btn:hover,
-.theme-toggle-btn:active{
-  transform:translateY(-2px);
-  color:#fff;
-  border-color:rgba(215,180,109,.46);
-  box-shadow:
-    0 16px 34px rgba(0,0,0,.34),
-    0 0 0 3px rgba(215,180,109,.06),
-    inset 0 1px 0 rgba(255,255,255,.07);
-}
-.theme-toggle-btn svg{width:25px;height:25px;display:block;}
-.theme-toggle-btn .sun-icon{display:none;}
-.theme-toggle-btn .moon-icon{display:block;}
-body.day-mode .theme-toggle-btn .sun-icon{display:block;}
-body.day-mode .theme-toggle-btn .moon-icon{display:none;}
-@media(max-width:420px){
-  .theme-toggle-btn{width:50px;height:50px;border-radius:16px;}
-  .theme-qr-row{gap:8px;}
-}
-
-body.day-mode{
-  --bg:#f7fbff;
-  --panel:#ffffff;
-  --panel-2:#f1f7ff;
-  --line:rgba(30,64,175,.10);
-  --text:#18324a;
-  --muted:#668096;
-  --gold:#f4b740;
-  --gold-2:#ee8f2f;
-  --danger:#ef6464;
-  --danger-bg:rgba(239,100,100,.10);
-  --ok:#30c48d;
-  --ok-bg:rgba(48,196,141,.10);
-  --shadow:0 16px 36px rgba(39,92,148,.12),0 4px 14px rgba(39,92,148,.06);
-  background:
-    radial-gradient(circle at 15% 0%, rgba(98,215,232,.28), transparent 28%),
-    radial-gradient(circle at 88% 12%, rgba(244,183,64,.22), transparent 26%),
-    linear-gradient(180deg,#f9fdff 0%, #eef8ff 54%, #f8fbf6 100%) !important;
-  color:var(--text) !important;
-}
-body.day-mode .card,
-body.day-mode .owner-shell{
-  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(246,252,255,.88)) !important;
-  backdrop-filter:blur(18px);
-  border-color:rgba(79,140,255,.12) !important;
-  box-shadow:var(--shadow) !important;
-}
-body.day-mode .owner-panel-card,
-body.day-mode .settings-box,
-body.day-mode .stats-chart-card,
-body.day-mode .stat-card{
-  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(246,252,255,.86)) !important;
-  border-color:rgba(79,140,255,.12) !important;
-  box-shadow:0 8px 18px rgba(39,92,148,.06) !important;
-}
-body.day-mode input,
-body.day-mode select,
-body.day-mode textarea,
-body.day-mode .settings-box textarea,
-body.day-mode .settings-box input,
-body.day-mode .settings-box select,
-body.day-mode .qr-link-field{
-  background:rgba(255,255,255,.92) !important;
-  color:#18324a !important;
-  border-color:rgba(79,140,255,.14) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.7) !important;
-}
-body.day-mode .logo-wrap{
-  background:
-    linear-gradient(rgba(255,255,255,.48), rgba(255,255,255,.64)),
-    var(--hero-bg, url("background-behind-logo.png") center/cover no-repeat) !important;
-  border-color:rgba(79,140,255,.12) !important;
-  box-shadow:var(--shadow) !important;
-}
-body.day-mode .booking-title,
-body.day-mode .section-title h2,
-body.day-mode .owner-shell-title h2,
-body.day-mode .settings-box .section-title h2,
-body.day-mode .reports-block-title,
-body.day-mode .stats-chart-card h3,
-body.day-mode .vip-row strong{
-  color:#1f5f78 !important;
-}
-body.day-mode .day-chip,
-body.day-mode .time-chip,
-body.day-mode .owner-tab,
-body.day-mode .secondary-btn{
-  background:linear-gradient(180deg,#ffffff,#f2f9ff) !important;
-  color:#18324a !important;
-  border-color:rgba(79,140,255,.12) !important;
-  box-shadow:0 8px 18px rgba(39,92,148,.06) !important;
-}
-body.day-mode .day-chip .day-name{color:#1f5f78 !important;}
-body.day-mode .day-chip .day-date{color:#668096 !important;}
-body.day-mode .day-chip.selected,
-body.day-mode .primary-btn{
-  background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
-  color:#fff !important;
-  border-color:transparent !important;
-  box-shadow:0 14px 30px rgba(24,183,201,.24) !important;
-}
-body.day-mode .day-chip.selected .day-name,
-body.day-mode .day-chip.selected .day-date{color:#fff !important;}
-body.day-mode .time-chip.free{
-  background:linear-gradient(180deg,#ffffff,#f2f9ff) !important;
-  color:#18324a !important;
-  box-shadow:0 8px 16px rgba(39,92,148,.06) !important;
-}
-body.day-mode .time-chip.selected{
-  background:linear-gradient(135deg,#f4b740,#ee8f2f) !important;
-  color:#fff !important;
-  border-color:transparent !important;
-  box-shadow:0 12px 24px rgba(238,143,47,.24) !important;
-}
-body.day-mode .empty-slots,
-body.day-mode .settings-preview-box,
-body.day-mode .upload-box,
-body.day-mode .toast,
-body.day-mode .customer-card,
-body.day-mode .appointment-details,
-body.day-mode .table-wrap,
-body.day-mode .waitlist-empty-box{
-  background:rgba(255,255,255,.88) !important;
-  color:#18324a !important;
-  border-color:rgba(79,140,255,.12) !important;
-  box-shadow:0 8px 18px rgba(39,92,148,.06) !important;
-}
-body.day-mode .theme-toggle-btn,
-body.day-mode .qr-icon-btn{
-  color:#1f5f78 !important;
-  background:
-    radial-gradient(circle at 20% 12%, rgba(98,215,232,.36), transparent 42%),
-    radial-gradient(circle at 82% 88%, rgba(244,183,64,.30), transparent 38%),
-    linear-gradient(180deg,#ffffff 0%,#eef9ff 100%) !important;
-  border-color:rgba(79,140,255,.16) !important;
-  box-shadow:0 12px 26px rgba(39,92,148,.13), inset 0 1px 0 rgba(255,255,255,.9) !important;
-}
-body.day-mode .theme-toggle-btn:hover,
-body.day-mode .theme-toggle-btn:active,
-body.day-mode .qr-icon-btn:hover,
-body.day-mode .qr-icon-btn:active{
-  color:#0f6f86 !important;
-  border-color:rgba(24,183,201,.32) !important;
-  box-shadow:0 16px 34px rgba(39,92,148,.18),0 0 0 3px rgba(24,183,201,.08),inset 0 1px 0 rgba(255,255,255,.95) !important;
-}
-body.day-mode .modal{
-  background:rgba(255,255,255,.88) !important;
-  color:#18324a !important;
-  border-color:rgba(79,140,255,.12) !important;
-}
-body.day-mode .helper,
-body.day-mode label,
-body.day-mode .section-sub,
-body.day-mode .owner-shell-title p{color:#668096 !important;}
-body.day-mode .appointments-table td,
-body.day-mode .customers-table td{
-  background:rgba(255,255,255,.82) !important;
-  color:#18324a !important;
-  border-color:rgba(79,140,255,.10) !important;
-}
-body.day-mode .appointments-table th,
-body.day-mode .customers-table th{color:#668096 !important;}
-</style>
-
 </head>
 <body>
-<script>
-  (function(){
-    try{
-      var savedTheme = localStorage.getItem('gal_app_theme_mode');
-      if(savedTheme === 'day') document.body.classList.add('day-mode');
-    }catch(e){}
-  })();
-</script>
   <div id="loader"><img id="loaderLogo" src="logo.png" alt="לוגו"></div>
 
   <div id="businessFrozenScreen" class="frozen-screen" aria-live="polite" aria-hidden="true">
@@ -1822,29 +1614,18 @@ body.day-mode .customers-table th{color:#668096 !important;}
               <div class="settings-actions">
                 <button class="primary-btn" id="saveSettingsBtn">שמור הגדרות</button>
                 <button class="danger-btn" id="resetSettingsBtn">איפוס הגדרות</button>
-              <div class="theme-qr-row">
-                <button class="theme-toggle-btn" id="themeToggleBtn" type="button" onclick="toggleThemeMode()" aria-label="מעבר מצב יום/לילה" title="מצב יום/לילה">
-                  <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="4"/>
-                    <path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M4.93 19.07l1.41-1.41"/><path d="M17.66 6.34l1.41-1.41"/>
-                  </svg>
-                  <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M21 12.8A8.6 8.6 0 1 1 11.2 3a6.8 6.8 0 0 0 9.8 9.8z"/>
+              <div class="qr-mini-row">
+                <button class="qr-icon-btn" id="openQrBtn" type="button" onclick="openQrModal()" aria-label="יצירת QR" title="יצירת QR">
+                  <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4h6v6H4z"/>
+                    <path d="M14 4h6v6h-6z"/>
+                    <path d="M4 14h6v6H4z"/>
+                    <path d="M14 14h2"/>
+                    <path d="M18 14h2v2"/>
+                    <path d="M14 18h2v2"/>
+                    <path d="M20 20h-2"/>
                   </svg>
                 </button>
-                <div class="qr-mini-row">
-                  <button class="qr-icon-btn" id="openQrBtn" type="button" onclick="openQrModal()" aria-label="יצירת QR" title="יצירת QR">
-                    <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M4 4h6v6H4z"/>
-                      <path d="M14 4h6v6h-6z"/>
-                      <path d="M4 14h6v6H4z"/>
-                      <path d="M14 14h2"/>
-                      <path d="M18 14h2v2"/>
-                      <path d="M14 18h2v2"/>
-                      <path d="M20 20h-2"/>
-                    </svg>
-                  </button>
-                </div>
               </div>
 
               </div>
@@ -5449,29 +5230,6 @@ function showCancelledAppointmentModal(appt = {}){
 function closeCancelledAppointmentModal(){
   document.getElementById('cancelAppointmentSuccessModal')?.remove();
 }
-
-
-function applyThemeMode(mode){
-  const isDay = mode === 'day';
-  document.body.classList.toggle('day-mode', isDay);
-  const metaTheme = document.querySelector('meta[name="theme-color"]');
-  if(metaTheme) metaTheme.setAttribute('content', isDay ? '#f7fbff' : '#0d1016');
-  const btn = document.getElementById('themeToggleBtn');
-  if(btn){
-    btn.setAttribute('aria-pressed', isDay ? 'true' : 'false');
-    btn.setAttribute('title', isDay ? 'מצב לילה' : 'מצב יום');
-  }
-}
-function toggleThemeMode(){
-  const nextMode = document.body.classList.contains('day-mode') ? 'night' : 'day';
-  try{ localStorage.setItem('gal_app_theme_mode', nextMode); }catch(e){}
-  applyThemeMode(nextMode);
-}
-document.addEventListener('DOMContentLoaded', function(){
-  let savedTheme = 'night';
-  try{ savedTheme = localStorage.getItem('gal_app_theme_mode') || 'night'; }catch(e){}
-  applyThemeMode(savedTheme);
-});
 
 </script>
 
