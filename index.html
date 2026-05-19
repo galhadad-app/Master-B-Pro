@@ -1355,35 +1355,53 @@ body.business-frozen{overflow:hidden;}
   }
 }
 
-/* ===== Optional Day Theme - activated only with body.day-theme ===== */
+/* ===== Day / Night Theme Toggle ===== */
+.qr-mini-row{
+  gap:10px;
+}
+
 .theme-toggle-btn{
-  width:46px;
-  height:46px;
+  width:54px;
+  height:54px;
   border:none;
-  border-radius:16px;
+  border-radius:17px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-  color:var(--gold);
-  border:1px solid rgba(215,180,109,.22);
-  box-shadow:0 10px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05);
-  transition:.2s ease;
+  background:
+    radial-gradient(circle at 30% 18%, rgba(215,180,109,.20), transparent 38%),
+    linear-gradient(180deg,#171d29 0%,#0f151f 100%);
+  color:#f7e7c3;
+  border:1px solid rgba(215,180,109,.28);
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease, color .2s ease;
   -webkit-tap-highlight-color:transparent;
 }
-.theme-toggle-btn:hover{transform:translateY(-1px);border-color:rgba(215,180,109,.36);}
-.theme-toggle-btn svg{width:22px;height:22px;display:block}
-.theme-toggle-btn .sun-icon{display:none}
-.theme-toggle-btn .moon-icon{display:block}
-body.day-theme .theme-toggle-btn{
-  background:linear-gradient(180deg,#ffffff,#eef9ff);
-  color:#18b7c9;
-  border:1px solid rgba(24,183,201,.22);
-  box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85);
+.theme-toggle-btn:hover,
+.theme-toggle-btn:active{
+  transform:translateY(-2px);
+  color:#ffffff;
+  border-color:rgba(215,180,109,.46);
+  box-shadow:
+    0 16px 34px rgba(0,0,0,.34),
+    0 0 0 3px rgba(215,180,109,.06),
+    inset 0 1px 0 rgba(255,255,255,.07);
 }
-body.day-theme .theme-toggle-btn .sun-icon{display:block}
-body.day-theme .theme-toggle-btn .moon-icon{display:none}
+.theme-toggle-btn svg{width:25px;height:25px;display:block}
+.theme-toggle-btn .sun-icon{display:block}
+.theme-toggle-btn .moon-icon{display:none}
+
+body.day-theme .theme-toggle-btn{
+  background:linear-gradient(180deg,#ffffff,#eef9ff) !important;
+  color:#18b7c9 !important;
+  border:1px solid rgba(24,183,201,.22) !important;
+  box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85) !important;
+}
+body.day-theme .theme-toggle-btn .sun-icon{display:none}
+body.day-theme .theme-toggle-btn .moon-icon{display:block}
 
 body.day-theme{
   --bg:#f7fbff;
@@ -1565,6 +1583,13 @@ body.day-theme .contact-action{
   background:linear-gradient(180deg,#ffffff,#eef9ff) !important;
   color:#18b7c9 !important;
   border:1px solid rgba(24,183,201,.20) !important;
+  box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85) !important;
+}
+
+body.day-theme .qr-icon-btn{
+  background:linear-gradient(180deg,#ffffff,#eef9ff) !important;
+  color:#18b7c9 !important;
+  border:1px solid rgba(24,183,201,.22) !important;
   box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85) !important;
 }
 
@@ -1927,21 +1952,20 @@ body.day-theme .frozen-card{
                     <path d="M14 18h2v2"/>
                     <path d="M20 20h-2"/>
                   </svg>
+                </button>
 
-<button type="button" id="themeToggleBtn" class="theme-toggle-btn" title="החלפת מצב יום/לילה" aria-label="החלפת מצב יום/לילה">
-  <span class="moon-icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none">
-      <path d="M21 14.7A8.5 8.5 0 0 1 9.3 3a7.1 7.1 0 1 0 11.7 11.7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </span>
-  <span class="sun-icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"/>
-      <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-  </span>
-</button>
-
+                <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="מעבר למצב יום" title="מעבר למצב יום">
+                  <span class="sun-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"/>
+                      <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span class="moon-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M21 14.7A8.5 8.5 0 0 1 9.3 3a7.1 7.1 0 1 0 11.7 11.7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
                 </button>
               </div>
 
@@ -5568,9 +5592,11 @@ function closeCancelledAppointmentModal(){
 <script>
 (function(){
   const KEY = 'galAppThemeMode';
+
   function applyTheme(mode){
     const isDay = mode === 'day';
     document.body.classList.toggle('day-theme', isDay);
+
     const btn = document.getElementById('themeToggleBtn');
     if(btn){
       btn.setAttribute('aria-label', isDay ? 'מעבר למצב לילה' : 'מעבר למצב יום');
@@ -5598,6 +5624,8 @@ function closeCancelledAppointmentModal(){
   }else{
     initThemeToggle();
   }
+
+  window.addEventListener('load', initThemeToggle);
 })();
 </script>
 
