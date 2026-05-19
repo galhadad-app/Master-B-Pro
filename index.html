@@ -722,6 +722,81 @@
       text-overflow:ellipsis;
     }
 
+    /* Exact soft preview style for the multi-appointment cancel choice */
+    #myAppointmentChoices.my-appt-result{
+      margin-top:2px !important;
+      border-radius:18px !important;
+      border:1px solid rgba(255,255,255,.08) !important;
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02)) !important;
+      padding:12px !important;
+    }
+    #myAppointmentChoices .my-appt-result-title{
+      margin:0 0 12px !important;
+      text-align:center !important;
+      font-size:15px !important;
+      color:#f7e7c3 !important;
+      font-weight:800 !important;
+      line-height:1.2 !important;
+    }
+    #myAppointmentChoicesList.my-appt-choice-list{
+      display:grid !important;
+      gap:8px !important;
+      margin-top:0 !important;
+    }
+    #myAppointmentChoicesList .my-appt-choice-card{
+      width:100% !important;
+      border:none !important;
+      text-align:right !important;
+      cursor:pointer !important;
+      border-radius:16px !important;
+      padding:12px 13px !important;
+      background:rgba(255,255,255,.035) !important;
+      border:1px solid rgba(255,255,255,.08) !important;
+      color:var(--text) !important;
+      font-family:inherit !important;
+      transition:.18s ease !important;
+      box-shadow:none !important;
+      margin:0 !important;
+    }
+    #myAppointmentChoicesList .my-appt-choice-card:hover{
+      background:rgba(215,180,109,.06) !important;
+      border-color:rgba(215,180,109,.18) !important;
+      transform:translateY(-1px) !important;
+    }
+    #myAppointmentChoicesList .my-appt-choice-main{
+      display:flex !important;
+      align-items:center !important;
+      justify-content:space-between !important;
+      gap:10px !important;
+      margin-bottom:5px !important;
+      line-height:1.2 !important;
+    }
+    #myAppointmentChoicesList .my-appt-choice-date{
+      font-size:13px !important;
+      font-weight:800 !important;
+      color:#f4f1ea !important;
+      min-width:0 !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+      white-space:nowrap !important;
+    }
+    #myAppointmentChoicesList .my-appt-choice-time{
+      font-size:14px !important;
+      font-weight:900 !important;
+      color:var(--gold) !important;
+      direction:ltr !important;
+      white-space:nowrap !important;
+      flex:0 0 auto !important;
+    }
+    #myAppointmentChoicesList .my-appt-choice-sub{
+      font-size:12px !important;
+      color:rgba(184,177,163,.86) !important;
+      line-height:1.5 !important;
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+    }
+
     .animated-panel{position:relative;overflow:hidden;background:linear-gradient(180deg, #171c26 0%, #10151d 100%);border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.04), inset 0 -1px 0 rgba(0,0,0,.32), 0 18px 36px rgba(0,0,0,.28);}
     .animated-panel::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at top, rgba(215,180,109,.10), transparent 42%), linear-gradient(180deg, rgba(255,255,255,.02), transparent 24%);pointer-events:none;z-index:0;}
     .animated-panel > *{position:relative;z-index:1;}
@@ -1888,7 +1963,7 @@ body.business-frozen{overflow:hidden;}
       </div>
 
       <div id="myAppointmentChoices" class="my-appt-result hidden">
-        <div class="my-appt-result-title">נמצאו כמה תורים</div>
+        <div class="my-appt-result-title">בחר איזה תור לבטל</div>
         <div class="my-appt-choice-list" id="myAppointmentChoicesList"></div>
         <div class="my-appt-actions">
           <button class="secondary-btn" id="backToMyAppointmentLookupBtn">חזרה</button>
