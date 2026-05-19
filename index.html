@@ -669,6 +669,41 @@
     .my-appt-actions{display:flex;gap:6px;margin-top:10px;}
     .my-appointment-modal .my-appt-actions > button{flex:1;margin-top:0;padding:10px 8px;font-size:13px;border-radius:14px;}
 
+    .my-appt-choice-list{display:grid;gap:8px;margin-top:10px;}
+    .my-appt-choice-card{
+      width:100%;
+      border:none;
+      text-align:right;
+      border-radius:16px;
+      padding:11px 12px;
+      background:linear-gradient(180deg,rgba(215,180,109,.09),rgba(255,255,255,.025));
+      border:1px solid rgba(215,180,109,.16);
+      color:var(--text);
+      cursor:pointer;
+      transition:.18s transform,.18s border-color,.18s background;
+      font-family:inherit;
+    }
+    .my-appt-choice-card:hover{
+      transform:translateY(-1px);
+      border-color:rgba(215,180,109,.32);
+      background:linear-gradient(180deg,rgba(215,180,109,.13),rgba(255,255,255,.035));
+    }
+    .my-appt-choice-main{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      font-size:14px;
+      font-weight:900;
+      color:#f7e7c3;
+    }
+    .my-appt-choice-sub{
+      margin-top:5px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
     .animated-panel{position:relative;overflow:hidden;background:linear-gradient(180deg, #171c26 0%, #10151d 100%);border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.04), inset 0 -1px 0 rgba(0,0,0,.32), 0 18px 36px rgba(0,0,0,.28);}
     .animated-panel::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at top, rgba(215,180,109,.10), transparent 42%), linear-gradient(180deg, rgba(255,255,255,.02), transparent 24%);pointer-events:none;z-index:0;}
     .animated-panel > *{position:relative;z-index:1;}
@@ -1831,6 +1866,15 @@ body.business-frozen{overflow:hidden;}
         <div class="my-appt-actions">
           <button class="primary-btn" id="findMyAppointmentBtn">מצא תור</button>
           <button class="secondary-btn" id="closeMyAppointmentBtn">סגור</button>
+        </div>
+      </div>
+
+      <div id="myAppointmentChoices" class="my-appt-result hidden">
+        <div class="my-appt-result-title">נמצאו כמה תורים</div>
+        <div class="my-appt-choice-list" id="myAppointmentChoicesList"></div>
+        <div class="my-appt-actions">
+          <button class="secondary-btn" id="backToMyAppointmentLookupBtn">חזרה</button>
+          <button class="secondary-btn" id="closeMyAppointmentChoicesBtn">סגור</button>
         </div>
       </div>
 
@@ -4149,9 +4193,71 @@ body.business-frozen{overflow:hidden;}
       document.getElementById('myAppointmentModal').classList.remove('show');
       activeClientAppointment = null;
       document.getElementById('myAppointmentLookupSection').classList.remove('hidden');
+      document.getElementById('myAppointmentChoices')?.classList.add('hidden');
       document.getElementById('myAppointmentResult').classList.add('hidden');
       document.getElementById('myAppointmentPhoneInput').value = '';
       document.getElementById('myAppointmentHelperText').textContent = 'אפשר לבטל רק תור עתידי.';
+    }
+
+    function backToMyAppointmentLookup(){
+      activeClientAppointment = null;
+      document.getElementById('myAppointmentLookupSection').classList.remove('hidden');
+      document.getElementById('myAppointmentChoices')?.classList.add('hidden');
+      document.getElementById('myAppointmentResult').classList.add('hidden');
+      document.getElementById('myAppointmentHelperText').textContent = 'אפשר לבטל רק תור עתידי.';
+      setTimeout(() => document.getElementById('myAppointmentPhoneInput')?.focus(), 50);
+    }
+
+    function showClientAppointmentDetails(appointment, helperText = 'זהו התור שבחרת.'){
+      if(!appointment) return;
+      activeClientAppointment = appointment;
+      const phone = normalizePhone(appointment.phone);
+      saveReturningCustomerFromKnownData('', '', appointment.name || '', appointment.phone || phone);
+      applyReturningCustomer();
+
+      document.getElementById("myApptName").textContent = appointment.name || "-";
+      document.getElementById("myApptDate").textContent = appointment.date === formatDateKey(today) ? "היום" : formatDatePrettyFromKey(appointment.date);
+      document.getElementById("myApptTime").textContent = appointment.time || "-";
+      document.getElementById("myApptService").textContent = appointment.service || "-";
+      document.getElementById("myAppointmentLookupSection").classList.add("hidden");
+      document.getElementById("myAppointmentChoices")?.classList.add("hidden");
+      document.getElementById("myAppointmentResult").classList.remove("hidden");
+      document.getElementById("myAppointmentHelperText").textContent = helperText;
+    }
+
+    function showClientAppointmentChoices(foundAppointments){
+      const lookupSection = document.getElementById("myAppointmentLookupSection");
+      const resultBox = document.getElementById("myAppointmentResult");
+      const choicesBox = document.getElementById("myAppointmentChoices");
+      const choicesList = document.getElementById("myAppointmentChoicesList");
+      const helper = document.getElementById("myAppointmentHelperText");
+      if(!choicesBox || !choicesList) return showClientAppointmentDetails(foundAppointments[0], 'זהו התור העתידי הקרוב שלך.');
+
+      lookupSection.classList.add("hidden");
+      resultBox.classList.add("hidden");
+      choicesBox.classList.remove("hidden");
+      helper.textContent = "בחר איזה תור ברצונך לראות או לבטל.";
+
+      choicesList.innerHTML = foundAppointments.map((item, index) => {
+        const dateText = item.date === formatDateKey(today) ? "היום" : formatDatePrettyFromKey(item.date);
+        const serviceText = item.service ? `שירות: ${escapeHtml(item.service)}` : 'שירות לא צוין';
+        return `
+          <button type="button" class="my-appt-choice-card" data-index="${index}">
+            <div class="my-appt-choice-main">
+              <span>${escapeHtml(dateText)}</span>
+              <span>${escapeHtml(item.time || '-')}</span>
+            </div>
+            <div class="my-appt-choice-sub">${serviceText}</div>
+          </button>
+        `;
+      }).join('');
+
+      choicesList.querySelectorAll('.my-appt-choice-card').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const index = Number(btn.dataset.index);
+          showClientAppointmentDetails(foundAppointments[index], 'זהו התור שבחרת. אפשר לבטל אותו מכאן.');
+        });
+      });
     }
 
     function findClientAppointment(phoneOverride = "", autoLookup = false){
@@ -4159,6 +4265,7 @@ body.business-frozen{overflow:hidden;}
       const lookupSection = document.getElementById("myAppointmentLookupSection");
       const phone = normalizePhone(phoneOverride || phoneInput.value);
       const resultBox = document.getElementById("myAppointmentResult");
+      const choicesBox = document.getElementById("myAppointmentChoices");
       const helper = document.getElementById("myAppointmentHelperText");
 
       if(phoneOverride) phoneInput.value = phone;
@@ -4166,28 +4273,33 @@ body.business-frozen{overflow:hidden;}
       if(!/^05\d{8}$/.test(phone)){
         helper.textContent = "יש להזין מספר פלאפון מלא שמתחיל ב-05.";
         lookupSection.classList.remove("hidden");
+        choicesBox?.classList.add("hidden");
         resultBox.classList.add("hidden");
         activeClientAppointment = null;
         return;
       }
-      const found = appointments.filter(item => normalizePhone(item.phone) === phone && isFutureOrTodayAppointment(item) && isActiveAppointment(item) && !isClosedDateKey(item.date)).sort((a,b) => appointmentDateTime(a) - appointmentDateTime(b))[0];
-      if(!found){
+
+      const foundAppointments = appointments
+        .filter(item => normalizePhone(item.phone) === phone && isFutureOrTodayAppointment(item) && isActiveAppointment(item) && !isClosedDateKey(item.date))
+        .sort((a,b) => appointmentDateTime(a) - appointmentDateTime(b));
+
+      if(!foundAppointments.length){
         helper.textContent = autoLookup ? "לא נמצא תור עתידי שמור עבורך." : "לא נמצא תור עתידי למספר הזה.";
         lookupSection.classList.toggle("hidden", !!autoLookup);
+        choicesBox?.classList.add("hidden");
         resultBox.classList.add("hidden");
         activeClientAppointment = null;
         return;
       }
-      activeClientAppointment = found;
-      saveReturningCustomerFromKnownData('', '', found.name || '', found.phone || phone);
-      applyReturningCustomer();
-      document.getElementById("myApptName").textContent = found.name || "-";
-      document.getElementById("myApptDate").textContent = found.date === formatDateKey(today) ? "היום" : formatDatePrettyFromKey(found.date);
-      document.getElementById("myApptTime").textContent = found.time || "-";
-      document.getElementById("myApptService").textContent = found.service || "-";
-      lookupSection.classList.add("hidden");
-      resultBox.classList.remove("hidden");
-      helper.textContent = "זהו התור העתידי הקרוב שלך.";
+
+      if(foundAppointments.length > 1){
+        saveReturningCustomerFromKnownData('', '', foundAppointments[0].name || '', foundAppointments[0].phone || phone);
+        applyReturningCustomer();
+        showClientAppointmentChoices(foundAppointments);
+        return;
+      }
+
+      showClientAppointmentDetails(foundAppointments[0], "זהו התור העתידי הקרוב שלך.");
     }
 
     async function cancelClientAppointment(){
@@ -4800,6 +4912,8 @@ document.getElementById('bookBtn').addEventListener('click', bookAppointment);
     document.getElementById('clientCancelAppointmentBtn').addEventListener('click', cancelClientAppointment);
     document.getElementById('closeMyAppointmentBtn').addEventListener('click', closeMyAppointmentModal);
     document.getElementById('closeMyAppointmentResultBtn').addEventListener('click', closeMyAppointmentModal);
+    document.getElementById('backToMyAppointmentLookupBtn')?.addEventListener('click', backToMyAppointmentLookup);
+    document.getElementById('closeMyAppointmentChoicesBtn')?.addEventListener('click', closeMyAppointmentModal);
     document.getElementById('closeCodeBtn').addEventListener('click', closeOwnerModal);
     document.getElementById('closeDetailsBtn').addEventListener('click', saveAndCloseDetailsModal);
     document.getElementById('cancelAppointmentBtn').addEventListener('click', cancelAppointmentByOwner);
