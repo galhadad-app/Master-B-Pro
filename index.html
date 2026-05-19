@@ -1076,11 +1076,9 @@ body.business-frozen{overflow:hidden;}
   display:flex;
   justify-content:center;
   align-items:center;
-  gap:10px;
   margin-top:12px;
   margin-bottom:10px;
 }
-.theme-icon-btn,
 .qr-icon-btn{
   width:54px;
   height:54px;
@@ -1100,8 +1098,6 @@ body.business-frozen{overflow:hidden;}
   transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease, color .2s ease;
   -webkit-tap-highlight-color:transparent;
 }
-.theme-icon-btn:hover,
-.theme-icon-btn:active,
 .qr-icon-btn:hover,
 .qr-icon-btn:active{
   transform:translateY(-2px);
@@ -1359,9 +1355,37 @@ body.business-frozen{overflow:hidden;}
   }
 }
 
+/* ===== Optional Day Theme - activated only with body.day-theme ===== */
+.theme-toggle-btn{
+  width:46px;
+  height:46px;
+  border:none;
+  border-radius:16px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  color:var(--gold);
+  border:1px solid rgba(215,180,109,.22);
+  box-shadow:0 10px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05);
+  transition:.2s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.theme-toggle-btn:hover{transform:translateY(-1px);border-color:rgba(215,180,109,.36);}
+.theme-toggle-btn svg{width:22px;height:22px;display:block}
+.theme-toggle-btn .sun-icon{display:none}
+.theme-toggle-btn .moon-icon{display:block}
+body.day-theme .theme-toggle-btn{
+  background:linear-gradient(180deg,#ffffff,#eef9ff);
+  color:#18b7c9;
+  border:1px solid rgba(24,183,201,.22);
+  box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85);
+}
+body.day-theme .theme-toggle-btn .sun-icon{display:block}
+body.day-theme .theme-toggle-btn .moon-icon{display:none}
 
-/* ===== Optional day mode: default stays dark; body.day-mode turns app bright ===== */
-body.day-mode{
+body.day-theme{
   --bg:#f7fbff;
   --panel:#ffffff;
   --panel-2:#f3f8ff;
@@ -1381,158 +1405,256 @@ body.day-mode{
     linear-gradient(180deg,#fbfeff 0%,#eef8ff 55%,#f9fbf3 100%) !important;
   color:var(--text) !important;
 }
-body.day-mode .card,
-body.day-mode .owner-shell,
-body.day-mode .owner-panel-card,
-body.day-mode .settings-box,
-body.day-mode .stat-card,
-body.day-mode .stats-chart-card,
-body.day-mode .stats-soft-card,
-body.day-mode .stats-soft-chart,
-body.day-mode .premium-donut-card,
-body.day-mode .my-appt-result,
-body.day-mode .waitlist-success-card,
-body.day-mode .notify-row,
-body.day-mode .empty-slots,
-body.day-mode .modal,
-body.day-mode .success-modal,
-body.day-mode .cancel-modal,
-body.day-mode .owner-code-card,
-body.day-mode .details-card{
+
+body.day-theme .card,
+body.day-theme .owner-shell,
+body.day-theme .owner-panel-card,
+body.day-theme .settings-box,
+body.day-theme .stat-card,
+body.day-theme .stats-chart-card,
+body.day-theme .stats-soft-card,
+body.day-theme .stats-soft-chart,
+body.day-theme .premium-donut-card,
+body.day-theme .my-appt-result,
+body.day-theme .waitlist-success-card,
+body.day-theme .notify-row,
+body.day-theme .empty-slots,
+body.day-theme .modal,
+body.day-theme .success-modal,
+body.day-theme .cancel-modal{
   background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(245,251,255,.92)) !important;
   color:var(--text) !important;
   border:1px solid rgba(79,140,255,.13) !important;
   box-shadow:var(--shadow) !important;
 }
-body.day-mode .logo-wrap,
-body.day-mode .animated-panel{
+
+body.day-theme .logo-wrap,
+body.day-theme .animated-panel{
   background:
     linear-gradient(rgba(255,255,255,.58),rgba(255,255,255,.72)),
     var(--hero-bg, url("background-behind-logo.png") center/cover no-repeat) !important;
   border:1px solid rgba(79,140,255,.14) !important;
   box-shadow:var(--shadow) !important;
 }
-body.day-mode input,
-body.day-mode select,
-body.day-mode textarea,
-body.day-mode .my-appt-input,
-body.day-mode .customers-search-input,
-body.day-mode .detail-edit,
-body.day-mode .settings-box textarea,
-body.day-mode .settings-box input,
-body.day-mode .settings-box select,
-body.day-mode #settingsPanel input,
-body.day-mode #settingsPanel textarea{
+
+body.day-theme input,
+body.day-theme select,
+body.day-theme textarea,
+body.day-theme .my-appt-input,
+body.day-theme .customers-search-input,
+body.day-theme .detail-edit,
+body.day-theme .settings-box textarea,
+body.day-theme .settings-box input,
+body.day-theme .settings-box select,
+body.day-theme #settingsPanel input,
+body.day-theme #settingsPanel textarea{
   background:#ffffff !important;
   color:var(--text) !important;
   border:1px solid rgba(79,140,255,.16) !important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 6px 14px rgba(39,92,148,.04) !important;
 }
-body.day-mode input::placeholder,
-body.day-mode textarea::placeholder,
-body.day-mode #settingsPanel input::placeholder,
-body.day-mode #settingsPanel textarea::placeholder{color:#8ca0b3 !important;}
-body.day-mode .day-chip,
-body.day-mode .time-chip,
-body.day-mode .owner-tab,
-body.day-mode .secondary-btn,
-body.day-mode .secondary-action-btn,
-body.day-mode .returning-customer-change,
-body.day-mode .mini-reset-btn,
-body.day-mode .clear-media-btn,
-body.day-mode .theme-icon-btn,
-body.day-mode .qr-icon-btn{
+
+body.day-theme input::placeholder,
+body.day-theme textarea::placeholder{
+  color:#8ca0b3 !important;
+}
+
+body.day-theme .day-chip,
+body.day-theme .time-chip,
+body.day-theme .owner-tab,
+body.day-theme .secondary-btn,
+body.day-theme .secondary-action-btn,
+body.day-theme .returning-customer-change,
+body.day-theme .mini-reset-btn,
+body.day-theme .clear-media-btn{
   background:linear-gradient(180deg,#ffffff,#f2f9ff) !important;
   color:var(--text) !important;
   border:1px solid rgba(79,140,255,.14) !important;
   box-shadow:0 8px 18px rgba(39,92,148,.06) !important;
 }
-body.day-mode .day-chip .day-name,
-body.day-mode .day-chip.available .day-date,
-body.day-mode .day-chip .day-date,
-body.day-mode .time-chip.free,
-body.day-mode .time-chip{color:var(--text) !important;}
-body.day-mode .day-chip.selected{background:linear-gradient(135deg,#62d7e8,#4f8cff) !important;color:#fff !important;}
-body.day-mode .day-chip.selected .day-name,
-body.day-mode .day-chip.selected .day-date{color:#fff !important;}
-body.day-mode .time-chip.selected,
-body.day-mode .owner-tab.active{background:linear-gradient(135deg,#f4b740,#ee8f2f) !important;color:#fff !important;border-color:transparent !important;}
-body.day-mode .time-chip.busy,
-body.day-mode .time-chip.closed,
-body.day-mode .day-chip.closed,
-body.day-mode .day-chip.past{background:#edf3f8 !important;color:#91a2b0 !important;border-color:rgba(96,120,142,.14) !important;}
-body.day-mode .primary-btn{background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;color:#fff !important;box-shadow:0 14px 30px rgba(24,183,201,.24) !important;}
-body.day-mode .danger-btn{background:linear-gradient(135deg,#ff8585,#ef6464) !important;color:#fff !important;}
-body.day-mode .waitlist-join-btn{background:linear-gradient(135deg,#62d7e8,#4f8cff) !important;color:#fff !important;}
-body.day-mode .notify-all-btn,
-body.day-mode .waitlist-confirm-btn{background:linear-gradient(135deg,#7ee6b1,#30c48d) !important;color:#07301f !important;}
-body.day-mode .appointments-table td,
-body.day-mode .customers-table td,
-body.day-mode .waitlist-table td{background:#ffffff !important;color:var(--text) !important;border-top:1px solid rgba(79,140,255,.12) !important;border-bottom:1px solid rgba(79,140,255,.12) !important;}
-body.day-mode .appointments-table td:first-child,
-body.day-mode .customers-table td:first-child,
-body.day-mode .waitlist-table td:first-child{border-right:1px solid rgba(79,140,255,.12) !important;}
-body.day-mode .appointments-table td:last-child,
-body.day-mode .customers-table td:last-child,
-body.day-mode .waitlist-table td:last-child{border-left:1px solid rgba(79,140,255,.12) !important;}
-body.day-mode .appointments-table th,
-body.day-mode .customers-table th,
-body.day-mode .waitlist-table th,
-body.day-mode label,
-body.day-mode .customers-search-label,
-body.day-mode .detail-label,
-body.day-mode .my-appt-field-label,
-body.day-mode .helper,
-body.day-mode .empty-state,
-body.day-mode .stats-empty,
-body.day-mode .waitlist-note,
-body.day-mode .notify-all-hint{color:var(--muted) !important;}
-body.day-mode .clickable-row:hover td{background:#eef8ff !important;}
-body.day-mode .contact-action{background:linear-gradient(180deg,#ffffff,#eef9ff) !important;color:#18b7c9 !important;border:1px solid rgba(24,183,201,.20) !important;box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85) !important;}
-body.day-mode .settings-preview-box,
-body.day-mode .logo-preview-wrap,
-body.day-mode .upload-box,
-body.day-mode .hour-row,
-body.day-mode .time-split,
-body.day-mode .service-row button,
-body.day-mode .vip-row,
-body.day-mode .bar-track,
-body.day-mode .logo-wrap.no-hero-bg{background:#ffffff !important;color:var(--text) !important;border:1px solid rgba(79,140,255,.13) !important;box-shadow:0 8px 18px rgba(39,92,148,.05) !important;}
-body.day-mode .hour-row .day-name,
-body.day-mode .reports-block-title,
-body.day-mode .waitlist-section-title,
-body.day-mode .booking-title,
-body.day-mode .section-title h2,
-body.day-mode .owner-shell-title h2,
-body.day-mode .my-appt-head h3,
-body.day-mode .my-appt-result-title,
-body.day-mode .stats-chart-card h3,
-body.day-mode .soft-chart-title,
-body.day-mode .vip-row strong,
-body.day-mode .customers-total strong,
-body.day-mode .detail-value,
-body.day-mode .my-appt-value{color:#17324a !important;}
-body.day-mode .selected-summary,
-body.day-mode .returning-customer-box,
-body.day-mode .owner-badge,
-body.day-mode .today-badge,
-body.day-mode .waitlist-status,
-body.day-mode .stats-soft-note{background:rgba(24,183,201,.08) !important;color:#1f6f83 !important;border:1px solid rgba(24,183,201,.16) !important;}
-body.day-mode .modal-backdrop{background:rgba(25,55,80,.25) !important;backdrop-filter:blur(8px) !important;}
-body.day-mode .success-modal h3,
-body.day-mode .cancel-modal h3,
-body.day-mode .success-note{color:var(--text) !important;}
-body.day-mode .success-datetime,
-body.day-mode .cancel-datetime,
-body.day-mode .success-btn,
-body.day-mode .cancel-btn{color:#17324a !important;}
-body.day-mode .success-btn,
-body.day-mode .cancel-btn{background:linear-gradient(135deg,#f4b740,#ee8f2f) !important;color:#fff !important;}
-body.day-mode #loader{background:radial-gradient(circle at center, rgba(98,215,232,.18), transparent 42%),linear-gradient(180deg,#fbfeff 0%,#eef8ff 100%) !important;}
-body.day-mode .toast{background:#ffffff !important;color:var(--text) !important;border:1px solid rgba(79,140,255,.14) !important;box-shadow:var(--shadow) !important;}
-body.day-mode .toast.error{background:#fff3f3 !important;color:#b91c1c !important;border:1px solid rgba(239,100,100,.38) !important;}
-body.day-mode .frozen-screen{background:radial-gradient(circle at top, rgba(98,215,232,.20), transparent 34%),linear-gradient(180deg,#fbfeff 0%,#eef8ff 100%) !important;color:var(--text) !important;}
-body.day-mode .frozen-card{background:#ffffff !important;color:var(--text) !important;border:1px solid rgba(79,140,255,.14) !important;box-shadow:var(--shadow) !important;}
+
+body.day-theme .day-chip .day-name,
+body.day-theme .day-chip.available .day-date,
+body.day-theme .day-chip .day-date,
+body.day-theme .time-chip.free,
+body.day-theme .time-chip{
+  color:var(--text) !important;
+}
+
+body.day-theme .day-chip.selected{
+  background:linear-gradient(135deg,#62d7e8,#4f8cff) !important;
+  color:#fff !important;
+}
+body.day-theme .day-chip.selected .day-name,
+body.day-theme .day-chip.selected .day-date{
+  color:#fff !important;
+}
+
+body.day-theme .time-chip.selected,
+body.day-theme .owner-tab.active{
+  background:linear-gradient(135deg,#f4b740,#ee8f2f) !important;
+  color:#fff !important;
+  border-color:transparent !important;
+}
+
+body.day-theme .time-chip.busy,
+body.day-theme .time-chip.closed,
+body.day-theme .day-chip.closed,
+body.day-theme .day-chip.past{
+  background:#edf3f8 !important;
+  color:#91a2b0 !important;
+  border-color:rgba(96,120,142,.14) !important;
+}
+
+body.day-theme .primary-btn{
+  background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
+  color:#fff !important;
+  box-shadow:0 14px 30px rgba(24,183,201,.24) !important;
+}
+body.day-theme .danger-btn{
+  background:linear-gradient(135deg,#ff8585,#ef6464) !important;
+  color:#fff !important;
+}
+body.day-theme .waitlist-join-btn{
+  background:linear-gradient(135deg,#62d7e8,#4f8cff) !important;
+  color:#fff !important;
+}
+body.day-theme .notify-all-btn,
+body.day-theme .waitlist-confirm-btn{
+  background:linear-gradient(135deg,#7ee6b1,#30c48d) !important;
+  color:#07301f !important;
+}
+
+body.day-theme .appointments-table td,
+body.day-theme .customers-table td,
+body.day-theme .waitlist-table td{
+  background:#ffffff !important;
+  color:var(--text) !important;
+  border-top:1px solid rgba(79,140,255,.12) !important;
+  border-bottom:1px solid rgba(79,140,255,.12) !important;
+}
+body.day-theme .appointments-table td:first-child,
+body.day-theme .customers-table td:first-child,
+body.day-theme .waitlist-table td:first-child{
+  border-right:1px solid rgba(79,140,255,.12) !important;
+}
+body.day-theme .appointments-table td:last-child,
+body.day-theme .customers-table td:last-child,
+body.day-theme .waitlist-table td:last-child{
+  border-left:1px solid rgba(79,140,255,.12) !important;
+}
+body.day-theme .appointments-table th,
+body.day-theme .customers-table th,
+body.day-theme .waitlist-table th,
+body.day-theme label,
+body.day-theme .customers-search-label,
+body.day-theme .detail-label,
+body.day-theme .my-appt-field-label,
+body.day-theme .helper,
+body.day-theme .empty-state,
+body.day-theme .stats-empty,
+body.day-theme .waitlist-note,
+body.day-theme .notify-all-hint{
+  color:var(--muted) !important;
+}
+body.day-theme .clickable-row:hover td{
+  background:#eef8ff !important;
+}
+
+body.day-theme .contact-action{
+  background:linear-gradient(180deg,#ffffff,#eef9ff) !important;
+  color:#18b7c9 !important;
+  border:1px solid rgba(24,183,201,.20) !important;
+  box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85) !important;
+}
+
+body.day-theme .settings-preview-box,
+body.day-theme .logo-preview-wrap,
+body.day-theme .upload-box,
+body.day-theme .hour-row,
+body.day-theme .time-split,
+body.day-theme .vip-row,
+body.day-theme .bar-track,
+body.day-theme .logo-wrap.no-hero-bg{
+  background:#ffffff !important;
+  color:var(--text) !important;
+  border:1px solid rgba(79,140,255,.13) !important;
+  box-shadow:0 8px 18px rgba(39,92,148,.05) !important;
+}
+
+body.day-theme .hour-row .day-name,
+body.day-theme .reports-block-title,
+body.day-theme .waitlist-section-title,
+body.day-theme .booking-title,
+body.day-theme .section-title h2,
+body.day-theme .owner-shell-title h2,
+body.day-theme .my-appt-head h3,
+body.day-theme .my-appt-result-title,
+body.day-theme .stats-chart-card h3,
+body.day-theme .soft-chart-title,
+body.day-theme .vip-row strong,
+body.day-theme .customers-total strong,
+body.day-theme .detail-value,
+body.day-theme .my-appt-value{
+  color:#17324a !important;
+}
+
+body.day-theme .selected-summary,
+body.day-theme .returning-customer-box,
+body.day-theme .owner-badge,
+body.day-theme .today-badge,
+body.day-theme .waitlist-status,
+body.day-theme .stats-soft-note{
+  background:rgba(24,183,201,.08) !important;
+  color:#1f6f83 !important;
+  border:1px solid rgba(24,183,201,.16) !important;
+}
+
+body.day-theme .modal-backdrop{
+  background:rgba(25,55,80,.25) !important;
+  backdrop-filter:blur(8px) !important;
+}
+body.day-theme .success-modal h3,
+body.day-theme .cancel-modal h3,
+body.day-theme .success-note{
+  color:var(--text) !important;
+}
+body.day-theme .success-btn,
+body.day-theme .cancel-btn{
+  background:linear-gradient(135deg,#f4b740,#ee8f2f) !important;
+  color:#fff !important;
+}
+
+body.day-theme #loader{
+  background:
+    radial-gradient(circle at center, rgba(98,215,232,.18), transparent 42%),
+    linear-gradient(180deg,#fbfeff 0%,#eef8ff 100%) !important;
+}
+
+body.day-theme .toast{
+  background:#ffffff !important;
+  color:var(--text) !important;
+  border:1px solid rgba(79,140,255,.14) !important;
+  box-shadow:var(--shadow) !important;
+}
+body.day-theme .toast.error{
+  background:#fff3f3 !important;
+  color:#b91c1c !important;
+  border:1px solid rgba(239,100,100,.38) !important;
+}
+
+body.day-theme .frozen-screen{
+  background:
+    radial-gradient(circle at top, rgba(98,215,232,.20), transparent 34%),
+    linear-gradient(180deg,#fbfeff 0%,#eef8ff 100%) !important;
+  color:var(--text) !important;
+}
+body.day-theme .frozen-card{
+  background:#ffffff !important;
+  color:var(--text) !important;
+  border:1px solid rgba(79,140,255,.14) !important;
+  box-shadow:var(--shadow) !important;
+}
 
 </style>
   <link rel="manifest" href="manifest.json">
@@ -1805,19 +1927,21 @@ body.day-mode .frozen-card{background:#ffffff !important;color:var(--text) !impo
                     <path d="M14 18h2v2"/>
                     <path d="M20 20h-2"/>
                   </svg>
-                </button>
-                <button class="theme-icon-btn" id="themeToggleBtn" type="button" onclick="toggleDayMode()" aria-label="מצב יום / לילה" title="מצב יום / לילה">
-                  <svg id="themeToggleIcon" viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M12 3v2"/>
-                    <path d="M12 19v2"/>
-                    <path d="M4.22 4.22l1.42 1.42"/>
-                    <path d="M18.36 18.36l1.42 1.42"/>
-                    <path d="M3 12h2"/>
-                    <path d="M19 12h2"/>
-                    <path d="M4.22 19.78l1.42-1.42"/>
-                    <path d="M18.36 5.64l1.42-1.42"/>
-                    <circle cx="12" cy="12" r="4"/>
-                  </svg>
+
+<button type="button" id="themeToggleBtn" class="theme-toggle-btn" title="החלפת מצב יום/לילה" aria-label="החלפת מצב יום/לילה">
+  <span class="moon-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M21 14.7A8.5 8.5 0 0 1 9.3 3a7.1 7.1 0 1 0 11.7 11.7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+  <span class="sun-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </span>
+</button>
+
                 </button>
               </div>
 
@@ -5442,41 +5566,39 @@ function closeCancelledAppointmentModal(){
 
 
 <script>
-  (function(){
-    const STORAGE_KEY = 'galAppThemeMode';
-    const sunIcon = '<path d="M12 3v2"/><path d="M12 19v2"/><path d="M4.22 4.22l1.42 1.42"/><path d="M18.36 18.36l1.42 1.42"/><path d="M3 12h2"/><path d="M19 12h2"/><path d="M4.22 19.78l1.42-1.42"/><path d="M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="4"/>';
-    const moonIcon = '<path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.7 6.7 0 0 0 21 12.8z"/>';
-
-    function setThemeIcon(isDay){
-      const icon = document.getElementById('themeToggleIcon');
-      const btn = document.getElementById('themeToggleBtn');
-      if(icon) icon.innerHTML = isDay ? moonIcon : sunIcon;
-      if(btn){
-        btn.title = isDay ? 'חזרה למצב לילה' : 'מעבר למצב יום';
-        btn.setAttribute('aria-label', btn.title);
-      }
+(function(){
+  const KEY = 'galAppThemeMode';
+  function applyTheme(mode){
+    const isDay = mode === 'day';
+    document.body.classList.toggle('day-theme', isDay);
+    const btn = document.getElementById('themeToggleBtn');
+    if(btn){
+      btn.setAttribute('aria-label', isDay ? 'מעבר למצב לילה' : 'מעבר למצב יום');
+      btn.setAttribute('title', isDay ? 'מעבר למצב לילה' : 'מעבר למצב יום');
     }
+  }
 
-    window.applySavedThemeMode = function(){
-      const isDay = localStorage.getItem(STORAGE_KEY) === 'day';
-      document.body.classList.toggle('day-mode', isDay);
-      setThemeIcon(isDay);
-    };
+  function initThemeToggle(){
+    const saved = localStorage.getItem(KEY) || 'dark';
+    applyTheme(saved);
 
-    window.toggleDayMode = function(){
-      const isDay = !document.body.classList.contains('day-mode');
-      document.body.classList.toggle('day-mode', isDay);
-      localStorage.setItem(STORAGE_KEY, isDay ? 'day' : 'dark');
-      setThemeIcon(isDay);
-      if(typeof showToast === 'function') showToast(isDay ? 'מצב יום הופעל' : 'מצב לילה הופעל');
-    };
+    const btn = document.getElementById('themeToggleBtn');
+    if(!btn || btn.dataset.ready === '1') return;
+    btn.dataset.ready = '1';
 
-    if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', window.applySavedThemeMode);
-    }else{
-      window.applySavedThemeMode();
-    }
-  })();
+    btn.addEventListener('click', function(){
+      const next = document.body.classList.contains('day-theme') ? 'dark' : 'day';
+      localStorage.setItem(KEY, next);
+      applyTheme(next);
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initThemeToggle);
+  }else{
+    initThemeToggle();
+  }
+})();
 </script>
 
 </body>
