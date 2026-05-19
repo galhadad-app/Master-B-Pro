@@ -1355,334 +1355,90 @@ body.business-frozen{overflow:hidden;}
   }
 }
 
-/* ===== Day / Night Theme Toggle - GUARANTEED VERSION ===== */
-.theme-top-switch{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:10px;
-  margin:0 0 14px;
-  padding:10px;
-  border-radius:20px;
-  background:rgba(255,255,255,.035);
-  border:1px solid rgba(255,255,255,.08);
-}
-
-.theme-toggle-btn{
-  min-width:132px;
-  height:46px;
-  border:none;
-  border-radius:999px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  cursor:pointer;
-  background:linear-gradient(135deg,#d7b46d,#c99540);
-  color:#17120a;
-  font-weight:900;
-  font-size:13px;
-  border:1px solid rgba(215,180,109,.30);
-  box-shadow:0 12px 26px rgba(201,149,64,.20);
-  transition:.2s ease;
-  -webkit-tap-highlight-color:transparent;
-}
-.theme-toggle-btn:hover,
-.theme-toggle-btn:active{
-  transform:translateY(-1px);
-}
-.theme-toggle-btn svg{
-  width:19px;
-  height:19px;
-  display:block;
-}
-.theme-toggle-btn .night-label{display:none}
-.theme-toggle-btn .day-label{display:inline-flex;align-items:center;gap:7px}
-body.day-theme .theme-toggle-btn .night-label{display:inline-flex;align-items:center;gap:7px}
-body.day-theme .theme-toggle-btn .day-label{display:none}
-
-body.day-theme .theme-top-switch{
-  background:rgba(255,255,255,.74);
-  border:1px solid rgba(79,140,255,.14);
-  box-shadow:0 8px 18px rgba(39,92,148,.06);
-}
-body.day-theme .theme-toggle-btn{
-  background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
-  color:#ffffff !important;
-  border-color:rgba(24,183,201,.18) !important;
-  box-shadow:0 14px 30px rgba(24,183,201,.22) !important;
-}
-
+/* ===== SIMPLE DAY THEME ===== */
 body.day-theme{
-  --bg:#f7fbff !important;
-  --panel:#ffffff !important;
-  --panel-2:#f3f8ff !important;
-  --line:rgba(30,64,175,.12) !important;
-  --text:#17324a !important;
-  --muted:#60788e !important;
-  --gold:#f4b740 !important;
-  --gold-2:#ee8f2f !important;
-  --danger:#ef6464 !important;
-  --danger-bg:rgba(239,100,100,.10) !important;
-  --ok:#30c48d !important;
-  --ok-bg:rgba(48,196,141,.10) !important;
-  --shadow:0 16px 36px rgba(39,92,148,.12),0 4px 14px rgba(39,92,148,.06) !important;
   background:
-    radial-gradient(circle at 12% 0%, rgba(98,215,232,.30), transparent 28%),
-    radial-gradient(circle at 92% 10%, rgba(244,183,64,.24), transparent 26%),
-    linear-gradient(180deg,#fbfeff 0%,#eef8ff 55%,#f9fbf3 100%) !important;
-  color:var(--text) !important;
+    radial-gradient(circle at 10% 0%, rgba(98,215,232,.28), transparent 30%),
+    radial-gradient(circle at 90% 10%, rgba(244,183,64,.18), transparent 28%),
+    linear-gradient(180deg,#fbfeff 0%,#eef8ff 60%,#f8fbf6 100%) !important;
+  color:#17324a !important;
 }
 
 body.day-theme .card,
 body.day-theme .owner-shell,
 body.day-theme .owner-panel-card,
 body.day-theme .settings-box,
-body.day-theme .stat-card,
-body.day-theme .stats-chart-card,
-body.day-theme .stats-soft-card,
-body.day-theme .stats-soft-chart,
-body.day-theme .premium-donut-card,
-body.day-theme .my-appt-result,
-body.day-theme .waitlist-success-card,
-body.day-theme .notify-row,
-body.day-theme .empty-slots,
 body.day-theme .modal,
 body.day-theme .success-modal,
-body.day-theme .cancel-modal{
-  background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(245,251,255,.92)) !important;
-  color:var(--text) !important;
-  border-color:rgba(79,140,255,.13) !important;
-  box-shadow:var(--shadow) !important;
-}
-
+body.day-theme .cancel-modal,
+body.day-theme .hour-row,
 body.day-theme .logo-wrap,
-body.day-theme .animated-panel{
-  background:
-    linear-gradient(rgba(255,255,255,.58),rgba(255,255,255,.72)),
-    var(--hero-bg, url("background-behind-logo.png") center/cover no-repeat) !important;
+body.day-theme .stat-card,
+body.day-theme .stats-chart-card{
+  background:linear-gradient(180deg,#ffffff,#f4faff) !important;
   border-color:rgba(79,140,255,.14) !important;
-  box-shadow:var(--shadow) !important;
+  color:#17324a !important;
+  box-shadow:0 14px 34px rgba(39,92,148,.10) !important;
 }
 
 body.day-theme input,
 body.day-theme select,
-body.day-theme textarea,
-body.day-theme .my-appt-input,
-body.day-theme .customers-search-input,
-body.day-theme .detail-edit,
-body.day-theme .settings-box textarea,
-body.day-theme .settings-box input,
-body.day-theme .settings-box select,
-body.day-theme #settingsPanel input,
-body.day-theme #settingsPanel textarea{
+body.day-theme textarea{
   background:#ffffff !important;
-  color:var(--text) !important;
-  border:1px solid rgba(79,140,255,.16) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 6px 14px rgba(39,92,148,.04) !important;
-}
-
-body.day-theme input::placeholder,
-body.day-theme textarea::placeholder{
-  color:#8ca0b3 !important;
+  color:#17324a !important;
+  border:1px solid rgba(79,140,255,.14) !important;
 }
 
 body.day-theme .day-chip,
 body.day-theme .time-chip,
 body.day-theme .owner-tab,
 body.day-theme .secondary-btn,
-body.day-theme .secondary-action-btn,
-body.day-theme .returning-customer-change,
-body.day-theme .mini-reset-btn,
-body.day-theme .clear-media-btn,
-body.day-theme .qr-icon-btn{
-  background:linear-gradient(180deg,#ffffff,#f2f9ff) !important;
-  color:var(--text) !important;
-  border:1px solid rgba(79,140,255,.14) !important;
-  box-shadow:0 8px 18px rgba(39,92,148,.06) !important;
+body.day-theme .secondary-action-btn{
+  background:linear-gradient(180deg,#ffffff,#eef8ff) !important;
+  color:#17324a !important;
+  border-color:rgba(79,140,255,.14) !important;
 }
 
-body.day-theme .day-chip .day-name,
-body.day-theme .day-chip.available .day-date,
-body.day-theme .day-chip .day-date,
-body.day-theme .time-chip.free,
-body.day-theme .time-chip{
-  color:var(--text) !important;
-}
-
-body.day-theme .day-chip.selected{
-  background:linear-gradient(135deg,#62d7e8,#4f8cff) !important;
-  color:#fff !important;
-}
-body.day-theme .day-chip.selected .day-name,
-body.day-theme .day-chip.selected .day-date{
-  color:#fff !important;
-}
-
+body.day-theme .day-chip.selected,
 body.day-theme .time-chip.selected,
-body.day-theme .owner-tab.active{
-  background:linear-gradient(135deg,#f4b740,#ee8f2f) !important;
-  color:#fff !important;
-  border-color:transparent !important;
-}
-
-body.day-theme .time-chip.busy,
-body.day-theme .time-chip.closed,
-body.day-theme .day-chip.closed,
-body.day-theme .day-chip.past{
-  background:#edf3f8 !important;
-  color:#91a2b0 !important;
-  border-color:rgba(96,120,142,.14) !important;
-}
-
+body.day-theme .owner-tab.active,
 body.day-theme .primary-btn{
   background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
-  color:#fff !important;
-  box-shadow:0 14px 30px rgba(24,183,201,.24) !important;
-}
-body.day-theme .danger-btn{
-  background:linear-gradient(135deg,#ff8585,#ef6464) !important;
-  color:#fff !important;
-}
-body.day-theme .waitlist-join-btn{
-  background:linear-gradient(135deg,#62d7e8,#4f8cff) !important;
-  color:#fff !important;
-}
-body.day-theme .notify-all-btn,
-body.day-theme .waitlist-confirm-btn{
-  background:linear-gradient(135deg,#7ee6b1,#30c48d) !important;
-  color:#07301f !important;
+  color:#ffffff !important;
+  border-color:transparent !important;
 }
 
 body.day-theme .appointments-table td,
 body.day-theme .customers-table td,
 body.day-theme .waitlist-table td{
   background:#ffffff !important;
-  color:var(--text) !important;
-  border-top:1px solid rgba(79,140,255,.12) !important;
-  border-bottom:1px solid rgba(79,140,255,.12) !important;
-}
-body.day-theme .appointments-table td:first-child,
-body.day-theme .customers-table td:first-child,
-body.day-theme .waitlist-table td:first-child{
-  border-right:1px solid rgba(79,140,255,.12) !important;
-}
-body.day-theme .appointments-table td:last-child,
-body.day-theme .customers-table td:last-child,
-body.day-theme .waitlist-table td:last-child{
-  border-left:1px solid rgba(79,140,255,.12) !important;
-}
-body.day-theme .appointments-table th,
-body.day-theme .customers-table th,
-body.day-theme .waitlist-table th,
-body.day-theme label,
-body.day-theme .customers-search-label,
-body.day-theme .detail-label,
-body.day-theme .my-appt-field-label,
-body.day-theme .helper,
-body.day-theme .empty-state,
-body.day-theme .stats-empty,
-body.day-theme .waitlist-note,
-body.day-theme .notify-all-hint{
-  color:var(--muted) !important;
-}
-body.day-theme .clickable-row:hover td{
-  background:#eef8ff !important;
-}
-
-body.day-theme .contact-action{
-  background:linear-gradient(180deg,#ffffff,#eef9ff) !important;
-  color:#18b7c9 !important;
-  border:1px solid rgba(24,183,201,.20) !important;
-  box-shadow:0 10px 24px rgba(39,92,148,.12),inset 0 1px 0 rgba(255,255,255,.85) !important;
-}
-
-body.day-theme .settings-preview-box,
-body.day-theme .logo-preview-wrap,
-body.day-theme .upload-box,
-body.day-theme .hour-row,
-body.day-theme .time-split,
-body.day-theme .vip-row,
-body.day-theme .bar-track,
-body.day-theme .logo-wrap.no-hero-bg{
-  background:#ffffff !important;
-  color:var(--text) !important;
-  border:1px solid rgba(79,140,255,.13) !important;
-  box-shadow:0 8px 18px rgba(39,92,148,.05) !important;
-}
-
-body.day-theme .hour-row .day-name,
-body.day-theme .reports-block-title,
-body.day-theme .waitlist-section-title,
-body.day-theme .booking-title,
-body.day-theme .section-title h2,
-body.day-theme .owner-shell-title h2,
-body.day-theme .my-appt-head h3,
-body.day-theme .my-appt-result-title,
-body.day-theme .stats-chart-card h3,
-body.day-theme .soft-chart-title,
-body.day-theme .vip-row strong,
-body.day-theme .customers-total strong,
-body.day-theme .detail-value,
-body.day-theme .my-appt-value{
   color:#17324a !important;
 }
 
-body.day-theme .selected-summary,
-body.day-theme .returning-customer-box,
-body.day-theme .owner-badge,
-body.day-theme .today-badge,
-body.day-theme .waitlist-status,
-body.day-theme .stats-soft-note{
-  background:rgba(24,183,201,.08) !important;
-  color:#1f6f83 !important;
-  border:1px solid rgba(24,183,201,.16) !important;
+.theme-toggle-btn{
+  width:54px;
+  height:54px;
+  border:none;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:linear-gradient(180deg,#171d29,#101620);
+  color:#f7e7c3;
+  border:1px solid rgba(215,180,109,.25);
+  box-shadow:0 12px 24px rgba(0,0,0,.25);
+  transition:.2s ease;
 }
 
-body.day-theme .modal-backdrop{
-  background:rgba(25,55,80,.25) !important;
-  backdrop-filter:blur(8px) !important;
-}
-body.day-theme .success-modal h3,
-body.day-theme .cancel-modal h3,
-body.day-theme .success-note{
-  color:var(--text) !important;
-}
-body.day-theme .success-btn,
-body.day-theme .cancel-btn{
-  background:linear-gradient(135deg,#f4b740,#ee8f2f) !important;
-  color:#fff !important;
+.theme-toggle-btn:hover{
+  transform:translateY(-2px);
 }
 
-body.day-theme #loader{
-  background:
-    radial-gradient(circle at center, rgba(98,215,232,.18), transparent 42%),
-    linear-gradient(180deg,#fbfeff 0%,#eef8ff 100%) !important;
-}
-
-body.day-theme .toast{
-  background:#ffffff !important;
-  color:var(--text) !important;
-  border:1px solid rgba(79,140,255,.14) !important;
-  box-shadow:var(--shadow) !important;
-}
-body.day-theme .toast.error{
-  background:#fff3f3 !important;
-  color:#b91c1c !important;
-  border:1px solid rgba(239,100,100,.38) !important;
-}
-
-body.day-theme .frozen-screen{
-  background:
-    radial-gradient(circle at top, rgba(98,215,232,.20), transparent 34%),
-    linear-gradient(180deg,#fbfeff 0%,#eef8ff 100%) !important;
-  color:var(--text) !important;
-}
-body.day-theme .frozen-card{
-  background:#ffffff !important;
-  color:var(--text) !important;
-  border:1px solid rgba(79,140,255,.14) !important;
-  box-shadow:var(--shadow) !important;
+body.day-theme .theme-toggle-btn{
+  background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
+  color:#ffffff !important;
+  border-color:rgba(24,183,201,.18) !important;
 }
 
 </style>
@@ -1713,33 +1469,94 @@ body.day-theme .frozen-card{
     line-height:1 !important;
   }
 }
+
+/* ===== SIMPLE DAY THEME ===== */
+body.day-theme{
+  background:
+    radial-gradient(circle at 10% 0%, rgba(98,215,232,.28), transparent 30%),
+    radial-gradient(circle at 90% 10%, rgba(244,183,64,.18), transparent 28%),
+    linear-gradient(180deg,#fbfeff 0%,#eef8ff 60%,#f8fbf6 100%) !important;
+  color:#17324a !important;
+}
+
+body.day-theme .card,
+body.day-theme .owner-shell,
+body.day-theme .owner-panel-card,
+body.day-theme .settings-box,
+body.day-theme .modal,
+body.day-theme .success-modal,
+body.day-theme .cancel-modal,
+body.day-theme .hour-row,
+body.day-theme .logo-wrap,
+body.day-theme .stat-card,
+body.day-theme .stats-chart-card{
+  background:linear-gradient(180deg,#ffffff,#f4faff) !important;
+  border-color:rgba(79,140,255,.14) !important;
+  color:#17324a !important;
+  box-shadow:0 14px 34px rgba(39,92,148,.10) !important;
+}
+
+body.day-theme input,
+body.day-theme select,
+body.day-theme textarea{
+  background:#ffffff !important;
+  color:#17324a !important;
+  border:1px solid rgba(79,140,255,.14) !important;
+}
+
+body.day-theme .day-chip,
+body.day-theme .time-chip,
+body.day-theme .owner-tab,
+body.day-theme .secondary-btn,
+body.day-theme .secondary-action-btn{
+  background:linear-gradient(180deg,#ffffff,#eef8ff) !important;
+  color:#17324a !important;
+  border-color:rgba(79,140,255,.14) !important;
+}
+
+body.day-theme .day-chip.selected,
+body.day-theme .time-chip.selected,
+body.day-theme .owner-tab.active,
+body.day-theme .primary-btn{
+  background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
+  color:#ffffff !important;
+  border-color:transparent !important;
+}
+
+body.day-theme .appointments-table td,
+body.day-theme .customers-table td,
+body.day-theme .waitlist-table td{
+  background:#ffffff !important;
+  color:#17324a !important;
+}
+
+.theme-toggle-btn{
+  width:54px;
+  height:54px;
+  border:none;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:linear-gradient(180deg,#171d29,#101620);
+  color:#f7e7c3;
+  border:1px solid rgba(215,180,109,.25);
+  box-shadow:0 12px 24px rgba(0,0,0,.25);
+  transition:.2s ease;
+}
+
+.theme-toggle-btn:hover{
+  transform:translateY(-2px);
+}
+
+body.day-theme .theme-toggle-btn{
+  background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
+  color:#ffffff !important;
+  border-color:rgba(24,183,201,.18) !important;
+}
+
 </style>
-
-
-<script>
-(function(){
-  window.applyGalTheme = function(mode){
-    var isDay = mode === 'day';
-    if(document.body){
-      document.body.classList.toggle('day-theme', isDay);
-    }
-    try{ localStorage.setItem('galAppThemeMode', mode); }catch(e){}
-  };
-
-  window.toggleGalTheme = function(){
-    var isDay = document.body && document.body.classList.contains('day-theme');
-    window.applyGalTheme(isDay ? 'dark' : 'day');
-  };
-
-  try{
-    if(localStorage.getItem('galAppThemeMode') === 'day'){
-      document.addEventListener('DOMContentLoaded', function(){
-        document.body.classList.add('day-theme');
-      });
-    }
-  }catch(e){}
-})();
-</script>
 
 </head>
 <body>
@@ -1898,8 +1715,35 @@ body.day-theme .frozen-card{
         </div>
 
         <div id="settingsPanel" class="owner-panel active-settings-panel">
-
-
+          <div class="settings-stack">
+              <div class="settings-two-col">
+                <div class="settings-box">
+                  <div class="section-title"><h2>מיתוג העסק</h2><span class="section-sub">מה שישפיע על דף הלקוח</span></div>
+                  <div class="settings-field">
+                    <input id="settingsBusinessName" placeholder="שם העסק" />
+                  </div>
+                  <div class="settings-field">
+                    <input id="settingsBusinessSubtitle" placeholder="כותרת משנה" />
+                  </div>
+                  <div class="settings-field">
+                    <input id="settingsWhatsapp" inputmode="numeric" placeholder="מספר וואטסאפ" />
+                  </div>
+                  <div class="settings-field">
+                    <input id="settingsBusinessAddress" placeholder="כתובת העסק" />
+                  </div>
+                  <div class="settings-field">
+                    <input id="settingsOwnerCode" inputmode="numeric" maxlength="4" placeholder="קוד לתורים ולקוחות" />
+                  </div>
+                  <div class="settings-field">
+                    <input id="settingsStatsCode" inputmode="numeric" maxlength="4" placeholder="קוד לסטטיסטיקה והגדרות" />
+                  </div>
+                  <div class="settings-field">
+                    <textarea id="settingsBusinessDescription" placeholder="תיאור קצר"></textarea>
+                  </div>
+                  <div class="settings-field">
+                    <textarea id="settingsImportantNotice" placeholder="הודעות חשובות ללקוח (לא חובה)"></textarea>
+                  </div>
+                </div>
 
                 <div class="settings-box">
                   <div class="section-title"><h2>לוגו ותמונת רקע</h2><span class="section-sub">אפשר להעלות מהטלפון</span></div>
@@ -1944,36 +1788,27 @@ body.day-theme .frozen-card{
               <div class="settings-actions">
                 <button class="primary-btn" id="saveSettingsBtn">שמור הגדרות</button>
                 <button class="danger-btn" id="resetSettingsBtn">איפוס הגדרות</button>
-              
-<div class="qr-mini-row">
-  <button class="qr-icon-btn" id="openQrBtn" type="button" onclick="openQrModal()" aria-label="יצירת QR" title="יצירת QR">
-    <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M4 4h6v6H4z"/>
-      <path d="M14 4h6v6h-6z"/>
-      <path d="M4 14h6v6H4z"/>
-      <path d="M14 14h2"/>
-      <path d="M18 14h2v2"/>
-      <path d="M14 18h2v2"/>
-      <path d="M20 20h-2"/>
-    </svg>
-  </button>
+              <div class="qr-mini-row">
+                <button class="qr-icon-btn" id="openQrBtn" type="button" onclick="openQrModal()" aria-label="יצירת QR" title="יצירת QR">
+                  <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4h6v6H4z"/>
+                    <path d="M14 4h6v6h-6z"/>
+                    <path d="M4 14h6v6H4z"/>
+                    <path d="M14 14h2"/>
+                    <path d="M18 14h2v2"/>
+                    <path d="M14 18h2v2"/>
+                    <path d="M20 20h-2"/>
+                  </svg>
+                </button>
 
-  <button class="theme-toggle-btn" id="themeToggleBtn" type="button" onclick="window.toggleGalTheme && window.toggleGalTheme()" aria-label="מצב יום / לילה" title="מצב יום / לילה">
-    <span class="day-label">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"/>
-        <path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </span>
+<button class="theme-toggle-btn" id="themeToggleBtn" type="button" onclick="toggleThemeMode()" title="מצב יום / לילה">
+<svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+<path d="M21 14.7A8.5 8.5 0 0 1 9.3 3a7.1 7.1 0 1 0 11.7 11.7Z"
+stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+</button>
 
-    <span class="night-label">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M21 14.7A8.5 8.5 0 0 1 9.3 3a7.1 7.1 0 1 0 11.7 11.7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </span>
-  </button>
-</div>
-
+              </div>
 
               </div>
               <div class="helper">דף הלקוח נשאר בנאמנות לגרסה המקורית, ורק מסך בעל העסק קיבל את לשונית ההגדרות המורחבת.</div>
@@ -5597,31 +5432,30 @@ function closeCancelledAppointmentModal(){
 
 <script>
 (function(){
-  function initTheme(){
-    try{
-      var saved = localStorage.getItem('galAppThemeMode') || 'dark';
-      window.applyGalTheme(saved);
-    }catch(e){
-      window.applyGalTheme('dark');
-    }
+  const KEY = 'themeMode';
 
-    var btn = document.getElementById('themeToggleBtn');
-    if(btn && !btn.dataset.themeReady){
-      btn.dataset.themeReady = '1';
-      btn.addEventListener('click', function(ev){
-        ev.preventDefault();
-        ev.stopPropagation();
-        window.toggleGalTheme();
+  function applyTheme(){
+    const mode = localStorage.getItem(KEY) || 'dark';
+    document.body.classList.toggle('day-theme', mode === 'day');
+  }
+
+  window.toggleThemeMode = function(){
+    const isDay = document.body.classList.contains('day-theme');
+    localStorage.setItem(KEY, isDay ? 'dark' : 'day');
+    applyTheme();
+  };
+
+  document.addEventListener('DOMContentLoaded', function(){
+    applyTheme();
+
+    const btn = document.getElementById('themeToggleBtn');
+    if(btn){
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        toggleThemeMode();
       });
     }
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', initTheme);
-  }else{
-    initTheme();
-  }
-  window.addEventListener('load', initTheme);
+  });
 })();
 </script>
 
