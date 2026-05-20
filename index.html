@@ -2652,6 +2652,79 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
     line-height:1 !important;
   }
 }
+
+
+/* ===== FINAL FIX: day mode appointment/customer detail popups + green source bars ===== */
+body.day-mode #detailsModal .modal,
+body.day-mode #customerModal .modal,
+body.light-mode #detailsModal .modal,
+body.light-mode #customerModal .modal,
+body[data-theme="day"] #detailsModal .modal,
+body[data-theme="day"] #customerModal .modal{
+  background:#ffffff !important;
+  color:#111827 !important;
+  border:1px solid #d8e8f2 !important;
+  box-shadow:0 24px 60px rgba(31,111,149,.18) !important;
+}
+
+body.day-mode #detailsModal .detail-box,
+body.day-mode #customerModal .detail-box,
+body.light-mode #detailsModal .detail-box,
+body.light-mode #customerModal .detail-box,
+body[data-theme="day"] #detailsModal .detail-box,
+body[data-theme="day"] #customerModal .detail-box{
+  border-bottom:1px solid rgba(15,95,125,.14) !important;
+  background:transparent !important;
+}
+
+body.day-mode #detailsModal .detail-label,
+body.day-mode #customerModal .detail-label,
+body.light-mode #detailsModal .detail-label,
+body.light-mode #customerModal .detail-label,
+body[data-theme="day"] #detailsModal .detail-label,
+body[data-theme="day"] #customerModal .detail-label{
+  color:#4b6b80 !important;
+}
+
+body.day-mode #detailsModal .detail-value,
+body.day-mode #customerModal .detail-value,
+body.day-mode #detailsModal .detail-edit,
+body.light-mode #detailsModal .detail-value,
+body.light-mode #customerModal .detail-value,
+body.light-mode #detailsModal .detail-edit,
+body[data-theme="day"] #detailsModal .detail-value,
+body[data-theme="day"] #customerModal .detail-value,
+body[data-theme="day"] #detailsModal .detail-edit{
+  color:#111827 !important;
+  -webkit-text-fill-color:#111827 !important;
+}
+
+body.day-mode #detailsModal textarea.detail-edit,
+body.day-mode #detailsModal input.detail-edit,
+body.light-mode #detailsModal textarea.detail-edit,
+body.light-mode #detailsModal input.detail-edit,
+body[data-theme="day"] #detailsModal textarea.detail-edit,
+body[data-theme="day"] #detailsModal input.detail-edit{
+  background:#ffffff !important;
+  border:1px solid #d8e8f2 !important;
+  color:#111827 !important;
+  -webkit-text-fill-color:#111827 !important;
+  border-radius:12px !important;
+  padding:10px 12px !important;
+}
+
+.stats-source-bars .stats-fill,
+.stats-source-bars .stats-fill.alt{
+  background:linear-gradient(90deg,rgba(96,190,142,.72),rgba(142,224,177,.96)) !important;
+}
+body.day-mode .stats-source-bars .stats-fill,
+body.day-mode .stats-source-bars .stats-fill.alt,
+body.light-mode .stats-source-bars .stats-fill,
+body.light-mode .stats-source-bars .stats-fill.alt,
+body[data-theme="day"] .stats-source-bars .stats-fill,
+body[data-theme="day"] .stats-source-bars .stats-fill.alt{
+  background:linear-gradient(90deg,#8fd8b4,#58c77d) !important;
+}
 </style>
 
 </head>
