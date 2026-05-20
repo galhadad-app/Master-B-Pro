@@ -7848,5 +7848,103 @@ body[data-theme="day"] #openMyAppointmentBtn:hover{
 }
 </style>
 
+
+<style id="no-future-close-button-fix">
+/* פופאפ אין תור עתידי - כפתור סגור מותאם ביחס לתיבה */
+#myAppointmentModal.no-future-state .my-appointment-modal{
+  width:min(92vw,420px) !important;
+  padding:22px 18px 18px !important;
+  border-radius:28px !important;
+}
+
+#myAppointmentModal.no-future-state .my-appt-head,
+#myAppointmentModal.no-future-state .my-appt-result-title,
+#myAppointmentModal.no-future-state .my-appt-actions,
+#myAppointmentModal.no-future-state input,
+#myAppointmentModal.no-future-state label{
+  display:none !important;
+}
+
+#myAppointmentModal.no-future-state .my-appt-hint{
+  display:block !important;
+  margin:0 0 16px !important;
+  min-height:0 !important;
+  text-align:center !important;
+  font-size:22px !important;
+  line-height:1.45 !important;
+  font-weight:900 !important;
+  color:#1f5f78 !important;
+}
+
+body:not(.day-mode):not(.light-mode):not([data-theme="day"]) #myAppointmentModal.no-future-state .my-appt-hint{
+  color:#f7e7c3 !important;
+}
+
+#myAppointmentModal.no-future-state .no-future-close-btn{
+  display:block !important;
+  width:100% !important;
+  margin:0 !important;
+  border:none !important;
+  border-radius:18px !important;
+  padding:15px 18px !important;
+  background:linear-gradient(135deg,#ff8f8f,#e65f5f) !important;
+  color:#fff !important;
+  font-family:inherit !important;
+  font-size:18px !important;
+  font-weight:900 !important;
+  cursor:pointer !important;
+  box-shadow:0 12px 26px rgba(230,95,95,.16) !important;
+}
+</style>
+
+<script id="no-future-close-button-fix-script">
+(function(){
+  function ensureNoFutureCloseButton(){
+    var modal = document.getElementById('myAppointmentModal');
+    if(!modal) return;
+
+    var text = (modal.textContent || '').replace(/\s+/g,' ').trim();
+    var isNoFuture = text.indexOf('לא נמצא תור עתידי שמור בשבילך') !== -1;
+
+    modal.classList.toggle('no-future-state', isNoFuture);
+
+    if(!isNoFuture) return;
+
+    var box = modal.querySelector('.my-appointment-modal') || modal.querySelector('.modal') || modal;
+    if(!box) return;
+
+    var hint = modal.querySelector('.my-appt-hint') || Array.from(modal.querySelectorAll('*')).find(function(el){
+      return (el.textContent || '').indexOf('לא נמצא תור עתידי שמור בשבילך') !== -1;
+    });
+
+    if(hint){
+      hint.textContent = 'לא נמצא תור עתידי שמור בשבילך';
+    }
+
+    var closeBtn = modal.querySelector('.no-future-close-btn');
+    if(!closeBtn){
+      closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'no-future-close-btn';
+      closeBtn.textContent = 'סגור';
+      closeBtn.addEventListener('click', function(){
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+      });
+      box.appendChild(closeBtn);
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', ensureNoFutureCloseButton);
+  }else{
+    ensureNoFutureCloseButton();
+  }
+
+  window.addEventListener('load', ensureNoFutureCloseButton);
+  setInterval(ensureNoFutureCloseButton, 400);
+})();
+</script>
+
 </body>
 </html>
