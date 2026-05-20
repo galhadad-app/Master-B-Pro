@@ -3414,7 +3414,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
   <div class="modal-backdrop" id="myAppointmentModal">
     <div class="modal my-appointment-modal">
       <div class="my-appt-head">
-        <h3 id="myAppointmentTitle">יש לי תור</h3>
+        <h3 id="myAppointmentTitle">לא נמצא תור עתידי שמור בשבילך</h3>
       </div>
 
       <div id="myAppointmentLookupSection" class="my-appt-card">
@@ -5817,7 +5817,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
       const helper = document.getElementById("myAppointmentHelperText");
 
       modal.classList.add("show");
-      document.getElementById("myAppointmentTitle").textContent = "יש לי תור";
+      document.getElementById("myAppointmentTitle").textContent = "לא נמצא תור עתידי שמור בשבילך";
       phoneInput.value = savedCustomer ? savedCustomer.phone : "";
       lookupSection.classList.remove("hidden");
       resultBox.classList.add("hidden");
@@ -5832,9 +5832,9 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
     }
     function closeMyAppointmentModal(){
       document.getElementById('myAppointmentModal').classList.remove('show');
-      document.getElementById("myAppointmentTitle").textContent = "יש לי תור";
+      document.getElementById("myAppointmentTitle").textContent = "לא נמצא תור עתידי שמור בשבילך";
       activeClientAppointment = null;
-      document.getElementById("myAppointmentTitle").textContent = "יש לי תור";
+      document.getElementById("myAppointmentTitle").textContent = "לא נמצא תור עתידי שמור בשבילך";
       const cancelSelectedBtn = document.getElementById("cancelSelectedMyAppointmentBtn");
       if(cancelSelectedBtn) cancelSelectedBtn.disabled = true;
       document.getElementById('myAppointmentLookupSection').classList.remove('hidden');
@@ -5846,7 +5846,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
 
     function backToMyAppointmentLookup(){
       activeClientAppointment = null;
-      document.getElementById("myAppointmentTitle").textContent = "יש לי תור";
+      document.getElementById("myAppointmentTitle").textContent = "לא נמצא תור עתידי שמור בשבילך";
       const cancelSelectedBtn = document.getElementById("cancelSelectedMyAppointmentBtn");
       if(cancelSelectedBtn) cancelSelectedBtn.disabled = true;
       document.getElementById('myAppointmentLookupSection').classList.remove('hidden');
@@ -5948,7 +5948,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
         .sort((a,b) => appointmentDateTime(a) - appointmentDateTime(b));
 
       if(!foundAppointments.length){
-        helper.textContent = autoLookup ? "לא נמצא תור עתידי שמור עבורך." : "לא נמצא תור עתידי למספר הזה.";
+        helper.textContent = autoLookup ? "לא נמצא תור עתידי שמור בשבילך" : "לא נמצא תור עתידי למספר הזה.";
         lookupSection.classList.toggle("hidden", !!autoLookup);
         choicesBox?.classList.add("hidden");
         resultBox.classList.add("hidden");
@@ -7673,6 +7673,180 @@ body[data-theme="day"] #clientScreen #clientToolsCard{
   window.addEventListener('load', moveClientTools);
 })();
 </script>
+
+
+<style id="waitlist-details-readable-fix">
+/* פופאפ פרטי רשימת המתנה - תיקון קריאות במצב יום */
+#waitlistDetailsModal .modal,
+#waitlistDetailsModal .waitlist-details-modal,
+#waitlistDetailsModal [class*="modal"],
+#waitlistDetailsModal [class*="details"]{
+  color:#10243a !important;
+}
+
+body.day-mode #waitlistDetailsModal .modal,
+body.day-mode #waitlistDetailsModal .waitlist-details-modal,
+body.day-mode #waitlistDetailsModal [class*="modal"],
+body.day-mode #waitlistDetailsModal [class*="details"],
+body.light-mode #waitlistDetailsModal .modal,
+body.light-mode #waitlistDetailsModal .waitlist-details-modal,
+body.light-mode #waitlistDetailsModal [class*="modal"],
+body.light-mode #waitlistDetailsModal [class*="details"],
+body[data-theme="day"] #waitlistDetailsModal .modal,
+body[data-theme="day"] #waitlistDetailsModal .waitlist-details-modal,
+body[data-theme="day"] #waitlistDetailsModal [class*="modal"],
+body[data-theme="day"] #waitlistDetailsModal [class*="details"]{
+  background:rgba(255,255,255,.96) !important;
+  color:#10243a !important;
+  border-color:rgba(31,95,120,.14) !important;
+}
+
+#waitlistDetailsModal h1,
+#waitlistDetailsModal h2,
+#waitlistDetailsModal h3,
+#waitlistDetailsModal .detail-label,
+#waitlistDetailsModal .detail-value,
+#waitlistDetailsModal p,
+#waitlistDetailsModal span,
+#waitlistDetailsModal div{
+  color:#10243a !important;
+  opacity:1 !important;
+  text-shadow:none !important;
+}
+
+#waitlistDetailsModal .detail-label{
+  color:#557082 !important;
+  font-weight:800 !important;
+}
+
+#waitlistDetailsModal .detail-value{
+  color:#10243a !important;
+  font-weight:900 !important;
+}
+
+#waitlistDetailsModal .secondary-btn,
+#waitlistDetailsModal button:not(.danger-btn):not([class*="delete"]){
+  background:#fff !important;
+  color:#10243a !important;
+  border:1px solid rgba(31,95,120,.16) !important;
+}
+
+#waitlistDetailsModal .danger-btn,
+#waitlistDetailsModal button[class*="delete"],
+#waitlistDetailsModal button[class*="remove"]{
+  background:linear-gradient(135deg,#ff8f8f,#e65f5f) !important;
+  color:#fff !important;
+  border:1px solid rgba(255,123,123,.18) !important;
+}
+</style>
+
+<style id="waitlist-details-readable-fallback">
+body.day-mode .modal h3,
+body.light-mode .modal h3,
+body[data-theme="day"] .modal h3{
+  color:#1f5f78 !important;
+}
+body.day-mode .modal .detail-label,
+body.light-mode .modal .detail-label,
+body[data-theme="day"] .modal .detail-label{
+  color:#60778a !important;
+}
+body.day-mode .modal .detail-value,
+body.light-mode .modal .detail-value,
+body[data-theme="day"] .modal .detail-value{
+  color:#10243a !important;
+}
+</style>
+
+
+<style id="no-future-appointment-popup-fix">
+#myAppointmentModal .my-appt-head,
+#myAppointmentModal .my-appt-result-title{
+  display:none !important;
+}
+
+#myAppointmentModal .my-appt-hint{
+  margin:0 !important;
+  min-height:0 !important;
+  font-size:16px !important;
+  line-height:1.7 !important;
+  font-weight:800 !important;
+  color:#1f5f78 !important;
+}
+
+body:not(.day-mode):not(.light-mode):not([data-theme="day"]) #myAppointmentModal .my-appt-hint{
+  color:#f7e7c3 !important;
+}
+
+#myAppointmentModal .my-appointment-modal{
+  padding:24px 20px !important;
+}
+</style>
+
+<script id="no-future-appointment-popup-fix-script">
+(function(){
+  function fixNoFutureAppointmentText(){
+    var modal = document.getElementById('myAppointmentModal');
+    if(!modal) return;
+
+    var all = modal.querySelectorAll('*');
+    all.forEach(function(el){
+      var t = (el.textContent || '').trim();
+      if(t === 'יש לי תור' || t === 'לא נמצא תור עתידי שמור עבורך.' || t === 'לא נמצא תור עתידי שמור עבורך'){
+        el.textContent = 'לא נמצא תור עתידי שמור בשבילך';
+      }
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fixNoFutureAppointmentText);
+  }else{
+    fixNoFutureAppointmentText();
+  }
+  setInterval(fixNoFutureAppointmentText,500);
+})();
+</script>
+
+
+<style id="my-appointment-button-frame-fix">
+/* כפתור "יש לי כבר תור" - מסגרת מותאמת סביב הטקסט */
+#openMyAppointmentBtn{
+  width:fit-content !important;
+  min-width:auto !important;
+  margin:12px auto 0 !important;
+  padding:10px 18px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(215,180,109,.28) !important;
+  background:rgba(215,180,109,.06) !important;
+  color:#f7e7c3 !important;
+  box-shadow:none !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  line-height:1.2 !important;
+}
+
+#openMyAppointmentBtn:hover{
+  background:rgba(215,180,109,.10) !important;
+  border-color:rgba(215,180,109,.38) !important;
+}
+
+body.day-mode #openMyAppointmentBtn,
+body.light-mode #openMyAppointmentBtn,
+body[data-theme="day"] #openMyAppointmentBtn{
+  border:1px solid rgba(31,95,120,.22) !important;
+  background:rgba(255,255,255,.72) !important;
+  color:#1f5f78 !important;
+  box-shadow:0 8px 18px rgba(39,92,148,.06) !important;
+}
+
+body.day-mode #openMyAppointmentBtn:hover,
+body.light-mode #openMyAppointmentBtn:hover,
+body[data-theme="day"] #openMyAppointmentBtn:hover{
+  background:rgba(31,95,120,.06) !important;
+  border-color:rgba(31,95,120,.32) !important;
+}
+</style>
 
 </body>
 </html>
