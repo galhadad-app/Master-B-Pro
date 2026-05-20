@@ -969,6 +969,90 @@
     }
 
 
+
+
+    /* ===== Branding icon visibility controls ===== */
+    .branding-field-row{
+      display:grid;
+      grid-template-columns:46px minmax(0,1fr) 70px;
+      gap:10px;
+      align-items:center;
+      margin-bottom:8px;
+    }
+    .branding-field-row input{
+      margin:0;
+    }
+    .branding-icon-badge{
+      width:46px;
+      height:46px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.10);
+      color:#d7b46d;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+      flex:0 0 auto;
+    }
+    .branding-icon-badge svg{width:24px;height:24px;display:block}
+    .branding-toggle-wrap{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:800;
+      line-height:1;
+      white-space:nowrap;
+      user-select:none;
+    }
+    .branding-toggle{
+      width:56px;
+      height:31px;
+      border:none;
+      outline:none;
+      cursor:pointer;
+      position:relative;
+      border-radius:999px;
+      background:linear-gradient(180deg,#353b46,#272d38);
+      box-shadow:inset 0 1px 3px rgba(0,0,0,.28),0 1px 0 rgba(255,255,255,.04);
+      transition:.22s ease;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .branding-toggle::after{
+      content:"";
+      position:absolute;
+      top:3px;
+      right:3px;
+      width:25px;
+      height:25px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 2px 8px rgba(0,0,0,.28);
+      transition:.22s ease;
+    }
+    .branding-toggle.active{
+      background:linear-gradient(135deg,#43d17d,#19a954);
+    }
+    .branding-toggle.active::after{
+      right:28px;
+    }
+    .contact-action.is-hidden-by-settings{display:none!important;}
+    .facebook-icon{color:#2f86ff;}
+    .instagram-icon{color:#db4bd7;}
+    @media(max-width:480px){
+      .branding-field-row{grid-template-columns:40px minmax(0,1fr) 62px;gap:8px;}
+      .branding-icon-badge{width:40px;height:40px;}
+      .branding-icon-badge svg{width:22px;height:22px;}
+      .branding-toggle{width:50px;height:29px;}
+      .branding-toggle::after{width:23px;height:23px;}
+      .branding-toggle.active::after{right:24px;}
+      .branding-toggle-wrap{font-size:9px;}
+    }
+
     .settings-stack{display:grid;gap:14px}
     .settings-box{padding:16px;border-radius:22px;background:linear-gradient(180deg,#161f2b 0%,#111823 100%);border:1px solid rgba(255,255,255,.08)}
     .settings-box .section-title{justify-content:space-between}
@@ -2316,7 +2400,231 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
   border:1px solid #d8e8f2 !important;
 }
 
-  </style>
+  
+
+/* ===== Final branding controls polish ===== */
+#settingsPanel .settings-box .branding-field-row{
+  grid-template-columns:54px minmax(0,1fr) 74px !important;
+  gap:12px !important;
+  align-items:center !important;
+  direction:rtl !important;
+}
+#settingsPanel .branding-icon-badge{
+  width:48px !important;
+  height:48px !important;
+  border-radius:50% !important;
+  background:#edf5ff !important;
+  border:none !important;
+  box-shadow:0 8px 18px rgba(43,99,154,.10), inset 0 1px 0 rgba(255,255,255,.9) !important;
+  color:#18b85e !important;
+}
+#settingsPanel .branding-icon-badge svg{
+  width:29px !important;
+  height:29px !important;
+}
+#settingsPanel .branding-field-row:nth-of-type(4) .branding-icon-badge{color:#2f75ff !important;}
+#settingsPanel .branding-field-row:nth-of-type(5) .branding-icon-badge{color:#35bfe8 !important;}
+#settingsPanel .branding-icon-badge.facebook-icon{color:#1877f2 !important;}
+#settingsPanel .branding-icon-badge.instagram-icon{color:#d946ef !important;}
+#settingsPanel .branding-toggle-wrap{
+  color:#24506a !important;
+  font-size:10.5px !important;
+  font-weight:900 !important;
+  gap:5px !important;
+}
+#settingsPanel .branding-toggle{
+  width:58px !important;
+  height:32px !important;
+  border-radius:999px !important;
+  background:linear-gradient(180deg,#d6dbe3,#bfc5cf) !important;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.16),0 3px 8px rgba(25,48,70,.10) !important;
+}
+#settingsPanel .branding-toggle::after{
+  top:3px !important;
+  right:3px !important;
+  width:26px !important;
+  height:26px !important;
+  background:#fff !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.22) !important;
+}
+#settingsPanel .branding-toggle.active{
+  background:linear-gradient(135deg,#23c55e,#16a34a) !important;
+}
+#settingsPanel .branding-toggle.active::after{right:29px !important;}
+#settingsPanel .company-code-field-hidden{display:none !important;}
+@media(max-width:480px){
+  #settingsPanel .settings-box .branding-field-row{grid-template-columns:48px minmax(0,1fr) 66px !important;gap:8px !important;}
+  #settingsPanel .branding-icon-badge{width:42px !important;height:42px !important;}
+  #settingsPanel .branding-icon-badge svg{width:25px !important;height:25px !important;}
+  #settingsPanel .branding-toggle{width:54px !important;height:30px !important;}
+  #settingsPanel .branding-toggle::after{width:24px !important;height:24px !important;}
+  #settingsPanel .branding-toggle.active::after{right:27px !important;}
+  #settingsPanel .branding-toggle-wrap{font-size:9px !important;}
+}
+
+
+/* ===== REAL BRAND STYLE ICON ROW FIX ===== */
+.branding-icon-field,
+.icon-toggle-row{
+  display:grid !important;
+  grid-template-columns:46px minmax(0,1fr) 70px !important;
+  gap:10px !important;
+  align-items:center !important;
+  direction:rtl !important;
+  margin-bottom:8px !important;
+}
+.branding-icon-badge,
+.brand-field-icon{
+  width:42px !important;
+  height:42px !important;
+  border-radius:50% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#eef6ff !important;
+  box-shadow:0 8px 18px rgba(43,126,197,.10), inset 0 1px 0 rgba(255,255,255,.86) !important;
+  overflow:hidden !important;
+}
+.branding-icon-badge svg,
+.brand-field-icon svg{
+  width:28px !important;
+  height:28px !important;
+  display:block !important;
+}
+.branding-icon-badge img,
+.brand-field-icon img{
+  width:28px !important;
+  height:28px !important;
+  display:block !important;
+  object-fit:contain !important;
+}
+.icon-visibility-toggle{
+  width:58px !important;
+  min-width:58px !important;
+  height:32px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(15,38,70,.12) !important;
+  background:linear-gradient(180deg,#d8dde5,#bfc6cf) !important;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.10), 0 4px 10px rgba(15,38,70,.10) !important;
+  position:relative !important;
+  cursor:pointer !important;
+  transition:.2s ease !important;
+  padding:0 !important;
+  margin:0 !important;
+}
+.icon-visibility-toggle::after{
+  content:"" !important;
+  position:absolute !important;
+  top:3px !important;
+  right:3px !important;
+  width:26px !important;
+  height:26px !important;
+  border-radius:50% !important;
+  background:#fff !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.22) !important;
+  transition:.2s ease !important;
+}
+.icon-visibility-toggle.active,
+.icon-visibility-toggle.is-on,
+.icon-visibility-toggle[aria-pressed="true"]{
+  background:linear-gradient(180deg,#28d463,#15b84f) !important;
+}
+.icon-visibility-toggle.active::after,
+.icon-visibility-toggle.is-on::after,
+.icon-visibility-toggle[aria-pressed="true"]::after{
+  right:28px !important;
+}
+.icon-toggle-label{
+  color:#1f5570 !important;
+  font-size:11px !important;
+  font-weight:800 !important;
+  text-align:center !important;
+  line-height:1.15 !important;
+  margin:0 0 3px !important;
+}
+.icon-toggle-wrap{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:2px !important;
+}
+.branding-icon-field input,
+.icon-toggle-row input{
+  height:58px !important;
+  border-radius:18px !important;
+}
+@media(max-width:520px){
+  .branding-icon-field,
+  .icon-toggle-row{
+    grid-template-columns:40px minmax(0,1fr) 64px !important;
+    gap:8px !important;
+  }
+  .branding-icon-badge,
+  .brand-field-icon{width:38px !important;height:38px !important;}
+  .branding-icon-badge svg,
+  .brand-field-icon svg{width:25px !important;height:25px !important;}
+  .icon-visibility-toggle{width:54px !important;min-width:54px !important;height:30px !important;}
+  .icon-visibility-toggle::after{width:24px !important;height:24px !important;}
+  .icon-visibility-toggle.active::after,
+  .icon-visibility-toggle.is-on::after,
+  .icon-visibility-toggle[aria-pressed="true"]::after{right:27px !important;}
+}
+
+
+/* ===== compact title/subtitle color picker - safe scoped ===== */
+.settings-title-color-field{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 40px !important;
+  gap:8px !important;
+  align-items:center !important;
+  direction:rtl !important;
+  position:relative !important;
+}
+.settings-title-color-field input{
+  width:100% !important;
+}
+.settings-title-color-btn{
+  width:36px !important;
+  height:36px !important;
+  border-radius:50% !important;
+  border:2px solid rgba(255,255,255,.78) !important;
+  background:var(--picked-color,#ffffff) !important;
+  box-shadow:0 8px 18px rgba(15,38,70,.12), inset 0 0 0 1px rgba(0,0,0,.10) !important;
+  cursor:pointer !important;
+  padding:0 !important;
+  margin:0 !important;
+}
+.settings-title-color-popover{
+  display:none;
+  position:absolute;
+  left:0;
+  top:44px;
+  z-index:9999;
+  background:#fff;
+  border:1px solid rgba(15,38,70,.10);
+  border-radius:16px;
+  padding:10px;
+  grid-template-columns:repeat(4,24px);
+  gap:8px;
+  box-shadow:0 16px 38px rgba(15,38,70,.18);
+}
+.settings-title-color-popover.show{
+  display:grid;
+}
+.settings-title-color-option{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  border:2px solid rgba(15,38,70,.12);
+  cursor:pointer;
+  padding:0;
+}
+.settings-title-color-option.selected{
+  box-shadow:0 0 0 3px rgba(59,130,246,.22);
+}
+
+</style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1016">
 
@@ -2399,6 +2707,17 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
                 <circle cx="8.7" cy="19.2" r="1.35"/>
                 <circle cx="15.3" cy="19.2" r="1.35"/>
               </svg>
+            </span>
+          </a>
+
+          <a id="facebookBtn" class="contact-action" href="#" aria-label="פייסבוק" title="פייסבוק">
+            <span class="contact-icon facebook-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="25" height="25" fill="currentColor"><path d="M14 8.8V6.9c0-.55.18-.9.95-.9H16V3.15C15.5 3.08 14.74 3 13.8 3c-2.2 0-3.7 1.34-3.7 3.8v2H7.6V12h2.5v9H14v-9h2.55l.4-3.2H14Z"/></svg>
+            </span>
+          </a>
+          <a id="instagramBtn" class="contact-action" href="#" aria-label="אינסטגרם" title="אינסטגרם">
+            <span class="contact-icon instagram-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="25" height="25" fill="currentColor"><path d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm8.7 2.3a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4ZM12 7.3a4.7 4.7 0 1 1 0 9.4 4.7 4.7 0 0 1 0-9.4Zm0 2a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"/></svg>
             </span>
           </a>
 
@@ -2508,21 +2827,76 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
                 <div class="settings-box">
                   <div class="section-title"><h2>מיתוג העסק</h2><span class="section-sub">מה שישפיע על דף הלקוח</span></div>
                   <div class="settings-field">
-                    <input id="settingsBusinessName" placeholder="שם העסק" />
+                    <div class="settings-title-color-field" data-color-field="title">
+  <input id="settingsBusinessName" placeholder="שם העסק" />
+  <button type="button" class="settings-title-color-btn" data-color-open="title" aria-label="בחר צבע טקסט"></button>
+  <div class="settings-title-color-popover" data-color-popover="title">
+    <button type="button" class="settings-title-color-option selected" data-color="#ffffff" style="background:#ffffff"></button>
+    <button type="button" class="settings-title-color-option" data-color="#111111" style="background:#111111"></button>
+    <button type="button" class="settings-title-color-option" data-color="#d7b46d" style="background:#d7b46d"></button>
+    <button type="button" class="settings-title-color-option" data-color="#1f6f8b" style="background:#1f6f8b"></button>
+    <button type="button" class="settings-title-color-option" data-color="#3b82f6" style="background:#3b82f6"></button>
+    <button type="button" class="settings-title-color-option" data-color="#00bcd4" style="background:#00bcd4"></button>
+    <button type="button" class="settings-title-color-option" data-color="#ff4fa3" style="background:#ff4fa3"></button>
+    <button type="button" class="settings-title-color-option" data-color="#f7e7c3" style="background:#f7e7c3"></button>
+  </div>
+</div>
                   </div>
                   <div class="settings-field">
-                    <input id="settingsBusinessSubtitle" placeholder="כותרת משנה" />
+                    <div class="settings-title-color-field" data-color-field="subtitle">
+  <input id="settingsBusinessSubtitle" placeholder="כותרת משנה" />
+  <button type="button" class="settings-title-color-btn" data-color-open="subtitle" aria-label="בחר צבע טקסט"></button>
+  <div class="settings-title-color-popover" data-color-popover="subtitle">
+    <button type="button" class="settings-title-color-option selected" data-color="#ffffff" style="background:#ffffff"></button>
+    <button type="button" class="settings-title-color-option" data-color="#111111" style="background:#111111"></button>
+    <button type="button" class="settings-title-color-option" data-color="#d7b46d" style="background:#d7b46d"></button>
+    <button type="button" class="settings-title-color-option" data-color="#1f6f8b" style="background:#1f6f8b"></button>
+    <button type="button" class="settings-title-color-option" data-color="#3b82f6" style="background:#3b82f6"></button>
+    <button type="button" class="settings-title-color-option" data-color="#00bcd4" style="background:#00bcd4"></button>
+    <button type="button" class="settings-title-color-option" data-color="#ff4fa3" style="background:#ff4fa3"></button>
+    <button type="button" class="settings-title-color-option" data-color="#f7e7c3" style="background:#f7e7c3"></button>
+  </div>
+</div>
                   </div>
-                  <div class="settings-field">
+                  <div class="settings-field branding-field-row">
+                    <span class="branding-icon-badge" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.05 4.91A9.82 9.82 0 0 0 12.07 2C6.65 2 2.24 6.41 2.24 11.83c0 1.74.45 3.44 1.31 4.94L2 22l5.39-1.5a9.8 9.8 0 0 0 4.68 1.19h.01c5.42 0 9.83-4.41 9.83-9.83a9.78 9.78 0 0 0-2.86-6.95Zm-6.98 15.11h-.01a8.14 8.14 0 0 1-4.14-1.13l-.3-.18-3.2.89.85-3.12-.2-.32a8.16 8.16 0 0 1-1.25-4.33c0-4.5 3.67-8.17 8.18-8.17 2.18 0 4.23.85 5.77 2.39a8.1 8.1 0 0 1 2.39 5.78c0 4.5-3.67 8.19-8.09 8.19Z"/></svg>
+                    </span>
                     <input id="settingsWhatsapp" inputmode="numeric" placeholder="מספר וואטסאפ" />
+                    <span class="branding-toggle-wrap"><span>הצג אייקון</span><button type="button" class="branding-toggle" id="showWhatsappIconToggle" data-icon-toggle="showWhatsappIcon" aria-label="הצג אייקון וואטסאפ"></button></span>
                   </div>
-                  <div class="settings-field">
+                  <div class="settings-field branding-field-row">
+                    <span class="branding-icon-badge" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.54 15.54 0 0 0 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.56 0 1 .44 1 1V20c0 .56-.44 1-1 1C10.07 21 3 13.93 3 5c0-.56.44-1 1-1h3.5c.56 0 1 .44 1 1 0 1.24.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2Z"/></svg>
+                    </span>
+                    <input id="settingsPhone" inputmode="numeric" placeholder="מספר טלפון" />
+                    <span class="branding-toggle-wrap"><span>הצג אייקון</span><button type="button" class="branding-toggle" id="showPhoneIconToggle" data-icon-toggle="showPhoneIcon" aria-label="הצג אייקון טלפון"></button></span>
+                  </div>
+                  <div class="settings-field branding-field-row">
+                    <span class="branding-icon-badge" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none"><path d="M5.2 14.2c-1.1-.35-2.05-1.27-2.05-2.55 0-1.56 1.2-2.72 2.82-2.72h.25C7.02 5.76 9.98 3.65 13.4 3.65c4.2 0 7.6 3.14 7.6 7.02 0 3.86-3.4 7-7.6 7H9.7l-3.38 2.05.58-3.15a6.6 6.6 0 0 1-1.7-2.37Z" fill="#9de8ff" stroke="#12364a" stroke-width="1.45" stroke-linejoin="round"/><path d="M9.4 10.85h.02M15.8 10.85h.02" stroke="#12364a" stroke-width="2.2" stroke-linecap="round"/><path d="M10.05 13.65c1.18 1.02 3.45 1.02 4.64 0" stroke="#12364a" stroke-width="1.55" stroke-linecap="round"/><circle cx="8.05" cy="18.2" r="1.45" fill="#12364a"/><circle cx="17.6" cy="18.2" r="1.45" fill="#12364a"/></svg>
+                    </span>
                     <input id="settingsBusinessAddress" placeholder="כתובת העסק" />
+                    <span class="branding-toggle-wrap"><span>הצג אייקון</span><button type="button" class="branding-toggle" id="showWazeIconToggle" data-icon-toggle="showWazeIcon" aria-label="הצג אייקון וויז"></button></span>
+                  </div>
+                  <div class="settings-field branding-field-row">
+                    <span class="branding-icon-badge facebook-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8.8V6.9c0-.55.18-.9.95-.9H16V3.15C15.5 3.08 14.74 3 13.8 3c-2.2 0-3.7 1.34-3.7 3.8v2H7.6V12h2.5v9H14v-9h2.55l.4-3.2H14Z"/></svg>
+                    </span>
+                    <input id="settingsFacebook" inputmode="url" placeholder="קישור פייסבוק" />
+                    <span class="branding-toggle-wrap"><span>הצג אייקון</span><button type="button" class="branding-toggle" id="showFacebookIconToggle" data-icon-toggle="showFacebookIcon" aria-label="הצג אייקון פייסבוק"></button></span>
+                  </div>
+                  <div class="settings-field branding-field-row">
+                    <span class="branding-icon-badge instagram-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm8.7 2.3a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4ZM12 7.3a4.7 4.7 0 1 1 0 9.4 4.7 4.7 0 0 1 0-9.4Zm0 2a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"/></svg>
+                    </span>
+                    <input id="settingsInstagram" inputmode="url" placeholder="קישור אינסטגרם" />
+                    <span class="branding-toggle-wrap"><span>הצג אייקון</span><button type="button" class="branding-toggle" id="showInstagramIconToggle" data-icon-toggle="showInstagramIcon" aria-label="הצג אייקון אינסטגרם"></button></span>
                   </div>
                   <div class="settings-field">
                     <input id="settingsOwnerCode" inputmode="numeric" maxlength="4" placeholder="קוד לתורים ולקוחות" />
                   </div>
-                  <div class="settings-field">
+                  <div class="settings-field company-code-field-hidden">
                     <input id="settingsStatsCode" inputmode="numeric" maxlength="4" placeholder="קוד לסטטיסטיקה והגדרות" />
                   </div>
                   <div class="settings-field">
@@ -2898,6 +3272,14 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
       ownerBadge: 'עמוד בעל העסק',
       whatsappNumber: '',
       whatsappEnabled: true,
+      businessPhone: '',
+      facebookUrl: '',
+      instagramUrl: '',
+      showWhatsappIcon: true,
+      showPhoneIcon: true,
+      showWazeIcon: true,
+      showFacebookIcon: false,
+      showInstagramIcon: false,
       botEnabled: true,
       ownerAccess: false,
       clientOwnerAccess: false,
@@ -3076,12 +3458,43 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
       rerenderAll();
     }
 
+
+    function setBrandingToggleState(key, isActive){
+      const btn = document.querySelector(`[data-icon-toggle="${key}"]`);
+      if(!btn) return;
+      btn.classList.toggle('active', !!isActive);
+      btn.setAttribute('aria-pressed', !!isActive ? 'true' : 'false');
+    }
+
+    function getBrandingToggleState(key, fallback = false){
+      const btn = document.querySelector(`[data-icon-toggle="${key}"]`);
+      return btn ? btn.classList.contains('active') : fallback;
+    }
+
+    function bindBrandingIconToggles(){
+      document.querySelectorAll('[data-icon-toggle]').forEach(btn => {
+        if(btn.dataset.boundIconToggle === '1') return;
+        btn.dataset.boundIconToggle = '1';
+        btn.addEventListener('click', () => {
+          btn.classList.toggle('active');
+          btn.setAttribute('aria-pressed', btn.classList.contains('active') ? 'true' : 'false');
+          if(currentBusinessSettings){
+            currentBusinessSettings[btn.dataset.iconToggle] = btn.classList.contains('active');
+            bindContactButtons();
+          }
+        });
+      });
+    }
+
     function syncSettingsTextFields(){
       const settings = currentBusinessSettings || BUSINESS_TEMPLATE;
       const settingsBusinessName = document.getElementById('settingsBusinessName');
       const settingsBusinessSubtitle = document.getElementById('settingsBusinessSubtitle');
       const settingsWhatsapp = document.getElementById('settingsWhatsapp');
+      const settingsPhone = document.getElementById('settingsPhone');
       const settingsBusinessAddress = document.getElementById('settingsBusinessAddress');
+      const settingsFacebook = document.getElementById('settingsFacebook');
+      const settingsInstagram = document.getElementById('settingsInstagram');
       const settingsOwnerCode = document.getElementById('settingsOwnerCode');
       const settingsStatsCode = document.getElementById('settingsStatsCode');
       const settingsBusinessDescription = document.getElementById('settingsBusinessDescription');
@@ -3089,7 +3502,15 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
       if(settingsBusinessName) settingsBusinessName.value = settings.businessName || '';
       if(settingsBusinessSubtitle) settingsBusinessSubtitle.value = settings.businessSubtitle || '';
       if(settingsWhatsapp) settingsWhatsapp.value = settings.whatsappNumber || '';
+      if(settingsPhone) settingsPhone.value = settings.businessPhone || settings.phone || '';
       if(settingsBusinessAddress) settingsBusinessAddress.value = settings.businessAddress || '';
+      if(settingsFacebook) settingsFacebook.value = settings.facebookUrl || settings.facebook || '';
+      if(settingsInstagram) settingsInstagram.value = settings.instagramUrl || settings.instagram || '';
+      setBrandingToggleState('showWhatsappIcon', settings.showWhatsappIcon !== false);
+      setBrandingToggleState('showPhoneIcon', settings.showPhoneIcon !== false);
+      setBrandingToggleState('showWazeIcon', settings.showWazeIcon !== false);
+      setBrandingToggleState('showFacebookIcon', settings.showFacebookIcon === true);
+      setBrandingToggleState('showInstagramIcon', settings.showInstagramIcon === true);
       if(settingsOwnerCode) settingsOwnerCode.value = settings.ownerCode || '';
       if(settingsStatsCode) settingsStatsCode.value = settings.statsSettingsCode || '';
       if(settingsBusinessDescription) settingsBusinessDescription.value = settings.businessDescription || '';
@@ -5077,7 +5498,15 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
         businessDescription: document.getElementById('settingsBusinessDescription').value.trim(),
         importantNotice: document.getElementById('settingsImportantNotice').value.trim(),
         whatsappNumber: normalizePhone(document.getElementById('settingsWhatsapp').value),
+        businessPhone: normalizePhone(document.getElementById('settingsPhone')?.value || ''),
         businessAddress: document.getElementById('settingsBusinessAddress').value.trim(),
+        facebookUrl: normalizeUrl(document.getElementById('settingsFacebook')?.value || ''),
+        instagramUrl: normalizeUrl(document.getElementById('settingsInstagram')?.value || ''),
+        showWhatsappIcon: getBrandingToggleState('showWhatsappIcon', true),
+        showPhoneIcon: getBrandingToggleState('showPhoneIcon', true),
+        showWazeIcon: getBrandingToggleState('showWazeIcon', true),
+        showFacebookIcon: getBrandingToggleState('showFacebookIcon', false),
+        showInstagramIcon: getBrandingToggleState('showInstagramIcon', false),
         ownerCode: document.getElementById('settingsOwnerCode').value.replace(/\D/g, '').slice(0,4) || BUSINESS_TEMPLATE.ownerCode,
         statsSettingsCode: document.getElementById('settingsStatsCode').value.replace(/\D/g, '').slice(0,4) || BUSINESS_TEMPLATE.statsSettingsCode,
         services: currentBusinessSettings.services,
@@ -5745,9 +6174,19 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
     const whatsappBtn = document.getElementById('whatsappBtn');
     const phoneBtn = document.getElementById('phoneBtn');
     const wazeBtn = document.getElementById('wazeBtn');
+    const facebookBtn = document.getElementById('facebookBtn');
+    const instagramBtn = document.getElementById('instagramBtn');
 
     function playSelectSound(){ return; }
     function playBookSound(){ return; }
+
+
+    function normalizeUrl(value){
+      const raw = String(value || '').trim();
+      if(!raw) return '';
+      if(/^https?:\/\//i.test(raw)) return raw;
+      return 'https://' + raw;
+    }
 
     function normalizeDigitsOnly(value){ return String(value || '').replace(/\D/g, ''); }
 
@@ -5770,7 +6209,7 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
     }
 
     function getBusinessPhoneRaw(){
-      return String((currentBusinessSettings && (currentBusinessSettings.businessPhone || currentBusinessSettings.phone || currentBusinessSettings.whatsappNumber)) || '').replace(/\D/g, '');
+      return String((currentBusinessSettings && (currentBusinessSettings.businessPhone || currentBusinessSettings.phone)) || '').replace(/\D/g, '');
     }
 
     function getBusinessWhatsappRaw(){
@@ -5824,7 +6263,27 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
       return 'https://www.waze.com/ul?q=' + q + '&navigate=yes';
     }
 
+    function getFacebookLink(){
+      return normalizeUrl((currentBusinessSettings && (currentBusinessSettings.facebookUrl || currentBusinessSettings.facebook)) || '') || '#';
+    }
+
+    function getInstagramLink(){
+      return normalizeUrl((currentBusinessSettings && (currentBusinessSettings.instagramUrl || currentBusinessSettings.instagram)) || '') || '#';
+    }
+
+    function setContactButtonVisibility(btn, shouldShow){
+      if(!btn) return;
+      btn.classList.toggle('is-hidden-by-settings', !shouldShow);
+    }
+
     function bindContactButtons(){
+      const s = currentBusinessSettings || BUSINESS_TEMPLATE;
+      setContactButtonVisibility(whatsappBtn, s.showWhatsappIcon !== false && !!getBusinessWhatsappRaw());
+      setContactButtonVisibility(phoneBtn, s.showPhoneIcon !== false && !!getBusinessPhoneRaw());
+      setContactButtonVisibility(wazeBtn, s.showWazeIcon !== false && !!String(s.businessAddress || '').trim());
+      setContactButtonVisibility(facebookBtn, s.showFacebookIcon === true && !!getFacebookLink().replace('#',''));
+      setContactButtonVisibility(instagramBtn, s.showInstagramIcon === true && !!getInstagramLink().replace('#',''));
+
       if(whatsappBtn){
         whatsappBtn.setAttribute('href', getWhatsappLink());
         whatsappBtn.setAttribute('target', '_blank');
@@ -5873,7 +6332,44 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
           window.open(href, '_blank', 'noopener');
         };
       }
+
+      if(facebookBtn){
+        facebookBtn.setAttribute('href', getFacebookLink());
+        facebookBtn.setAttribute('target', '_blank');
+        facebookBtn.setAttribute('rel', 'noopener noreferrer');
+        facebookBtn.onclick = function(e){
+          const href = getFacebookLink();
+          if(href === '#'){
+            e.preventDefault();
+            showToast('אין קישור פייסבוק מוגדר.', true);
+            return;
+          }
+          e.preventDefault();
+          playSelectSound();
+          window.open(href, '_blank', 'noopener');
+        };
+      }
+
+      if(instagramBtn){
+        instagramBtn.setAttribute('href', getInstagramLink());
+        instagramBtn.setAttribute('target', '_blank');
+        instagramBtn.setAttribute('rel', 'noopener noreferrer');
+        instagramBtn.onclick = function(e){
+          const href = getInstagramLink();
+          if(href === '#'){
+            e.preventDefault();
+            showToast('אין קישור אינסטגרם מוגדר.', true);
+            return;
+          }
+          e.preventDefault();
+          playSelectSound();
+          window.open(href, '_blank', 'noopener');
+        };
+      }
+
     }
+
+bindBrandingIconToggles();
 
 document.getElementById('bookBtn').addEventListener('click', bookAppointment);
     document.getElementById('openMyAppointmentBtn').addEventListener('click', openMyAppointmentModal);
@@ -6359,6 +6855,93 @@ function closeCancelledAppointmentModal(){
     applyDayMode(next);
   };
   try{ applyDayMode(localStorage.getItem(STORAGE_KEY) === '1'); }catch(e){ applyDayMode(false); }
+})();
+</script>
+
+
+<script>
+(function(){
+  const STORE_TITLE = 'businessTitleColor';
+  const STORE_SUBTITLE = 'businessSubtitleColor';
+
+  function saveColor(target, color){
+    try{
+      localStorage.setItem(target === 'title' ? STORE_TITLE : STORE_SUBTITLE, color);
+    }catch(e){}
+  }
+
+  function getColor(target){
+    try{
+      return localStorage.getItem(target === 'title' ? STORE_TITLE : STORE_SUBTITLE) || '#ffffff';
+    }catch(e){
+      return '#ffffff';
+    }
+  }
+
+  function applyColor(target, color){
+    const selector = target === 'title'
+      ? '.hero-brand-copy h1, #clientBusinessName, .business-title, [data-business-title]'
+      : '.hero-brand-copy div, #clientBusinessSubtitle, .business-subtitle, [data-business-subtitle]';
+
+    document.querySelectorAll(selector).forEach(el=>{
+      el.style.color = color;
+    });
+
+    document.querySelectorAll('[data-color-field="'+target+'"]').forEach(field=>{
+      const btn = field.querySelector('.settings-title-color-btn');
+      if(btn) btn.style.setProperty('--picked-color', color);
+      field.querySelectorAll('.settings-title-color-option').forEach(opt=>{
+        opt.classList.toggle('selected', opt.getAttribute('data-color') === color);
+      });
+    });
+  }
+
+  function initColors(){
+    applyColor('title', getColor('title'));
+    applyColor('subtitle', getColor('subtitle'));
+  }
+
+  document.addEventListener('click', function(e){
+    const open = e.target.closest('[data-color-open]');
+    if(open){
+      e.preventDefault();
+      e.stopPropagation();
+      const target = open.getAttribute('data-color-open');
+      const pop = document.querySelector('[data-color-popover="'+target+'"]');
+      document.querySelectorAll('.settings-title-color-popover').forEach(p=>{
+        if(p !== pop) p.classList.remove('show');
+      });
+      if(pop) pop.classList.toggle('show');
+      return;
+    }
+
+    const opt = e.target.closest('.settings-title-color-option[data-color]');
+    if(opt){
+      e.preventDefault();
+      e.stopPropagation();
+      const pop = opt.closest('.settings-title-color-popover');
+      const field = opt.closest('.settings-title-color-field');
+      const target = field ? field.getAttribute('data-color-field') : null;
+      const color = opt.getAttribute('data-color');
+      if(target){
+        saveColor(target, color);
+        applyColor(target, color);
+      }
+      if(pop) pop.classList.remove('show');
+      return;
+    }
+
+    document.querySelectorAll('.settings-title-color-popover').forEach(p=>p.classList.remove('show'));
+  });
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initColors);
+  }else{
+    initColors();
+  }
+
+  setTimeout(initColors, 300);
+  setTimeout(initColors, 1000);
 })();
 </script>
 
