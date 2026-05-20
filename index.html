@@ -571,10 +571,10 @@
     .settings-upload-row{display:grid;grid-template-columns:240px 1fr;gap:14px;align-items:center}
     .settings-preview-box{background:#0b1119;border:1px solid rgba(255,255,255,.1);border-radius:18px;min-height:122px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px}
     .settings-preview-box img{max-width:100%;max-height:120px;object-fit:contain;display:block}
-    .settings-preview-box.cover img{width:100%;height:100%;max-height:none;object-fit:cover;border-radius:12px}
+    .settings-preview-box.cover img{width:100%;height:100%;max-height:none;object-fit:cover;object-position:center center;border-radius:12px}
     .upload-box{border:1px dashed rgba(255,255,255,.18);border-radius:18px;padding:16px;background:rgba(255,255,255,.02)}
     .upload-box input{display:none}
-    .upload-trigger{display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#caa25a,#8f6a31);color:#fff7e7;border:none;border-radius:16px;padding:14px 16px;font-weight:800;cursor:pointer;width:100%}
+    .upload-trigger{display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#8ff0b3,#58c77d);color:#0b2b16;border:none;border-radius:16px;padding:14px 16px;font-weight:800;cursor:pointer;width:100%}
     .upload-meta{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.6}
     .stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
     .stat-card{background:linear-gradient(180deg,#161f2b 0%,#121923 100%);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:16px;text-align:center}
@@ -1819,6 +1819,398 @@ body.day-mode .returning-customer-change{
   background:rgba(255,255,255,.82) !important;
   border:1px solid rgba(79,140,255,.13) !important;
   color:#1f5f78 !important;
+}
+
+
+/* ===== Light mode readability fixes - no preview ===== */
+body.day-mode,
+html.day-mode body,
+body.light-mode,
+html.light-mode body,
+body[data-theme="day"],
+html[data-theme="day"] body{
+  --gold:#1f6f95;
+  --gold-2:#2f86b7;
+  --muted:#3f6078;
+  --text:#102033;
+}
+
+/* remove yellow/top halo glow from all main white boxes in day mode */
+body.day-mode .card::before,
+body.day-mode .owner-shell::before,
+body.day-mode .owner-panel-card::before,
+body.day-mode .settings-box::before,
+body.day-mode .animated-panel::before,
+body.day-mode .stats-chart-card::before,
+body.day-mode .stats-soft-card::before,
+body.day-mode .stats-soft-chart::before,
+body.day-mode .premium-donut-card::before,
+body.light-mode .card::before,
+body.light-mode .owner-shell::before,
+body.light-mode .owner-panel-card::before,
+body.light-mode .settings-box::before,
+body.light-mode .animated-panel::before,
+body.light-mode .stats-chart-card::before,
+body.light-mode .stats-soft-card::before,
+body.light-mode .stats-soft-chart::before,
+body.light-mode .premium-donut-card::before,
+body[data-theme="day"] .card::before,
+body[data-theme="day"] .owner-shell::before,
+body[data-theme="day"] .owner-panel-card::before,
+body[data-theme="day"] .settings-box::before,
+body[data-theme="day"] .animated-panel::before,
+body[data-theme="day"] .stats-chart-card::before,
+body[data-theme="day"] .stats-soft-card::before,
+body[data-theme="day"] .stats-soft-chart::before,
+body[data-theme="day"] .premium-donut-card::before{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+}
+
+/* neutralize yellow radial glows in day mode panels */
+body.day-mode .animated-panel,
+body.day-mode .card,
+body.day-mode .owner-shell,
+body.day-mode .owner-panel-card,
+body.day-mode .settings-box,
+body.light-mode .animated-panel,
+body.light-mode .card,
+body.light-mode .owner-shell,
+body.light-mode .owner-panel-card,
+body.light-mode .settings-box,
+body[data-theme="day"] .animated-panel,
+body[data-theme="day"] .card,
+body[data-theme="day"] .owner-shell,
+body[data-theme="day"] .owner-panel-card,
+body[data-theme="day"] .settings-box{
+  background:#ffffff !important;
+  color:#111827 !important;
+  box-shadow:0 14px 36px rgba(31,111,149,.10) !important;
+}
+
+/* statistics readability in day mode */
+body.day-mode #statsPanel,
+body.day-mode #statsPanel *,
+body.light-mode #statsPanel,
+body.light-mode #statsPanel *,
+body[data-theme="day"] #statsPanel,
+body[data-theme="day"] #statsPanel *{
+  color:#111827 !important;
+}
+
+body.day-mode #statsPanel strong,
+body.day-mode #statsPanel .stat-card strong,
+body.day-mode #statsPanel .stats-soft-card strong,
+body.day-mode #statsPanel .donut-center,
+body.day-mode #statsPanel .soft-donut-value,
+body.day-mode #statsPanel .legend-value,
+body.day-mode #statsPanel .pdf-summary-value,
+body.day-mode #statsPanel .pdf-metric-value,
+body.light-mode #statsPanel strong,
+body.light-mode #statsPanel .stat-card strong,
+body.light-mode #statsPanel .stats-soft-card strong,
+body.light-mode #statsPanel .donut-center,
+body.light-mode #statsPanel .soft-donut-value,
+body.light-mode #statsPanel .legend-value,
+body.light-mode #statsPanel .pdf-summary-value,
+body.light-mode #statsPanel .pdf-metric-value,
+body[data-theme="day"] #statsPanel strong,
+body[data-theme="day"] #statsPanel .stat-card strong,
+body[data-theme="day"] #statsPanel .stats-soft-card strong,
+body[data-theme="day"] #statsPanel .donut-center,
+body[data-theme="day"] #statsPanel .soft-donut-value,
+body[data-theme="day"] #statsPanel .legend-value,
+body[data-theme="day"] #statsPanel .pdf-summary-value,
+body[data-theme="day"] #statsPanel .pdf-metric-value{
+  color:#1f6f95 !important;
+}
+
+body.day-mode #statsPanel h2,
+body.day-mode #statsPanel h3,
+body.day-mode #statsPanel .section-title h2,
+body.day-mode #statsPanel .stats-soft-note,
+body.light-mode #statsPanel h2,
+body.light-mode #statsPanel h3,
+body.light-mode #statsPanel .section-title h2,
+body.light-mode #statsPanel .stats-soft-note,
+body[data-theme="day"] #statsPanel h2,
+body[data-theme="day"] #statsPanel h3,
+body[data-theme="day"] #statsPanel .section-title h2,
+body[data-theme="day"] #statsPanel .stats-soft-note{
+  color:#0f5f7d !important;
+}
+
+body.day-mode #statsPanel .stat-card,
+body.day-mode #statsPanel .stats-soft-card,
+body.day-mode #statsPanel .stats-soft-chart,
+body.day-mode #statsPanel .stats-chart-card,
+body.day-mode #statsPanel .premium-donut-card,
+body.light-mode #statsPanel .stat-card,
+body.light-mode #statsPanel .stats-soft-card,
+body.light-mode #statsPanel .stats-soft-chart,
+body.light-mode #statsPanel .stats-chart-card,
+body.light-mode #statsPanel .premium-donut-card,
+body[data-theme="day"] #statsPanel .stat-card,
+body[data-theme="day"] #statsPanel .stats-soft-card,
+body[data-theme="day"] #statsPanel .stats-soft-chart,
+body[data-theme="day"] #statsPanel .stats-chart-card,
+body[data-theme="day"] #statsPanel .premium-donut-card{
+  background:#ffffff !important;
+  border-color:#d8e8f2 !important;
+  box-shadow:none !important;
+}
+
+/* customers total readability in day mode */
+body.day-mode .customers-total,
+body.day-mode .customers-total strong,
+body.light-mode .customers-total,
+body.light-mode .customers-total strong,
+body[data-theme="day"] .customers-total,
+body[data-theme="day"] .customers-total strong{
+  color:#111827 !important;
+}
+
+
+/* ===== Day mode reports/customers color fix ===== */
+body.day-mode .report-tile,
+body.light-mode .report-tile,
+body[data-theme="day"] .report-tile{
+  background:linear-gradient(180deg,#ffffff 0%,#f3f9fd 100%) !important;
+  border:1px solid #d8e8f2 !important;
+  box-shadow:0 10px 24px rgba(31,111,149,.10) !important;
+}
+
+body.day-mode .report-month,
+body.light-mode .report-month,
+body[data-theme="day"] .report-month{
+  color:#0f5f7d !important;
+}
+
+body.day-mode .reports-block-title,
+body.light-mode .reports-block-title,
+body[data-theme="day"] .reports-block-title{
+  color:#0f5f7d !important;
+}
+
+body.day-mode .reports-block-note,
+body.light-mode .reports-block-note,
+body[data-theme="day"] .reports-block-note{
+  color:#3f6078 !important;
+}
+
+body.day-mode .customers-total,
+body.day-mode .customers-total strong,
+body.light-mode .customers-total,
+body.light-mode .customers-total strong,
+body[data-theme="day"] .customers-total,
+body[data-theme="day"] .customers-total strong{
+  color:#0f5f7d !important;
+  font-weight:900 !important;
+}
+
+
+/* ===== Day mode popup compatibility ===== */
+body.day-mode .modal,
+body.day-mode .success-modal,
+body.day-mode .cancel-modal,
+body.day-mode .my-appointment-modal,
+body.light-mode .modal,
+body.light-mode .success-modal,
+body.light-mode .cancel-modal,
+body.light-mode .my-appointment-modal,
+body[data-theme="day"] .modal,
+body[data-theme="day"] .success-modal,
+body[data-theme="day"] .cancel-modal,
+body[data-theme="day"] .my-appointment-modal{
+  background:#ffffff !important;
+  color:#111827 !important;
+  border:1px solid #d8e8f2 !important;
+  box-shadow:0 24px 60px rgba(31,111,149,.18) !important;
+}
+
+body.day-mode .modal h3,
+body.day-mode .success-modal h3,
+body.day-mode .cancel-modal h3,
+body.day-mode .my-appt-head h3,
+body.light-mode .modal h3,
+body.light-mode .success-modal h3,
+body.light-mode .cancel-modal h3,
+body.light-mode .my-appt-head h3,
+body[data-theme="day"] .modal h3,
+body[data-theme="day"] .success-modal h3,
+body[data-theme="day"] .cancel-modal h3,
+body[data-theme="day"] .my-appt-head h3{
+  color:#0f5f7d !important;
+}
+
+body.day-mode .success-note,
+body.day-mode .my-appt-hint,
+body.day-mode .my-appt-field-label,
+body.day-mode .my-appt-label,
+body.light-mode .success-note,
+body.light-mode .my-appt-hint,
+body.light-mode .my-appt-field-label,
+body.light-mode .my-appt-label,
+body[data-theme="day"] .success-note,
+body[data-theme="day"] .my-appt-hint,
+body[data-theme="day"] .my-appt-field-label,
+body[data-theme="day"] .my-appt-label{
+  color:#3f6078 !important;
+}
+
+body.day-mode .success-datetime,
+body.day-mode .cancel-datetime,
+body.day-mode .my-appt-value,
+body.day-mode .my-appt-choice-time,
+body.light-mode .success-datetime,
+body.light-mode .cancel-datetime,
+body.light-mode .my-appt-value,
+body.light-mode .my-appt-choice-time,
+body[data-theme="day"] .success-datetime,
+body[data-theme="day"] .cancel-datetime,
+body[data-theme="day"] .my-appt-value,
+body[data-theme="day"] .my-appt-choice-time{
+  color:#1f6f95 !important;
+}
+
+body.day-mode .success-modal .success-details:first-of-type,
+body.day-mode .cancel-modal .success-details:first-of-type,
+body.light-mode .success-modal .success-details:first-of-type,
+body.light-mode .cancel-modal .success-details:first-of-type,
+body[data-theme="day"] .success-modal .success-details:first-of-type,
+body[data-theme="day"] .cancel-modal .success-details:first-of-type{
+  background:#f3f9fd !important;
+  border:1px solid #d8e8f2 !important;
+}
+
+body.day-mode .success-btn,
+body.day-mode .cancel-btn,
+body.light-mode .success-btn,
+body.light-mode .cancel-btn,
+body[data-theme="day"] .success-btn,
+body[data-theme="day"] .cancel-btn{
+  background:linear-gradient(135deg,#8ff0b3,#58c77d) !important;
+  color:#0b2b16 !important;
+  box-shadow:0 10px 22px rgba(88,199,125,.18) !important;
+}
+
+body.day-mode .modal input,
+body.day-mode .modal select,
+body.day-mode .my-appt-input,
+body.light-mode .modal input,
+body.light-mode .modal select,
+body.light-mode .my-appt-input,
+body[data-theme="day"] .modal input,
+body[data-theme="day"] .modal select,
+body[data-theme="day"] .my-appt-input{
+  background:#ffffff !important;
+  color:#111827 !important;
+  border:1px solid #d8e8f2 !important;
+}
+
+body.day-mode .my-appt-result,
+body.day-mode #myAppointmentChoices.my-appt-result,
+body.day-mode #myAppointmentChoicesList .my-appt-choice-card,
+body.light-mode .my-appt-result,
+body.light-mode #myAppointmentChoices.my-appt-result,
+body.light-mode #myAppointmentChoicesList .my-appt-choice-card,
+body[data-theme="day"] .my-appt-result,
+body[data-theme="day"] #myAppointmentChoices.my-appt-result,
+body[data-theme="day"] #myAppointmentChoicesList .my-appt-choice-card{
+  background:#f8fbfd !important;
+  border:1px solid #d8e8f2 !important;
+  color:#111827 !important;
+}
+
+body.day-mode .my-appt-choice-date,
+body.day-mode .my-appt-choice-sub,
+body.light-mode .my-appt-choice-date,
+body.light-mode .my-appt-choice-sub,
+body[data-theme="day"] .my-appt-choice-date,
+body[data-theme="day"] .my-appt-choice-sub{
+  color:#111827 !important;
+}
+
+body.day-mode .modal-backdrop,
+body.light-mode .modal-backdrop,
+body[data-theme="day"] .modal-backdrop{
+  background:rgba(15,95,125,.18) !important;
+  backdrop-filter:blur(7px) !important;
+}
+
+body.day-mode .welcome-popup,
+body.day-mode .welcome-modal,
+body.day-mode .important-message-popup,
+body.day-mode .important-message-modal,
+body.light-mode .welcome-popup,
+body.light-mode .welcome-modal,
+body.light-mode .important-message-popup,
+body.light-mode .important-message-modal,
+body[data-theme="day"] .welcome-popup,
+body[data-theme="day"] .welcome-modal,
+body[data-theme="day"] .important-message-popup,
+body[data-theme="day"] .important-message-modal{
+  background:#ffffff !important;
+  color:#111827 !important;
+  border:1px solid #d8e8f2 !important;
+  box-shadow:0 24px 60px rgba(31,111,149,.18) !important;
+}
+
+
+
+/* ===== Hero background image: fill frame correctly, no milky overlay ===== */
+.logo-wrap{
+  background:
+    var(--hero-bg, url("background-behind-logo.png") center/cover no-repeat) !important;
+  background-color:#0f1722 !important;
+}
+
+.logo-wrap::before,
+.logo-wrap::after{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+  opacity:0 !important;
+  filter:none !important;
+  backdrop-filter:none !important;
+}
+
+body.day-mode .logo-wrap,
+body.light-mode .logo-wrap,
+body[data-theme="day"] .logo-wrap{
+  background:
+    var(--hero-bg, url("background-behind-logo.png") center/cover no-repeat) !important;
+  background-color:#f7fbfe !important;
+  filter:none !important;
+  opacity:1 !important;
+}
+
+body.day-mode .logo-wrap::before,
+body.day-mode .logo-wrap::after,
+body.light-mode .logo-wrap::before,
+body.light-mode .logo-wrap::after,
+body[data-theme="day"] .logo-wrap::before,
+body[data-theme="day"] .logo-wrap::after{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+  opacity:0 !important;
+  filter:none !important;
+  backdrop-filter:none !important;
+}
+
+.settings-preview-box.cover img,
+#bgPreview,
+#backgroundPreview,
+#heroBgPreview,
+#logoBgPreview{
+  width:100% !important;
+  height:100% !important;
+  max-height:none !important;
+  object-fit:cover !important;
+  object-position:center center !important;
+  border-radius:12px !important;
 }
 
 </style>
