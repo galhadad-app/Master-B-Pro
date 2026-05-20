@@ -2796,7 +2796,12 @@ body[data-theme="day"] #waitlistModal #closeWaitlistBtn{
 }
 
   </style>
-  <link rel="manifest" href="manifest.json">
+  <link id="appManifestLink" rel="manifest" href="manifest.json">
+  <link id="appAppleTouchIcon" rel="apple-touch-icon" href="logo.png">
+  <link id="appFavicon" rel="icon" type="image/png" href="logo.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="תן לעבוד">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0d1016">
 
 
@@ -3585,6 +3590,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
     let activeWaitlistDate = null;
     const BUSINESS_SETTINGS_STORAGE_KEY = `business-settings-${BUSINESS_TEMPLATE.businessId}`;
     let currentBusinessSettings = loadBusinessSettings();
+    window.__lastBusinessSettings = currentBusinessSettings;
 
     function loadBusinessSettings(){
       try {
@@ -3765,6 +3771,136 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
       if(settingsImportantNotice) settingsImportantNotice.value = settings.importantNotice || '';
     }
 
+
+    function setOrCreateHeadLink(id, rel, href, extra = {}){
+      if(!href) return null;
+      let link = document.getElementById(id);
+      if(!link){
+        link = document.createElement('link');
+        link.id = id;
+        link.rel = rel;
+        document.head.appendChild(link);
+      }
+      Object.keys(extra).forEach(key => link.setAttribute(key, extra[key]));
+      link.href = href;
+      return link;
+    }
+
+    function setOrCreateMeta(name, content){
+      let meta = document.querySelector(`meta[name="${name}"]`);
+      if(!meta){
+        meta = document.createElement('meta');
+        meta.setAttribute('name', name);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', content);
+      return meta;
+    }
+
+    function getAbsoluteAppUrl(pathOrUrl){
+      try {
+        return new URL(pathOrUrl, window.location.href).href;
+      } catch(err){
+        return pathOrUrl;
+      }
+    }
+
+    function getPwaStartUrl(){
+      const url = new URL(window.location.href);
+      url.searchParams.set('business', getActiveBusinessId());
+      return url.pathname + url.search + url.hash;
+    }
+
+    function loadImageForPwaIcon(src){
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = getAbsoluteAppUrl(src || BUSINESS_TEMPLATE.logoSrc || 'logo.png');
+      });
+    }
+
+    async function createPwaIconDataUrl(src, size){
+      const img = await loadImageForPwaIcon(src);
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0d1016';
+      ctx.fillRect(0, 0, size, size);
+      const padding = Math.round(size * 0.10);
+      const box = size - padding * 2;
+      const sourceWidth = img.naturalWidth || img.width || size;
+      const sourceHeight = img.naturalHeight || img.height || size;
+      const scale = Math.min(box / sourceWidth, box / sourceHeight);
+      const drawWidth = Math.max(1, Math.round(sourceWidth * scale));
+      const drawHeight = Math.max(1, Math.round(sourceHeight * scale));
+      const dx = Math.round((size - drawWidth) / 2);
+      const dy = Math.round((size - drawHeight) / 2);
+      ctx.drawImage(img, dx, dy, drawWidth, drawHeight);
+      return canvas.toDataURL('image/png');
+    }
+
+    async function updatePwaInstallMetadata(settings = currentBusinessSettings){
+      const safeSettings = settings || BUSINESS_TEMPLATE;
+      const businessName = String(safeSettings.businessName || safeSettings.bookingTitle || BUSINESS_TEMPLATE.businessName || 'תן לעבוד').trim() || 'תן לעבוד';
+      const shortName = businessName.length > 12 ? businessName.slice(0, 12) : businessName;
+      const logoSrc = String(safeSettings.logoSrc || BUSINESS_TEMPLATE.logoSrc || 'logo.png').trim() || 'logo.png';
+      const cacheKey = encodeURIComponent(`${getActiveBusinessId()}-${String(logoSrc).slice(0, 80)}`);
+      let icon180 = logoSrc;
+      let icon192 = logoSrc;
+      let icon512 = logoSrc;
+
+      try {
+        [icon180, icon192, icon512] = await Promise.all([
+          createPwaIconDataUrl(logoSrc, 180),
+          createPwaIconDataUrl(logoSrc, 192),
+          createPwaIconDataUrl(logoSrc, 512)
+        ]);
+      } catch(err){
+        const fallbackIcon = getAbsoluteAppUrl(logoSrc) + (String(logoSrc).includes('?') ? '&' : '?') + 'pwa=' + cacheKey;
+        icon180 = fallbackIcon;
+        icon192 = fallbackIcon;
+        icon512 = fallbackIcon;
+      }
+
+      setOrCreateHeadLink('appAppleTouchIcon', 'apple-touch-icon', icon180);
+      setOrCreateHeadLink('appFavicon', 'icon', icon192, { type:'image/png' });
+      setOrCreateMeta('apple-mobile-web-app-title', businessName);
+      setOrCreateMeta('application-name', businessName);
+      setOrCreateMeta('theme-color', '#0d1016');
+
+      const manifest = {
+        name: businessName,
+        short_name: shortName,
+        description: 'מערכת קביעת תורים לעסקים',
+        start_url: getPwaStartUrl(),
+        scope: './',
+        display: 'standalone',
+        orientation: 'portrait',
+        dir: 'rtl',
+        lang: 'he',
+        background_color: '#0d1016',
+        theme_color: '#0d1016',
+        icons: [
+          { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+        ]
+      };
+
+      try {
+        if(window.__activeManifestObjectUrl) URL.revokeObjectURL(window.__activeManifestObjectUrl);
+        const blob = new Blob([JSON.stringify(manifest, null, 2)], { type:'application/manifest+json' });
+        window.__activeManifestObjectUrl = URL.createObjectURL(blob);
+        setOrCreateHeadLink('appManifestLink', 'manifest', window.__activeManifestObjectUrl);
+      } catch(err){
+        setOrCreateHeadLink('appManifestLink', 'manifest', 'manifest.json?business=' + encodeURIComponent(getActiveBusinessId()) + '&v=' + Date.now());
+      }
+    }
+
     function applyBusinessTemplate(){
       const settings = currentBusinessSettings || BUSINESS_TEMPLATE;
       const businessName = String(settings.businessName || '').trim();
@@ -3775,6 +3911,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
       const pageTitleParts = [businessName, businessSubtitle].filter(Boolean);
 
       document.title = pageTitleParts.length ? pageTitleParts.join(' - ') : 'קביעת תור';
+      updatePwaInstallMetadata(settings).catch(err => console.warn('PWA metadata update failed', err));
       const hasLogo = Boolean(String(settings.logoSrc || '').trim());
       if(hasLogo){
         businessLogoEl.src = settings.logoSrc;
@@ -5746,6 +5883,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
           ? await optimizeImageFile(file, { maxWidth: 700, maxHeight: 700, outputType: 'image/webp', quality: 0.86, mode: 'contain' })
           : await optimizeImageFile(file, { maxWidth: Math.min(heroSize.width, 1100), maxHeight: Math.min(heroSize.height, 520), outputType: 'image/webp', quality: 0.78, mode: 'cover' });
         persistBusinessSettings({ [key]: dataUrl });
+        if(key === 'logoSrc') updatePwaInstallMetadata(currentBusinessSettings).catch(err => console.warn('PWA icon refresh failed', err));
         applyBusinessTemplate();
         await saveBusinessSettingsToCloud(currentBusinessSettings);
         input.value = '';
