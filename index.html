@@ -2626,16 +2626,16 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
 
 
 
-/* ===== FINAL FIX: premium waitlist success modal - day mode readable design ===== */
+/* ===== FINAL FIX: soft waitlist confirmation modal + real cancel ===== */
 #waitlistModal .waitlist-success-box{
   display:grid !important;
-  gap:16px !important;
+  gap:15px !important;
   text-align:center !important;
-  padding:4px 0 0 !important;
+  padding:2px 0 0 !important;
 }
 #waitlistModal .waitlist-success-title{
   margin:0 !important;
-  font-size:25px !important;
+  font-size:24px !important;
   color:#1f6d86 !important;
   font-weight:900 !important;
   line-height:1.25 !important;
@@ -2643,40 +2643,44 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
 }
 #waitlistModal .waitlist-success-card{
   display:grid !important;
-  gap:9px !important;
-  background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(243,251,255,.76)) !important;
-  border:1px solid rgba(24,183,201,.14) !important;
+  gap:0 !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(245,252,255,.56)) !important;
+  border:1px solid rgba(31,109,134,.10) !important;
   border-radius:24px !important;
-  padding:13px !important;
+  padding:8px 16px !important;
   color:#18324a !important;
   line-height:1.45 !important;
   font-size:16px !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 12px 26px rgba(39,92,148,.08) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 10px 24px rgba(39,92,148,.06) !important;
 }
 #waitlistModal .waitlist-success-card > div{
-  min-height:46px !important;
+  min-height:40px !important;
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
   gap:7px !important;
-  padding:10px 12px !important;
-  border-radius:17px !important;
-  background:rgba(255,255,255,.70) !important;
-  border:1px solid rgba(79,140,255,.09) !important;
+  padding:8px 0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  border:none !important;
+  border-bottom:1px solid rgba(31,109,134,.08) !important;
   color:#10243a !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.72) !important;
+  box-shadow:none !important;
 }
 #waitlistModal .waitlist-success-card > div:last-child{
-  margin-top:4px !important;
-  min-height:48px !important;
-  background:linear-gradient(180deg,rgba(228,255,247,.92),rgba(241,255,251,.82)) !important;
-  border:1px solid rgba(48,196,141,.22) !important;
+  margin-top:6px !important;
+  min-height:auto !important;
+  padding:10px 12px !important;
+  border-bottom:none !important;
+  border-radius:16px !important;
+  background:rgba(231,255,247,.74) !important;
+  border:1px solid rgba(48,196,141,.18) !important;
   color:#1d6f5a !important;
   font-weight:800 !important;
 }
 #waitlistModal .waitlist-success-card > div:last-child::before{
   content:"🔔";
-  font-size:18px;
+  font-size:17px;
   line-height:1;
 }
 #waitlistModal .waitlist-success-card strong{
@@ -2686,7 +2690,7 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
 #waitlistModal .waitlist-confirm-btn{
   background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
   color:#fff !important;
-  box-shadow:0 14px 30px rgba(24,183,201,.24) !important;
+  box-shadow:0 14px 30px rgba(24,183,201,.22) !important;
 }
 body.day-mode #waitlistModal .modal:not(.success-modal):not(.cancel-modal){
   width:min(92vw,390px) !important;
@@ -2712,8 +2716,8 @@ body.day-mode #waitlistModal .modal-actions > button{
 @media(max-width:430px){
   body.day-mode #waitlistModal .modal:not(.success-modal):not(.cancel-modal){width:min(92vw,370px)!important;padding:22px 16px 16px!important;border-radius:30px!important;}
   #waitlistModal .waitlist-success-title{font-size:22px!important;}
-  #waitlistModal .waitlist-success-card{font-size:15px!important;padding:11px!important;border-radius:22px!important;}
-  #waitlistModal .waitlist-success-card > div{min-height:42px!important;padding:9px 10px!important;border-radius:15px!important;}
+  #waitlistModal .waitlist-success-card{font-size:15px!important;padding:7px 14px!important;border-radius:22px!important;}
+  #waitlistModal .waitlist-success-card > div{min-height:38px!important;padding:7px 0!important;}
   body.day-mode #waitlistModal .modal-actions > button{min-height:54px!important;font-size:17px!important;border-radius:20px!important;}
 }
 
@@ -3500,6 +3504,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
     const waitlistEntries = [];
     const busyMap = {};
     let waitlistUnsubscribe = null;
+    let pendingWaitlistData = null;
     let activeWaitlistDate = null;
     const BUSINESS_SETTINGS_STORAGE_KEY = `business-settings-${BUSINESS_TEMPLATE.businessId}`;
     let currentBusinessSettings = loadBusinessSettings();
@@ -4623,12 +4628,15 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
           <button class="secondary-btn" id="waitlistSuccessCancelBtn">ביטול</button>
         </div>
       </div>`;
-      document.getElementById('waitlistSuccessOkBtn')?.addEventListener('click', closeWaitlistModal);
-      document.getElementById('waitlistSuccessCancelBtn')?.addEventListener('click', closeWaitlistModal);
+      document.getElementById('waitlistSuccessOkBtn')?.addEventListener('click', confirmWaitlistJoin);
+      document.getElementById('waitlistSuccessCancelBtn')?.addEventListener('click', () => {
+        pendingWaitlistData = null;
+        closeWaitlistModal();
+      });
     }
 
     function openWaitlistModal(date){ renderWaitlistFormModal(); activeWaitlistDate = new Date(date); const dateText = `${getDayLabel(activeWaitlistDate)} • ${formatDatePretty(activeWaitlistDate)}`; document.getElementById('waitlistModalDate').textContent = `ליום ${dateText}`; document.getElementById('waitFirstName').value = ''; document.getElementById('waitLastName').value = ''; document.getElementById('waitPhone').value = ''; const waitService = document.getElementById('waitService'); if(waitService){ const hasServices = (currentBusinessSettings.services || []).length; if(!waitService.options.length){ waitService.innerHTML = `<option value="">בחר שירות</option>` + (currentBusinessSettings.services || []).map(service => `<option value="${escapeHtml(service.value)}">${escapeHtml(service.label)}</option>`).join(''); } waitService.value = hasServices ? '' : 'לא נבחר'; } document.getElementById('waitlistModal').classList.add('show'); setTimeout(() => document.getElementById('waitFirstName').focus(), 50); }
-    function closeWaitlistModal(){ document.getElementById('waitlistModal').classList.remove('show'); activeWaitlistDate = null; }
+    function closeWaitlistModal(){ document.getElementById('waitlistModal').classList.remove('show'); activeWaitlistDate = null; pendingWaitlistData = null; }
     async function joinWaitlist(){ if(!activeWaitlistDate) return; const firstName = document.getElementById('waitFirstName').value.trim(); const lastName = document.getElementById('waitLastName').value.trim(); const phone = formatDisplayPhone(document.getElementById('waitPhone').value.trim()); const service = document.getElementById('waitService')?.value || ''; if(!firstName || !lastName || !phone) return showToast('יש למלא שם, שם משפחה ופלאפון.', true); if(!/^05\d{8}$/.test(phone)) return showToast('יש להזין מספר פלאפון מלא שמתחיל ב-05.', true); saveReturningCustomer(firstName, lastName, phone); applyReturningCustomer(); /* שירות ברשימת המתנה לא חובה */ const dateKey = formatDateKey(activeWaitlistDate);
 
       const normalizedPhone = normalizePhone(phone);
@@ -4652,29 +4660,51 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
         return showToast('כבר הצטרפת לרשימת ההמתנה ליום זה.', true);
       }
 
+      const dateText = `${getDayLabel(activeWaitlistDate)} • ${formatDatePretty(activeWaitlistDate)}`;
+      pendingWaitlistData = {
+        firstName,
+        lastName,
+        name: `${firstName} ${lastName}`.trim(),
+        phone,
+        service: service || 'לא נבחר',
+        date: dateKey,
+        dateText
+      };
+
+      showWaitlistSuccessModal({
+        dateText,
+        firstName,
+        lastName,
+        phone,
+        service: service || 'לא נבחר'
+      });
+    }
+
+    async function confirmWaitlistJoin(){
+      if(!pendingWaitlistData) return closeWaitlistModal();
+      const okBtn = document.getElementById('waitlistSuccessOkBtn');
+      if(okBtn){
+        okBtn.disabled = true;
+        okBtn.textContent = 'שומר...';
+      }
       try{
         await createWaitlistEntry({
-          firstName,
-          lastName,
-          name: `${firstName} ${lastName}`.trim(),
-          phone,
-          service: service || 'לא נבחר',
-          date: dateKey
+          firstName: pendingWaitlistData.firstName,
+          lastName: pendingWaitlistData.lastName,
+          name: pendingWaitlistData.name,
+          phone: pendingWaitlistData.phone,
+          service: pendingWaitlistData.service,
+          date: pendingWaitlistData.date
         });
-
-        const dateText = `${getDayLabel(activeWaitlistDate)} • ${formatDatePretty(activeWaitlistDate)}`;
-
-        showWaitlistSuccessModal({
-          dateText,
-          firstName,
-          lastName,
-          phone,
-          service: service || 'לא נבחר'
-        });
-
+        closeWaitlistModal();
+        showToast('נכנסת לרשימת המתנה. נעדכן אותך אם יתפנה תור.');
       }catch(err){
         console.error(err);
         showToast('שגיאה בשמירת רשימת ההמתנה.', true);
+        if(okBtn){
+          okBtn.disabled = false;
+          okBtn.textContent = 'אישור';
+        }
       }
     }
     let waitlistClaimInProgress = false;
