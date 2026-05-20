@@ -2624,7 +2624,100 @@ body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmen
   box-shadow:0 0 0 3px rgba(59,130,246,.22);
 }
 
-</style>
+
+
+/* ===== FINAL FIX: premium waitlist success modal - day mode readable design ===== */
+#waitlistModal .waitlist-success-box{
+  display:grid !important;
+  gap:16px !important;
+  text-align:center !important;
+  padding:4px 0 0 !important;
+}
+#waitlistModal .waitlist-success-title{
+  margin:0 !important;
+  font-size:25px !important;
+  color:#1f6d86 !important;
+  font-weight:900 !important;
+  line-height:1.25 !important;
+  letter-spacing:-.02em !important;
+}
+#waitlistModal .waitlist-success-card{
+  display:grid !important;
+  gap:9px !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(243,251,255,.76)) !important;
+  border:1px solid rgba(24,183,201,.14) !important;
+  border-radius:24px !important;
+  padding:13px !important;
+  color:#18324a !important;
+  line-height:1.45 !important;
+  font-size:16px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 12px 26px rgba(39,92,148,.08) !important;
+}
+#waitlistModal .waitlist-success-card > div{
+  min-height:46px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:7px !important;
+  padding:10px 12px !important;
+  border-radius:17px !important;
+  background:rgba(255,255,255,.70) !important;
+  border:1px solid rgba(79,140,255,.09) !important;
+  color:#10243a !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72) !important;
+}
+#waitlistModal .waitlist-success-card > div:last-child{
+  margin-top:4px !important;
+  min-height:48px !important;
+  background:linear-gradient(180deg,rgba(228,255,247,.92),rgba(241,255,251,.82)) !important;
+  border:1px solid rgba(48,196,141,.22) !important;
+  color:#1d6f5a !important;
+  font-weight:800 !important;
+}
+#waitlistModal .waitlist-success-card > div:last-child::before{
+  content:"🔔";
+  font-size:18px;
+  line-height:1;
+}
+#waitlistModal .waitlist-success-card strong{
+  color:#1f6d86 !important;
+  font-weight:900 !important;
+}
+#waitlistModal .waitlist-confirm-btn{
+  background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
+  color:#fff !important;
+  box-shadow:0 14px 30px rgba(24,183,201,.24) !important;
+}
+body.day-mode #waitlistModal .modal:not(.success-modal):not(.cancel-modal){
+  width:min(92vw,390px) !important;
+  border-radius:32px !important;
+  padding:24px 18px 18px !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(244,251,255,.88)) !important;
+  border:1px solid rgba(79,140,255,.14) !important;
+  box-shadow:0 22px 55px rgba(39,92,148,.18),0 5px 18px rgba(39,92,148,.10) !important;
+  color:#18324a !important;
+}
+body.day-mode #waitlistModal .modal-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:12px !important;
+  margin-top:2px !important;
+}
+body.day-mode #waitlistModal .modal-actions > button{
+  margin-top:0 !important;
+  min-height:58px !important;
+  border-radius:22px !important;
+  font-size:18px !important;
+}
+@media(max-width:430px){
+  body.day-mode #waitlistModal .modal:not(.success-modal):not(.cancel-modal){width:min(92vw,370px)!important;padding:22px 16px 16px!important;border-radius:30px!important;}
+  #waitlistModal .waitlist-success-title{font-size:22px!important;}
+  #waitlistModal .waitlist-success-card{font-size:15px!important;padding:11px!important;border-radius:22px!important;}
+  #waitlistModal .waitlist-success-card > div{min-height:42px!important;padding:9px 10px!important;border-radius:15px!important;}
+  body.day-mode #waitlistModal .modal-actions > button{min-height:54px!important;font-size:17px!important;border-radius:20px!important;}
+}
+
+  </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1016">
 
@@ -2753,7 +2846,8 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
           <div class="hero-brand-copy" id="heroBrandCopy">
             <h1 id="heroBusinessName" style="margin:0;font-size:54px;line-height:1;color:var(--gold);font-weight:900;letter-spacing:.01em;">מספרת מהדרין</h1>
             <div id="heroBusinessSubtitle" style="font-size:28px;color:#f4e6c8;">קביעת תור</div>
-                   </div>
+            <div id="heroBrandDivider" style="width:92px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);"></div>
+          </div>
         </div>
         
     
@@ -4522,7 +4616,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
           <div><strong>שם:</strong> ${escapeHtml(fullName || '-')}</div>
           <div><strong>פלאפון:</strong> ${escapeHtml(phone || '-')}</div>
           <div><strong>שירות:</strong> ${escapeHtml(service || 'לא נבחר')}</div>
-          <div style="margin-top:6px;color:#d7e9df;">נעדכן אותך אם יתפנה תור.</div>
+          <div class="waitlist-success-note">נעדכן אותך אם יתפנה תור.</div>
         </div>
         <div class="modal-actions">
           <button class="primary-btn waitlist-confirm-btn" id="waitlistSuccessOkBtn">אישור</button>
