@@ -7298,6 +7298,19 @@ body[data-theme="day"] #waitService.day-service-proxy{
   color:#fff;
   border-color:transparent;
 }
+.day-service-picker-empty{
+  width:100%;
+  border-radius:18px;
+  background:rgba(255,255,255,.72);
+  border:1px solid rgba(79,140,255,.10);
+  color:#557084;
+  font-family:inherit;
+  font-size:16px;
+  font-weight:800;
+  line-height:1.35;
+  padding:15px 18px;
+  text-align:center;
+}
 .day-service-picker-close{
   width:100%;
   margin-top:12px;
@@ -7312,15 +7325,13 @@ body[data-theme="day"] #waitService.day-service-proxy{
   padding:15px 18px;
   cursor:pointer;
 }
-body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker-backdrop{display:none!important;}
+
 </style>
 
 <script id="day-service-custom-picker-fix">
 (function(){
   function isDayMode(){
-    return document.body.classList.contains('day-mode') ||
-           document.body.classList.contains('light-mode') ||
-           document.body.getAttribute('data-theme') === 'day';
+    return true;
   }
 
   function ensurePicker(){
@@ -7354,10 +7365,19 @@ body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker
 
     list.innerHTML = '';
     Array.from(select.options || []).forEach(function(option, index){
+      const optionText = (option.textContent || option.value || '').trim();
+      const optionValue = (option.value || '').trim();
+
+      /* לא מציגים את שורת ברירת המחדל "בחר שירות" בתוך הפופאפ,
+         כי הכותרת כבר מופיעה בראש התיבה */
+      if(!optionValue && optionText){
+        return;
+      }
+
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'day-service-picker-option' + (select.selectedIndex === index ? ' active' : '');
-      btn.textContent = option.textContent || option.value || 'שירות';
+      btn.textContent = optionText || 'שירות';
       btn.addEventListener('click', function(){
         select.selectedIndex = index;
         select.value = option.value;
@@ -7367,6 +7387,13 @@ body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker
       });
       list.appendChild(btn);
     });
+
+    if(!list.children.length){
+      const empty = document.createElement('div');
+      empty.className = 'day-service-picker-empty';
+      empty.textContent = 'לא הוגדרו שירותים';
+      list.appendChild(empty);
+    }
 
     backdrop.classList.add('show');
     return true;
@@ -7411,6 +7438,112 @@ body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker
   setInterval(markSelects, 500);
 })();
 </script>
+
+
+<style id="service-picker-real-final-fix">
+#addServiceBtn{
+  background:linear-gradient(135deg,#e4c27c,#c99540) !important;
+  color:#19150d !important;
+  border:1px solid rgba(215,180,109,.22) !important;
+  box-shadow:0 12px 28px rgba(201,149,64,.18) !important;
+}
+
+/* מפעיל את בחירת השירות המותאמת גם במצב לילה */
+body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker-backdrop{
+  display:none;
+}
+.day-service-picker-backdrop.show{
+  display:flex !important;
+}
+
+/* אותה תיבת בחירת שירות נקייה גם במצב לילה וגם במצב יום */
+.day-service-picker-sheet{
+  width:min(92vw,420px) !important;
+  direction:rtl !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(245,251,255,.96)) !important;
+  border:1px solid rgba(79,140,255,.16) !important;
+  border-radius:28px !important;
+  box-shadow:0 24px 70px rgba(20,70,110,.24) !important;
+  padding:16px !important;
+  color:#10243a !important;
+}
+.day-service-picker-title{
+  text-align:center !important;
+  font-size:22px !important;
+  font-weight:900 !important;
+  color:#1f5f78 !important;
+  margin:2px 0 12px !important;
+}
+.day-service-picker-option{
+  width:100% !important;
+  border-radius:18px !important;
+  background:rgba(255,255,255,.84) !important;
+  border:1px solid rgba(79,140,255,.14) !important;
+  color:#10243a !important;
+  font-family:inherit !important;
+  font-size:19px !important;
+  font-weight:800 !important;
+  line-height:1.25 !important;
+  padding:16px 18px !important;
+  text-align:center !important;
+  cursor:pointer !important;
+  box-shadow:0 8px 18px rgba(39,92,148,.06) !important;
+}
+.day-service-picker-option.active{
+  background:linear-gradient(135deg,#18b7c9,#4f8cff) !important;
+  color:#fff !important;
+  border-color:transparent !important;
+}
+.day-service-picker-close{
+  width:100% !important;
+  margin-top:12px !important;
+  border:none !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,#ff8f8f,#e65f5f) !important;
+  border:1px solid rgba(255,123,123,.18) !important;
+  color:#fff !important;
+  font-family:inherit !important;
+  font-size:18px !important;
+  font-weight:900 !important;
+  padding:15px 18px !important;
+  cursor:pointer !important;
+  box-shadow:0 12px 26px rgba(230,95,95,.16) !important;
+}
+</style>
+
+
+<style id="service-picker-night-mode-fix">
+/* מצב לילה - תיבת בחירת שירות מותאמת ללילה */
+body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker-sheet{
+  background:linear-gradient(180deg,#151922 0%,#111621 100%) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  box-shadow:0 24px 70px rgba(0,0,0,.46) !important;
+  color:#f4f1ea !important;
+}
+body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker-title{
+  color:#f7e7c3 !important;
+}
+body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker-option{
+  background:rgba(255,255,255,.045) !important;
+  border:1px solid rgba(255,255,255,.09) !important;
+  color:#f4f1ea !important;
+  box-shadow:none !important;
+}
+body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker-option:hover{
+  background:rgba(215,180,109,.08) !important;
+  border-color:rgba(215,180,109,.18) !important;
+}
+body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker-option.active{
+  background:linear-gradient(135deg,#e4c27c,#c99540) !important;
+  color:#19150d !important;
+  border-color:transparent !important;
+}
+body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker-close{
+  background:linear-gradient(135deg,#ff8f8f,#e65f5f) !important;
+  border:1px solid rgba(255,123,123,.18) !important;
+  color:#fff !important;
+}
+</style>
 
 </body>
 </html>
