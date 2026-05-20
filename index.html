@@ -2721,6 +2721,80 @@ body.day-mode #waitlistModal .modal-actions > button{
   body.day-mode #waitlistModal .modal-actions > button{min-height:54px!important;font-size:17px!important;border-radius:20px!important;}
 }
 
+  
+
+/* ===== FINAL FIX: day-mode service selects + waitlist button spacing ===== */
+body.day-mode select,
+body.light-mode select,
+body[data-theme="day"] select,
+body.day-mode .modal select,
+body.light-mode .modal select,
+body[data-theme="day"] .modal select,
+body.day-mode #clientService,
+body.day-mode #waitService,
+body.light-mode #clientService,
+body.light-mode #waitService,
+body[data-theme="day"] #clientService,
+body[data-theme="day"] #waitService{
+  color-scheme: light !important;
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  background-color:#ffffff !important;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #1f6d86 50%),
+    linear-gradient(135deg, #1f6d86 50%, transparent 50%),
+    linear-gradient(180deg,#ffffff,#f7fcff) !important;
+  background-position:
+    left 20px center,
+    left 13px center,
+    center !important;
+  background-size:7px 7px,7px 7px,100% 100% !important;
+  background-repeat:no-repeat !important;
+  color:#10243a !important;
+  border:1px solid rgba(79,140,255,.16) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 8px 18px rgba(39,92,148,.06) !important;
+}
+body.day-mode select option,
+body.light-mode select option,
+body[data-theme="day"] select option{
+  background:#ffffff !important;
+  color:#10243a !important;
+}
+body.day-mode select:focus,
+body.light-mode select:focus,
+body[data-theme="day"] select:focus{
+  border-color:rgba(24,183,201,.42) !important;
+  box-shadow:0 0 0 3px rgba(24,183,201,.12),0 8px 18px rgba(39,92,148,.06) !important;
+}
+body.day-mode #waitlistModal .fields,
+body.light-mode #waitlistModal .fields,
+body[data-theme="day"] #waitlistModal .fields{
+  margin-bottom:18px !important;
+}
+body.day-mode #waitlistModal .modal-actions,
+body.light-mode #waitlistModal .modal-actions,
+body[data-theme="day"] #waitlistModal .modal-actions{
+  margin-top:18px !important;
+  padding-top:0 !important;
+  gap:14px !important;
+}
+body.day-mode #waitlistModal #joinWaitlistBtn,
+body.day-mode #waitlistModal #closeWaitlistBtn,
+body.light-mode #waitlistModal #joinWaitlistBtn,
+body.light-mode #waitlistModal #closeWaitlistBtn,
+body[data-theme="day"] #waitlistModal #joinWaitlistBtn,
+body[data-theme="day"] #waitlistModal #closeWaitlistBtn{
+  margin-top:0 !important;
+}
+@media(max-width:430px){
+  body.day-mode #waitlistModal .fields,
+  body.light-mode #waitlistModal .fields,
+  body[data-theme="day"] #waitlistModal .fields{margin-bottom:20px !important;}
+  body.day-mode #waitlistModal .modal-actions,
+  body.light-mode #waitlistModal .modal-actions,
+  body[data-theme="day"] #waitlistModal .modal-actions{margin-top:20px !important;}
+}
+
   </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1016">
