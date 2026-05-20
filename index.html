@@ -2213,7 +2213,110 @@ body[data-theme="day"] .logo-wrap::after{
   border-radius:12px !important;
 }
 
-</style>
+
+
+/* ===== FIX: day mode appointment popups readability + cancel choice cleanup ===== */
+body.day-mode #existingAppointmentChoiceBackdrop .modal,
+body.light-mode #existingAppointmentChoiceBackdrop .modal,
+body[data-theme="day"] #existingAppointmentChoiceBackdrop .modal{
+  background:rgba(255,255,255,.92) !important;
+  color:#102033 !important;
+  border:1px solid rgba(79,140,255,.12) !important;
+  box-shadow:0 16px 36px rgba(39,92,148,.12), 0 4px 14px rgba(39,92,148,.06) !important;
+}
+body.day-mode #existingAppointmentChoiceBackdrop h3,
+body.light-mode #existingAppointmentChoiceBackdrop h3,
+body[data-theme="day"] #existingAppointmentChoiceBackdrop h3{
+  color:#1f6f95 !important;
+}
+body.day-mode #existingAppointmentChoiceBackdrop .modal div,
+body.light-mode #existingAppointmentChoiceBackdrop .modal div,
+body[data-theme="day"] #existingAppointmentChoiceBackdrop .modal div{
+  color:#102033 !important;
+}
+body.day-mode #existingAppointmentChoiceBackdrop .modal div[style*="rgba(215,180,109"],
+body.light-mode #existingAppointmentChoiceBackdrop .modal div[style*="rgba(215,180,109"],
+body[data-theme="day"] #existingAppointmentChoiceBackdrop .modal div[style*="rgba(215,180,109"]{
+  background:#f3f9fd !important;
+  border:1px solid #d8e8f2 !important;
+  color:#1f6f95 !important;
+}
+body.day-mode #existingAppointmentChoiceBackdrop .modal div[style*="rgba(215,180,109"] span,
+body.light-mode #existingAppointmentChoiceBackdrop .modal div[style*="rgba(215,180,109"] span,
+body[data-theme="day"] #existingAppointmentChoiceBackdrop .modal div[style*="rgba(215,180,109"] span{
+  color:#1f6f95 !important;
+}
+
+/* The choices box itself must not draw an outside frame around the appointments/buttons */
+body.day-mode #myAppointmentChoices.my-appt-result,
+body.light-mode #myAppointmentChoices.my-appt-result,
+body[data-theme="day"] #myAppointmentChoices.my-appt-result,
+#myAppointmentChoices.my-appt-result{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+  border-radius:0 !important;
+}
+
+/* Keep each appointment readable in day mode */
+body.day-mode #myAppointmentChoicesList .my-appt-choice-card,
+body.light-mode #myAppointmentChoicesList .my-appt-choice-card,
+body[data-theme="day"] #myAppointmentChoicesList .my-appt-choice-card{
+  background:rgba(255,255,255,.76) !important;
+  border:1px solid #d8e8f2 !important;
+  color:#102033 !important;
+  box-shadow:none !important;
+}
+body.day-mode #myAppointmentChoicesList .my-appt-choice-card.is-selected,
+body.light-mode #myAppointmentChoicesList .my-appt-choice-card.is-selected,
+body[data-theme="day"] #myAppointmentChoicesList .my-appt-choice-card.is-selected{
+  background:#eef8ff !important;
+  border-color:#7bcde0 !important;
+}
+body.day-mode #myAppointmentChoicesList .my-appt-choice-date,
+body.day-mode #myAppointmentChoicesList .my-appt-choice-sub,
+body.light-mode #myAppointmentChoicesList .my-appt-choice-date,
+body.light-mode #myAppointmentChoicesList .my-appt-choice-sub,
+body[data-theme="day"] #myAppointmentChoicesList .my-appt-choice-date,
+body[data-theme="day"] #myAppointmentChoicesList .my-appt-choice-sub{
+  color:#102033 !important;
+  opacity:1 !important;
+}
+body.day-mode #myAppointmentChoicesList .my-appt-choice-time,
+body.light-mode #myAppointmentChoicesList .my-appt-choice-time,
+body[data-theme="day"] #myAppointmentChoicesList .my-appt-choice-time{
+  color:#1f6f95 !important;
+  opacity:1 !important;
+}
+
+/* Show a real exit option in the cancel-choice popup */
+#myAppointmentChoices .my-appt-actions{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:8px !important;
+  margin-top:12px !important;
+}
+#myAppointmentChoices .my-appt-actions #backToMyAppointmentLookupBtn{
+  display:none !important;
+}
+#myAppointmentChoices .my-appt-actions #closeMyAppointmentChoicesBtn{
+  display:block !important;
+  width:100% !important;
+  margin-top:0 !important;
+  border-radius:15px !important;
+  padding:11px 12px !important;
+  box-shadow:none !important;
+}
+body.day-mode #myAppointmentChoices .my-appt-actions #closeMyAppointmentChoicesBtn,
+body.light-mode #myAppointmentChoices .my-appt-actions #closeMyAppointmentChoicesBtn,
+body[data-theme="day"] #myAppointmentChoices .my-appt-actions #closeMyAppointmentChoicesBtn{
+  background:#ffffff !important;
+  color:#1f6f95 !important;
+  border:1px solid #d8e8f2 !important;
+}
+
+  </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1016">
 
@@ -2708,7 +2811,7 @@ body[data-theme="day"] .logo-wrap::after{
         <div class="my-appt-actions">
           <button class="danger-btn" id="cancelSelectedMyAppointmentBtn" disabled>בטל את התור שנבחר</button>
           <button class="secondary-btn" id="backToMyAppointmentLookupBtn">חזרה</button>
-          <button class="secondary-btn" id="closeMyAppointmentChoicesBtn">סגור</button>
+          <button class="secondary-btn" id="closeMyAppointmentChoicesBtn">ביטול</button>
         </div>
       </div>
 
