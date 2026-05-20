@@ -3038,6 +3038,10 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
           <button class="secondary-action-btn" id="openMyAppointmentBtn">יש לי כבר תור</button>
         </div>
       </section>
+
+      <section id="clientToolsCard" class="customer-tools-card">
+        <div class="customer-tools-actions" id="clientToolsActions"></div>
+      </section>
     </section>
 
     <section id="ownerScreen" class="screen">
@@ -7544,6 +7548,131 @@ body:not(.day-mode):not(.light-mode):not([data-theme="day"]) .day-service-picker
   color:#fff !important;
 }
 </style>
+
+
+
+<style id="branding-spacing-delete-real-fix">
+/* מיתוג העסק - רווח אחיד בין כל שדות התיבה */
+#settingsPanel .settings-box .settings-field{
+  margin:0 0 14px 0 !important;
+}
+#settingsPanel .settings-box .settings-field:last-child{
+  margin-bottom:0 !important;
+}
+#settingsPanel .settings-box .section-title{
+  margin-bottom:18px !important;
+}
+#settingsPanel .settings-title-color-field{
+  margin:0 !important;
+}
+#settingsPanel .settings-title-color-field input,
+#settingsPanel .branding-field-row input,
+#settingsPanel .settings-field textarea{
+  min-height:58px !important;
+}
+
+/* שירותים ומחירים - מחק עדין כמו רשימת המתנה */
+#serviceBuilder .service-row button[data-role="delete"]{
+  margin:0 !important;
+  background:rgba(255,123,123,.10) !important;
+  border:1px solid rgba(255,123,123,.25) !important;
+  color:#ff8f8f !important;
+  border-radius:18px !important;
+  padding:10px 12px !important;
+  min-width:58px !important;
+  height:48px !important;
+  font-weight:900 !important;
+  box-shadow:none !important;
+}
+#serviceBuilder .service-row button[data-role="delete"]:hover{
+  background:rgba(255,123,123,.16) !important;
+  border-color:rgba(255,123,123,.34) !important;
+}
+
+/* מצב יום - אותו סגנון עדין, מותאם לרקע בהיר */
+body.day-mode #serviceBuilder .service-row button[data-role="delete"],
+body.light-mode #serviceBuilder .service-row button[data-role="delete"],
+body[data-theme="day"] #serviceBuilder .service-row button[data-role="delete"]{
+  background:rgba(255,123,123,.10) !important;
+  border:1px solid rgba(255,123,123,.24) !important;
+  color:#d85b5b !important;
+  border-radius:18px !important;
+  box-shadow:none !important;
+}
+body.day-mode #serviceBuilder .service-row button[data-role="delete"]:hover,
+body.light-mode #serviceBuilder .service-row button[data-role="delete"]:hover,
+body[data-theme="day"] #serviceBuilder .service-row button[data-role="delete"]:hover{
+  background:rgba(255,123,123,.16) !important;
+  border-color:rgba(255,123,123,.34) !important;
+}
+
+/* ביטול הכלל הישן שהיה הופך את מחק לכהה/כבד */
+#settingsPanel .service-row button[data-role="delete"]{
+  background:rgba(255,123,123,.10) !important;
+}
+</style>
+
+
+
+<style id="client-tools-main-only-style">
+#clientScreen #clientToolsCard.customer-tools-card{
+  width:fit-content !important;
+  min-width:auto !important;
+  margin:14px auto 0 !important;
+  padding:14px 18px !important;
+  border-radius:28px !important;
+  background:linear-gradient(180deg,#151922 0%, #111621 100%) !important;
+  border:1px solid var(--line) !important;
+  box-shadow:var(--shadow) !important;
+}
+#clientScreen #clientToolsCard .customer-tools-actions{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:14px !important;
+  flex-wrap:wrap !important;
+}
+#clientScreen #clientToolsCard .customer-tools-actions > *{
+  margin:0 !important;
+}
+body.day-mode #clientScreen #clientToolsCard,
+body.light-mode #clientScreen #clientToolsCard,
+body[data-theme="day"] #clientScreen #clientToolsCard{
+  background:rgba(255,255,255,.88) !important;
+  border:1px solid rgba(31,95,120,.12) !important;
+  box-shadow:0 14px 36px rgba(39,92,148,.10) !important;
+}
+#ownerScreen #clientToolsCard,
+.owner-shell #clientToolsCard{
+  display:none !important;
+}
+</style>
+
+<script id="client-tools-main-only-script">
+(function(){
+  function moveClientTools(){
+    var holder = document.getElementById('clientToolsActions');
+    if(!holder) return;
+
+    var installBtn = document.getElementById('installAppBtn');
+    var themeBtn = document.getElementById('themeToggleBtn');
+
+    if(installBtn && installBtn.parentElement !== holder){
+      holder.appendChild(installBtn);
+    }
+    if(themeBtn && themeBtn.parentElement !== holder){
+      holder.appendChild(themeBtn);
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', moveClientTools);
+  }else{
+    moveClientTools();
+  }
+  window.addEventListener('load', moveClientTools);
+})();
+</script>
 
 </body>
 </html>
