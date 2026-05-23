@@ -2796,7 +2796,7 @@ body[data-theme="day"] #waitlistModal #closeWaitlistBtn{
 }
 
   </style>
-  <link id="appManifestLink" rel="manifest" href="manifest.json">
+  <link id="appManifestLink" rel="manifest" href="manifest.json?v=mispara-shell-v5">
   <link id="appAppleTouchIcon" rel="apple-touch-icon" href="logo.png">
   <link id="appFavicon" rel="icon" type="image/png" href="logo.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3829,7 +3829,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#0d1016';
       ctx.fillRect(0, 0, size, size);
-      const padding = Math.round(size * 0.10);
+      const padding = Math.round(size * 0.04);
       const box = size - padding * 2;
       const sourceWidth = img.naturalWidth || img.width || size;
       const sourceHeight = img.naturalHeight || img.height || size;
@@ -3844,8 +3844,8 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
 
     async function updatePwaInstallMetadata(settings = currentBusinessSettings){
       const safeSettings = settings || BUSINESS_TEMPLATE;
-      const businessName = String(safeSettings.businessName || safeSettings.bookingTitle || BUSINESS_TEMPLATE.businessName || 'תן לעבוד').trim() || 'תן לעבוד';
-      const shortName = businessName.length > 12 ? businessName.slice(0, 12) : businessName;
+      const businessName = 'המספרה שלי';
+      const shortName = 'המספרה שלי';
       const logoSrc = String(safeSettings.logoSrc || BUSINESS_TEMPLATE.logoSrc || 'logo.png').trim() || 'logo.png';
       const cacheKey = encodeURIComponent(`${getActiveBusinessId()}-${String(logoSrc).slice(0, 80)}`);
       let icon180 = logoSrc;
