@@ -3830,7 +3830,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#0d1016';
       ctx.fillRect(0, 0, size, size);
-      const padding = Math.round(size * 0.02);
+      const padding = Math.round(size * 0.005);
       const box = size - padding * 2;
       const sourceWidth = img.naturalWidth || img.width || size;
       const sourceHeight = img.naturalHeight || img.height || size;
