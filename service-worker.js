@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ten-laavod-pwa-v3';
+const CACHE_NAME = 'mispara-shell-v4';
 const APP_SHELL = [
   './',
   './index.html',
