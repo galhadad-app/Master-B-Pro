@@ -2,7 +2,7 @@
   "name": "המספרה שלי",
   "short_name": "המספרה שלי",
   "description": "מערכת קביעת תורים לעסקים",
-  "start_url": "./index.html?v=mispara-my-v6",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
