@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mispara-shell-v5';
+const CACHE_NAME = 'mispara-my-v6';
 const APP_SHELL = [
   './',
   './index.html',
