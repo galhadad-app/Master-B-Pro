@@ -1,8 +1,9 @@
-const CACHE_NAME = 'mispara-shell-v4';
+const CACHE_NAME = 'mispara-shell-v5';
 const APP_SHELL = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './logo.png'
 ];
 
 self.addEventListener('install', (event) => {
