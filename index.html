@@ -6802,7 +6802,7 @@ document.getElementById('bookBtn').addEventListener('click', bookAppointment);
     document.getElementById('closeImportantNoticeBtn').addEventListener('click', closeImportantNoticeModal);
     document.getElementById('joinWaitlistBtn').addEventListener('click', joinWaitlist);
     document.getElementById('closeWaitlistBtn').addEventListener('click', closeWaitlistModal);
-    document.getElementById('closeNotifyWaitlistBtn').addEventListener('click', closeNotifyWaitlistModal);
+    document.getElementById('closeNotifyWaitlistBtn')?.addEventListener('click', closeNotifyWaitlistModal);
     document.getElementById('closeSuccessBtn').addEventListener('click', closeSuccessModal);
     document.getElementById('backToClientBtn').addEventListener('click', () => {
       document.getElementById('ownerScreen').classList.remove('active');
