@@ -2796,7 +2796,7 @@ body[data-theme="day"] #waitlistModal #closeWaitlistBtn{
 }
 
   </style>
-  <link id="appManifestLink" rel="manifest" href="manifest.json?v=mispara-my-v6">
+  <link id="appManifestLink" rel="manifest" href="manifest.json">
   <link id="appAppleTouchIcon" rel="apple-touch-icon" href="logo.png">
   <link id="appFavicon" rel="icon" type="image/png" href="logo.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2903,7 +2903,6 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
 }
 </style>
 
-  <!-- PWA FIX v6: fixed install name + larger generated icon -->
 </head>
 <body>
   <div id="loader"><img id="loaderLogo" src="logo.png" alt="לוגו"></div>
@@ -3467,7 +3466,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
   </div>
 
   <div class="modal-backdrop" id="waitlistModal"><div class="modal" id="waitlistModalBox"><div id="waitlistModalBody"><h3>כניסה לרשימת המתנה</h3><div class="helper" id="waitlistModalDate" style="text-align:center;margin-bottom:10px;color:#f4f1ea;"></div><div class="fields compact-fields"><div class="name-row form-row-two"><div><label>שם פרטי</label><input id="waitFirstName" placeholder="שם" /></div><div><label>שם משפחה</label><input id="waitLastName" placeholder="שם משפחה" /></div></div><div class="name-row form-row-two"><div><label>פלאפון</label><input id="waitPhone" inputmode="numeric" maxlength="10" placeholder="05XXXXXXXX" /></div><div><label>שירות</label><select id="waitService"></select></div></div></div><div class="modal-actions"><button class="primary-btn" id="joinWaitlistBtn">אישור</button><button class="secondary-btn" id="closeWaitlistBtn">סגור</button></div></div></div></div>
-  <div class="modal-backdrop" id="notifyWaitlistModal"><div class="modal"><h3>התפנה תור</h3><div class="helper" id="notifyWaitlistText" style="text-align:center;color:#f4f1ea;line-height:1.8;"></div><button class="primary-btn notify-all-btn" id="sendAllWaitlistBtn">שלח לכולם</button><div class="notify-all-hint">בלחיצה אחת ייפתח וואטסאפ לכל הממתינים, אחד אחרי השני.</div><div class="notify-modal-list" id="notifyWaitlistLinks"></div></div></div>
+  <div class="modal-backdrop" id="notifyWaitlistModal"><div class="modal"><h3>התפנה תור</h3><div class="helper" id="notifyWaitlistText" style="text-align:center;color:#f4f1ea;line-height:1.8;"></div><button class="primary-btn notify-all-btn" id="sendAllWaitlistBtn">שלח לכולם</button><div class="notify-all-hint">בלחיצה אחת ייפתח וואטסאפ לכל הממתינים, אחד אחרי השני.</div><div class="notify-modal-list" id="notifyWaitlistLinks"></div><button class="secondary-btn" id="closeNotifyWaitlistBtn">סגור</button></div></div>
 
   <div class="modal-backdrop" id="successModal">
     <div class="success-modal">
@@ -3830,7 +3829,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#0d1016';
       ctx.fillRect(0, 0, size, size);
-      const padding = Math.round(size * 0.005);
+      const padding = Math.round(size * 0.10);
       const box = size - padding * 2;
       const sourceWidth = img.naturalWidth || img.width || size;
       const sourceHeight = img.naturalHeight || img.height || size;
@@ -3845,8 +3844,8 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
 
     async function updatePwaInstallMetadata(settings = currentBusinessSettings){
       const safeSettings = settings || BUSINESS_TEMPLATE;
-      const businessName = 'המספרה שלי';
-      const shortName = 'המספרה שלי';
+      const businessName = String(safeSettings.businessName || safeSettings.bookingTitle || BUSINESS_TEMPLATE.businessName || 'תן לעבוד').trim() || 'תן לעבוד';
+      const shortName = businessName.length > 12 ? businessName.slice(0, 12) : businessName;
       const logoSrc = String(safeSettings.logoSrc || BUSINESS_TEMPLATE.logoSrc || 'logo.png').trim() || 'logo.png';
       const cacheKey = encodeURIComponent(`${getActiveBusinessId()}-${String(logoSrc).slice(0, 80)}`);
       let icon180 = logoSrc;
@@ -3868,13 +3867,13 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
 
       setOrCreateHeadLink('appAppleTouchIcon', 'apple-touch-icon', icon180);
       setOrCreateHeadLink('appFavicon', 'icon', icon192, { type:'image/png' });
-      setOrCreateMeta('apple-mobile-web-app-title', 'המספרה שלי');
-      setOrCreateMeta('application-name', 'המספרה שלי');
+      setOrCreateMeta('apple-mobile-web-app-title', businessName);
+      setOrCreateMeta('application-name', businessName);
       setOrCreateMeta('theme-color', '#0d1016');
 
       const manifest = {
-        name: 'המספרה שלי',
-        short_name: 'המספרה שלי',
+        name: businessName,
+        short_name: shortName,
         description: 'מערכת קביעת תורים לעסקים',
         start_url: getPwaStartUrl(),
         scope: './',
@@ -6802,7 +6801,7 @@ document.getElementById('bookBtn').addEventListener('click', bookAppointment);
     document.getElementById('closeImportantNoticeBtn').addEventListener('click', closeImportantNoticeModal);
     document.getElementById('joinWaitlistBtn').addEventListener('click', joinWaitlist);
     document.getElementById('closeWaitlistBtn').addEventListener('click', closeWaitlistModal);
-    document.getElementById('closeNotifyWaitlistBtn')?.addEventListener('click', closeNotifyWaitlistModal);
+    document.getElementById('closeNotifyWaitlistBtn').addEventListener('click', closeNotifyWaitlistModal);
     document.getElementById('closeSuccessBtn').addEventListener('click', closeSuccessModal);
     document.getElementById('backToClientBtn').addEventListener('click', () => {
       document.getElementById('ownerScreen').classList.remove('active');
