@@ -2796,7 +2796,7 @@ body[data-theme="day"] #waitlistModal #closeWaitlistBtn{
 }
 
   </style>
-  <link id="appManifestLink" rel="manifest" href="manifest.json?v=mispara-shell-v5">
+  <link id="appManifestLink" rel="manifest" href="manifest.json?v=mispara-my-v6">
   <link id="appAppleTouchIcon" rel="apple-touch-icon" href="logo.png">
   <link id="appFavicon" rel="icon" type="image/png" href="logo.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2903,6 +2903,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
 }
 </style>
 
+  <!-- PWA FIX v6: fixed install name + larger generated icon -->
 </head>
 <body>
   <div id="loader"><img id="loaderLogo" src="logo.png" alt="לוגו"></div>
@@ -3829,7 +3830,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#0d1016';
       ctx.fillRect(0, 0, size, size);
-      const padding = Math.round(size * 0.04);
+      const padding = Math.round(size * 0.02);
       const box = size - padding * 2;
       const sourceWidth = img.naturalWidth || img.width || size;
       const sourceHeight = img.naturalHeight || img.height || size;
@@ -3867,13 +3868,13 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
 
       setOrCreateHeadLink('appAppleTouchIcon', 'apple-touch-icon', icon180);
       setOrCreateHeadLink('appFavicon', 'icon', icon192, { type:'image/png' });
-      setOrCreateMeta('apple-mobile-web-app-title', businessName);
-      setOrCreateMeta('application-name', businessName);
+      setOrCreateMeta('apple-mobile-web-app-title', 'המספרה שלי');
+      setOrCreateMeta('application-name', 'המספרה שלי');
       setOrCreateMeta('theme-color', '#0d1016');
 
       const manifest = {
-        name: businessName,
-        short_name: shortName,
+        name: 'המספרה שלי',
+        short_name: 'המספרה שלי',
         description: 'מערכת קביעת תורים לעסקים',
         start_url: getPwaStartUrl(),
         scope: './',
