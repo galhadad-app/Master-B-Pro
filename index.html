@@ -5462,7 +5462,7 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
       const notes = document.getElementById('detailNotesInput').value.trim();
       const source = document.getElementById('detailSourceInput').value.trim();
       const changed = notes !== detailsInitialState.notes || source !== detailsInitialState.source;
-      document.getElementById('closeDetailsBtn').textContent = changed ? 'שמור וסגור' : 'סגור';
+      document.getElementById('closeDetailsBtn').style.display = 'none';
       return changed;
     }
 
@@ -6792,7 +6792,6 @@ document.getElementById('bookBtn').addEventListener('click', bookAppointment);
     document.getElementById('backToMyAppointmentLookupBtn')?.addEventListener('click', backToMyAppointmentLookup);
     document.getElementById('closeMyAppointmentChoicesBtn')?.addEventListener('click', closeMyAppointmentModal);
     document.getElementById('closeCodeBtn').addEventListener('click', closeOwnerModal);
-    document.getElementById('closeDetailsBtn').addEventListener('click', saveAndCloseDetailsModal);
     document.getElementById('cancelAppointmentBtn').addEventListener('click', cancelAppointmentByOwner);
     document.getElementById('detailNotesInput').addEventListener('input', updateDetailsButtonState);
     document.getElementById('detailSourceInput').addEventListener('input', updateDetailsButtonState);
