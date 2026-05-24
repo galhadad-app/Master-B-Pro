@@ -5462,7 +5462,8 @@ body[data-theme="day"] .stats-source-bars .stats-fill.alt{
       const notes = document.getElementById('detailNotesInput').value.trim();
       const source = document.getElementById('detailSourceInput').value.trim();
       const changed = notes !== detailsInitialState.notes || source !== detailsInitialState.source;
-      document.getElementById('closeDetailsBtn').style.display = 'none';
+      const closeDetailsBtn = document.getElementById('closeDetailsBtn');
+      if(closeDetailsBtn) closeDetailsBtn.textContent = changed ? 'שמור וסגור' : 'סגור';
       return changed;
     }
 
@@ -6792,6 +6793,7 @@ document.getElementById('bookBtn').addEventListener('click', bookAppointment);
     document.getElementById('backToMyAppointmentLookupBtn')?.addEventListener('click', backToMyAppointmentLookup);
     document.getElementById('closeMyAppointmentChoicesBtn')?.addEventListener('click', closeMyAppointmentModal);
     document.getElementById('closeCodeBtn').addEventListener('click', closeOwnerModal);
+    document.getElementById('closeDetailsBtn')?.addEventListener('click', saveAndCloseDetailsModal);
     document.getElementById('cancelAppointmentBtn').addEventListener('click', cancelAppointmentByOwner);
     document.getElementById('detailNotesInput').addEventListener('input', updateDetailsButtonState);
     document.getElementById('detailSourceInput').addEventListener('input', updateDetailsButtonState);
@@ -7987,13 +7989,12 @@ body[data-theme="day"] #openMyAppointmentBtn:hover{
 
 
 <style id="no-future-close-button-fix">
-/* פופאפ אין תור עתידי - כפתור סגור מותאם ביחס לתיבה */
+/* פופאפ אין תור עתידי - בלי כפתור סגור נוסף */
 #myAppointmentModal.no-future-state .my-appointment-modal{
   width:min(92vw,420px) !important;
   padding:22px 18px 18px !important;
   border-radius:28px !important;
 }
-
 #myAppointmentModal.no-future-state .my-appt-head,
 #myAppointmentModal.no-future-state .my-appt-result-title,
 #myAppointmentModal.no-future-state .my-appt-actions,
@@ -8001,10 +8002,9 @@ body[data-theme="day"] #openMyAppointmentBtn:hover{
 #myAppointmentModal.no-future-state label{
   display:none !important;
 }
-
 #myAppointmentModal.no-future-state .my-appt-hint{
   display:block !important;
-  margin:0 0 16px !important;
+  margin:0 !important;
   min-height:0 !important;
   text-align:center !important;
   font-size:22px !important;
@@ -8012,74 +8012,43 @@ body[data-theme="day"] #openMyAppointmentBtn:hover{
   font-weight:900 !important;
   color:#1f5f78 !important;
 }
-
 body:not(.day-mode):not(.light-mode):not([data-theme="day"]) #myAppointmentModal.no-future-state .my-appt-hint{
   color:#f7e7c3 !important;
 }
-
-#myAppointmentModal.no-future-state .no-future-close-btn{
-  display:block !important;
-  width:100% !important;
-  margin:0 !important;
-  border:none !important;
-  border-radius:18px !important;
-  padding:15px 18px !important;
-  background:linear-gradient(135deg,#ff8f8f,#e65f5f) !important;
-  color:#fff !important;
-  font-family:inherit !important;
-  font-size:18px !important;
-  font-weight:900 !important;
-  cursor:pointer !important;
-  box-shadow:0 12px 26px rgba(230,95,95,.16) !important;
+#myAppointmentModal .no-future-close-btn{
+  display:none !important;
 }
 </style>
 
 <script id="no-future-close-button-fix-script">
 (function(){
-  function ensureNoFutureCloseButton(){
+  function fixNoFutureAppointmentText(){
     var modal = document.getElementById('myAppointmentModal');
     if(!modal) return;
 
-    var text = (modal.textContent || '').replace(/\s+/g,' ').trim();
+    var text = modal.textContent || '';
     var isNoFuture = text.indexOf('לא נמצא תור עתידי שמור בשבילך') !== -1;
-
     modal.classList.toggle('no-future-state', isNoFuture);
 
-    if(!isNoFuture) return;
+    var oldCloseBtn = modal.querySelector('.no-future-close-btn');
+    if(oldCloseBtn) oldCloseBtn.remove();
 
-    var box = modal.querySelector('.my-appointment-modal') || modal.querySelector('.modal') || modal;
-    if(!box) return;
+    if(!isNoFuture) return;
 
     var hint = modal.querySelector('.my-appt-hint') || Array.from(modal.querySelectorAll('*')).find(function(el){
       return (el.textContent || '').indexOf('לא נמצא תור עתידי שמור בשבילך') !== -1;
     });
-
     if(hint){
       hint.textContent = 'לא נמצא תור עתידי שמור בשבילך';
-    }
-
-    var closeBtn = modal.querySelector('.no-future-close-btn');
-    if(!closeBtn){
-      closeBtn = document.createElement('button');
-      closeBtn.type = 'button';
-      closeBtn.className = 'no-future-close-btn';
-      closeBtn.textContent = 'סגור';
-      closeBtn.addEventListener('click', function(){
-        modal.classList.remove('show');
-        modal.style.display = 'none';
-      });
-      box.appendChild(closeBtn);
     }
   }
 
   if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', ensureNoFutureCloseButton);
+    document.addEventListener('DOMContentLoaded', fixNoFutureAppointmentText);
   }else{
-    ensureNoFutureCloseButton();
+    fixNoFutureAppointmentText();
   }
-
-  window.addEventListener('load', ensureNoFutureCloseButton);
-  setInterval(ensureNoFutureCloseButton, 400);
+  setInterval(fixNoFutureAppointmentText,500);
 })();
 </script>
 
