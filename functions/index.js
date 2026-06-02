@@ -780,7 +780,7 @@ app.post("/business/save", async (req, res) => {
     const ownerAccess = body.ownerAccess === true || body.ownerAccess === "true" || body.clientOwnerAccess === true || body.clientOwnerAccess === "true";
     const ownerCode = String(body.ownerCode || "1234").replace(/\D/g, "").slice(0, 4) || "1234";
     const statsSettingsCode = String(body.statsSettingsCode || "4321").replace(/\D/g, "").slice(0, 4) || "4321";
-    const centralBotNumber = normalizePhone(body.centralBotNumber || body.botWhatsappNumber || getCentralBotWhatsappNumber() || "972547674814");
+    const centralBotNumber = normalizePhone(body.centralBotNumber || body.botWhatsappNumber || getCentralBotWhatsappNumber() || "972544419964");
     const whatsappUrl = whatsappBotMode === "central"
       ? `https://wa.me/${centralBotNumber}?text=${encodeURIComponent(`start_${businessId}`)}`
       : whatsappBotMode === "private"
@@ -2120,7 +2120,7 @@ function normalizeWaitlistEntry(entry) {
 
 
 function getCentralBotWhatsappNumber() {
-  return normalizePhone(process.env.CENTRAL_BOT_WHATSAPP_NUMBER || process.env.BOT_WHATSAPP_NUMBER || "972547674814");
+  return normalizePhone(process.env.CENTRAL_BOT_WHATSAPP_NUMBER || process.env.BOT_WHATSAPP_NUMBER || "972544419964");
 }
 
 function getProtectedWhatsappNumbers(business = {}) {
@@ -2130,7 +2130,7 @@ function getProtectedWhatsappNumbers(business = {}) {
   // ולכן אם בעל העסק בדק כלקוח ברשימת המתנה - המספר שלו נפסל בטעות.
   const protectedNumbers = new Set([
     getCentralBotWhatsappNumber(),
-    "972547674814",
+    "972544419964",
     process.env.CENTRAL_BOT_WHATSAPP_NUMBER,
     process.env.BOT_WHATSAPP_NUMBER,
     business.botWhatsappNumber,
