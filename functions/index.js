@@ -1250,7 +1250,7 @@ async function handleSmartIncomingText(from, rawText, metadata = {}) {
   const session = await getSession(from);
   const incomingPhoneNumberId = String(metadata?.phone_number_id || getWhatsappContext()?.incomingPhoneNumberId || "");
 
-  console.log("📩 Incoming WhatsApp smart-agent message", {
+  console.log("📩 Incoming WhatsApp professional-agent message", {
     from,
     text,
     incomingPhoneNumberId,
@@ -1264,63 +1264,67 @@ async function handleSmartIncomingText(from, rawText, metadata = {}) {
     const business = await getBusinessSettings(startBusinessId);
     if (!business) {
       await clearSession(from);
-      await sendWhatsAppMessage(from, "לא מצאתי את העסק הזה במערכת 🙏");
+      await sendWhatsAppMessage(from, "לא מצאתי את העסק הזה במערכת. אפשר לפתוח שוב את הצ׳אט מתוך האפליקציה ולנסות מחדש.");
       return;
     }
 
     if (isWhatsappBotDisabled(business)) {
       await clearSession(from);
-      console.log("⏸️ WhatsApp bot is disabled for business start flow", { businessId: startBusinessId, from });
+      console.log("⏸️ WhatsApp agent is disabled for business start flow", { businessId: startBusinessId, from });
       return;
     }
 
     setWhatsappBusinessContext(business);
     await saveSession(from, {
-      step: "main_menu",
+      step: "smart_idle",
       businessId: startBusinessId,
       businessName: business.businessName || business.name || "העסק",
+      smartDraft: admin.firestore.FieldValue.delete(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     await sendWhatsAppMessage(
       from,
-      `שלום וברכה 👋\nהגעת ל${business.businessName || business.name || "העסק"}.\n\nאפשר לכתוב לי חופשי מה תרצה לעשות:\n• לקבוע תור\n• לבטל תור\n• לראות שעות פתיחה\n\nלדוגמה: "יש תור מחר בבוקר?"`
+      `שלום וברכה, הגעת ל${business.businessName || business.name || "העסק"}.\n` +
+      `אפשר לכתוב לי בצורה חופשית מה תרצה לעשות.\n\n` +
+      `לדוגמה:\n` +
+      `״יש תור מחר בבוקר?״\n` +
+      `״אני רוצה לקבוע תור היום ב־12״\n` +
+      `״לבטל את התור שלי״\n` +
+      `״מה שעות הפתיחה?״`
     );
     return;
   }
 
   if (isResetText(text)) {
     if (!session?.businessId) {
-      await sendWhatsAppMessage(from, "כדי להתחיל צריך להיכנס דרך קישור הוואטסאפ של העסק מתוך האפליקציה.");
+      await sendWhatsAppMessage(from, "כדי להתחיל צריך להיכנס פעם אחת דרך אייקון הוואטסאפ באפליקציה של העסק.");
       return;
     }
 
     const business = await getBusinessSettings(session.businessId);
     if (!business) {
       await clearSession(from);
-      await sendWhatsAppMessage(from, "העסק לא נמצא במערכת 🙏");
+      await sendWhatsAppMessage(from, "העסק לא נמצא במערכת. אפשר לפתוח מחדש דרך האפליקציה.");
       return;
     }
 
     if (isWhatsappBotDisabled(business)) {
       await clearSession(from);
-      console.log("⏸️ WhatsApp bot is disabled for business menu flow", { businessId: session.businessId, from });
+      console.log("⏸️ WhatsApp agent is disabled for reset flow", { businessId: session.businessId, from });
       return;
     }
 
     setWhatsappBusinessContext(business);
-    await saveSession(from, { step: "main_menu" });
-    await sendWhatsAppMessage(
-      from,
-      `בשמחה. התחלנו מחדש ✅\n\nכתוב לי מה תרצה לעשות:\nלקבוע תור, לבטל תור או לראות שעות פתיחה.`
-    );
+    await saveSession(from, { step: "smart_idle", smartDraft: admin.firestore.FieldValue.delete() });
+    await sendWhatsAppMessage(from, "התחלנו מחדש. כתוב לי מה תרצה לעשות: לקבוע תור, לבטל תור או לבדוק שעות פתיחה.");
     return;
   }
 
   if (!session?.businessId) {
     await sendWhatsAppMessage(
       from,
-      "המערכת פעילה ✅\nכדי שאדע לאיזה עסק לשייך אותך, צריך להיכנס פעם ראשונה דרך אייקון הוואטסאפ באפליקציה של העסק."
+      "המערכת פעילה. כדי שאדע לאיזה עסק לשייך אותך, צריך להיכנס פעם ראשונה דרך אייקון הוואטסאפ באפליקציה של העסק."
     );
     return;
   }
@@ -1328,33 +1332,18 @@ async function handleSmartIncomingText(from, rawText, metadata = {}) {
   const business = await getBusinessSettings(session.businessId);
   if (!business) {
     await clearSession(from);
-    await sendWhatsAppMessage(from, "העסק לא נמצא במערכת 🙏");
+    await sendWhatsAppMessage(from, "העסק לא נמצא במערכת. אפשר לפתוח מחדש דרך האפליקציה.");
     return;
   }
 
   if (isWhatsappBotDisabled(business)) {
     await clearSession(from);
-    console.log("⏸️ WhatsApp bot is disabled for existing session", { businessId: session.businessId, from });
+    console.log("⏸️ WhatsApp agent is disabled for existing session", { businessId: session.businessId, from });
     return;
   }
 
   setWhatsappBusinessContext(business);
-
-  const step = session.step || "main_menu";
-  const normalizedText = await smartNormalizeText({ from, text, business, session, step });
-
-  console.log("🧠 Smart agent normalized input", { from, step, original: text, normalized: normalizedText });
-
-  if (step === "main_menu") return handleMainMenu(from, normalizedText, business, session);
-  if (step === "choose_day") return handleChooseDay(from, normalizedText, business, session);
-  if (step === "choose_time") return handleChooseTime(from, normalizedText, business, session);
-  if (step === "choose_service") return handleChooseService(from, normalizedText, business, session);
-  if (step === "ask_name") return handleAskName(from, normalizedText, business, session);
-  if (step === "cancel_select") return handleCancelSelect(from, normalizedText, business, session);
-  if (step === "cancel_confirm") return handleCancelConfirm(from, normalizedText, business, session);
-
-  await saveSession(from, { step: "main_menu" });
-  await sendWhatsAppMessage(from, "איך אפשר לעזור? אפשר לכתוב: לקבוע תור, לבטל תור או שעות פתיחה.");
+  return handleProfessionalAgent(from, text, business, session);
 }
 
 async function smartNormalizeText({ text, business, session, step }) {
@@ -1504,6 +1493,468 @@ function safeParseJson(raw) {
       return null;
     }
   }
+}
+
+
+// =======================
+// Professional conversational WhatsApp agent
+// =======================
+async function handleProfessionalAgent(from, text, business, session = {}) {
+  const step = String(session.step || "smart_idle");
+
+  if (step === "smart_booking") {
+    return continueSmartBooking(from, text, business, session);
+  }
+
+  if (step === "smart_cancel") {
+    return continueSmartCancel(from, text, business, session);
+  }
+
+  const intent = detectSmartIntent(text);
+
+  if (intent === "hours") {
+    await saveSession(from, { step: "smart_idle" });
+    await sendWhatsAppMessage(from, buildHoursMessage(business));
+    return;
+  }
+
+  if (intent === "cancel") {
+    return startSmartCancel(from, business);
+  }
+
+  if (intent === "book") {
+    return startSmartBooking(from, text, business, session);
+  }
+
+  await sendWhatsAppMessage(
+    from,
+    `אפשר לעזור בשמחה. כתוב לי באופן חופשי מה תרצה לעשות:\n` +
+    `לקבוע תור, לבטל תור או לבדוק שעות פתיחה.\n\n` +
+    `לדוגמה: ״יש תור מחר בבוקר?״`
+  );
+}
+
+function detectSmartIntent(text) {
+  const lowered = String(text || "").toLowerCase();
+  if (/שעות|פתיחה|פתוח|סגור|מתי אתם|מתי פתוח/.test(lowered)) return "hours";
+  if (/בטל|לבטל|ביטול|התור שלי|לא להגיע/.test(lowered)) return "cancel";
+  if (/תור|לקבוע|קבע|פנוי|זמין|אפשר להגיע|מחר|היום|ביום|בשעה|בוקר|צהריים|ערב/.test(lowered)) return "book";
+  return "unknown";
+}
+
+async function startSmartBooking(from, text, business, session = {}) {
+  const draft = buildSmartDraftFromText(text, business, session?.smartDraft || {});
+  return continueSmartBooking(from, text, business, { ...session, step: "smart_booking", smartDraft: draft });
+}
+
+async function continueSmartBooking(from, text, business, session = {}) {
+  const previousDraft = session.smartDraft || {};
+  const draft = buildSmartDraftFromText(text, business, previousDraft);
+
+  const services = normalizeServices(business.services);
+  if (!draft.service && services.length === 1) {
+    draft.service = getServiceLabel(services[0]);
+  }
+
+  if (!draft.date) {
+    await saveSession(from, { step: "smart_booking", smartDraft: draft });
+    await sendWhatsAppMessage(
+      from,
+      `בשמחה. לאיזה יום נוח לך?\n` +
+      `אפשר לכתוב למשל: היום, מחר, יום חמישי, או תאריך כמו 05/06.`
+    );
+    return;
+  }
+
+  const availableTimes = await getAvailableTimesForDate(business.businessId, business, draft.date);
+  if (!availableTimes.length) {
+    const alternatives = await getNextAvailableSlotSuggestions(business.businessId, business, 3);
+    await saveSession(from, { step: "smart_booking", smartDraft: { ...draft, date: "", time: "" } });
+    await sendWhatsAppMessage(
+      from,
+      `ביום ${formatDatePrettyFromKey(draft.date)} אין כרגע שעות פנויות.\n` +
+      (alternatives.length
+        ? `אפשר במקום זה: ${alternatives.map((s) => `${formatDatePrettyFromKey(s.date)} ב־${s.time}`).join(", ")}.\nמה נוח לך?`
+        : `כרגע לא מצאתי שעות פנויות בימים הקרובים.`)
+    );
+    return;
+  }
+
+  if (!draft.time) {
+    const preferred = filterTimesByPeriod(availableTimes, draft.period);
+    const shown = (preferred.length ? preferred : availableTimes).slice(0, 6);
+    await saveSession(from, { step: "smart_booking", smartDraft: draft, availableTimes });
+    await sendWhatsAppMessage(
+      from,
+      `יש לי ביום ${formatDatePrettyFromKey(draft.date)} את השעות האלה: ${shown.join(", ")}.\n` +
+      `איזו שעה תרצה? אפשר פשוט לכתוב שעה, למשל 10:30.`
+    );
+    return;
+  }
+
+  if (!availableTimes.includes(draft.time)) {
+    const preferred = filterTimesByPeriod(availableTimes, draft.period);
+    const shown = (preferred.length ? preferred : availableTimes).slice(0, 6);
+    await saveSession(from, { step: "smart_booking", smartDraft: { ...draft, time: "" }, availableTimes });
+    await sendWhatsAppMessage(
+      from,
+      `השעה ${draft.time} לא פנויה ביום ${formatDatePrettyFromKey(draft.date)}.\n` +
+      `השעות הפנויות הן: ${shown.join(", ")}.\nאיזו שעה מתאימה לך?`
+    );
+    return;
+  }
+
+  if (!draft.service) {
+    await saveSession(from, { step: "smart_booking", smartDraft: draft });
+    await sendWhatsAppMessage(
+      from,
+      `איזה שירות תרצה?\n${services.map((s) => `• ${getServiceLabel(s)}`).join("\n")}`
+    );
+    return;
+  }
+
+  const matchedService = findServiceByText(draft.service, services);
+  if (!matchedService && services.length > 1) {
+    await saveSession(from, { step: "smart_booking", smartDraft: { ...draft, service: "" } });
+    await sendWhatsAppMessage(
+      from,
+      `לא זיהיתי את השירות. אפשר לבחור מתוך:\n${services.map((s) => `• ${getServiceLabel(s)}`).join("\n")}`
+    );
+    return;
+  }
+  if (matchedService) draft.service = getServiceLabel(matchedService);
+
+  if (!draft.name) {
+    await saveSession(from, { step: "smart_booking", smartDraft: draft });
+    await sendWhatsAppMessage(
+      from,
+      `מעולה. רק שם מלא לסיום הקביעה?`
+    );
+    return;
+  }
+
+  return createSmartAppointment(from, business, draft);
+}
+
+function buildSmartDraftFromText(text, business, base = {}) {
+  const draft = { ...(base || {}) };
+  const raw = String(text || "").trim();
+  const lowered = raw.toLowerCase();
+
+  const parsedDate = parseSmartDate(raw);
+  if (parsedDate) draft.date = parsedDate;
+
+  const parsedTime = parseSmartTime(raw);
+  if (parsedTime) draft.time = parsedTime;
+
+  const period = parseSmartPeriod(raw);
+  if (period) draft.period = period;
+
+  const services = normalizeServices(business.services);
+  const service = findServiceByText(raw, services);
+  if (service) draft.service = getServiceLabel(service);
+
+  if (!draft.name && shouldTreatTextAsName(raw, base)) {
+    draft.name = raw.replace(/^(שמי|קוראים לי|שם)\s+/i, "").trim();
+  }
+
+  if (lowered.includes("תור") || lowered.includes("לקבוע") || lowered.includes("קבע")) {
+    draft.intent = "book";
+  }
+
+  return draft;
+}
+
+function shouldTreatTextAsName(text, base = {}) {
+  const value = String(text || "").trim();
+  if (!value || value.length < 2 || value.length > 45) return false;
+  if (!base?.date || !base?.time || !base?.service) return false;
+  if (/\d|תור|מחר|היום|שעה|בוקר|צהריים|ערב|בטל|ביטול|פתיחה/.test(value)) return false;
+  return /^[\u0590-\u05FFa-zA-Z'\- ]{2,}$/.test(value);
+}
+
+function parseSmartDate(text) {
+  const raw = String(text || "");
+  const lowered = raw.toLowerCase();
+  const now = new Date();
+
+  if (/היום/.test(lowered)) return formatDateKey(now);
+  if (/מחר/.test(lowered)) return formatDateKey(addDays(now, 1));
+  if (/מחרתיים/.test(lowered)) return formatDateKey(addDays(now, 2));
+
+  const dateMatch = raw.match(/(\d{1,2})[\/\.\-](\d{1,2})(?:[\/\.\-](\d{2,4}))?/);
+  if (dateMatch) {
+    const day = Number(dateMatch[1]);
+    const month = Number(dateMatch[2]);
+    let year = dateMatch[3] ? Number(dateMatch[3]) : now.getFullYear();
+    if (year < 100) year += 2000;
+    const d = new Date(year, month - 1, day);
+    if (d && d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day) {
+      if (d < new Date(now.getFullYear(), now.getMonth(), now.getDate())) d.setFullYear(d.getFullYear() + 1);
+      return formatDateKey(d);
+    }
+  }
+
+  const weekdays = [
+    { re: /ראשון|יום א/, day: 0 },
+    { re: /שני|יום ב/, day: 1 },
+    { re: /שלישי|יום ג/, day: 2 },
+    { re: /רביעי|יום ד/, day: 3 },
+    { re: /חמישי|יום ה/, day: 4 },
+    { re: /שישי|יום ו/, day: 5 },
+    { re: /שבת/, day: 6 },
+  ];
+  const found = weekdays.find((w) => w.re.test(lowered));
+  if (found) return formatDateKey(nextWeekday(now, found.day));
+
+  return "";
+}
+
+function parseSmartTime(text) {
+  const raw = String(text || "");
+  const match = raw.match(/(?:בשעה\s*)?\b([01]?\d|2[0-3])(?:[:\.](\d{2}))?\b/);
+  if (!match) return "";
+  const hour = Number(match[1]);
+  const minute = match[2] ? Number(match[2]) : 0;
+  if (minute < 0 || minute > 59) return "";
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function parseSmartPeriod(text) {
+  const lowered = String(text || "").toLowerCase();
+  if (/בוקר|מוקדם/.test(lowered)) return "morning";
+  if (/צהריים|צהרים/.test(lowered)) return "noon";
+  if (/אחר הצהריים|אחהצ|אחה"צ/.test(lowered)) return "afternoon";
+  if (/ערב/.test(lowered)) return "evening";
+  return "";
+}
+
+function filterTimesByPeriod(times, period) {
+  if (!period) return times;
+  return (times || []).filter((time) => {
+    const mins = timeToMinutes(time);
+    if (period === "morning") return mins >= 8 * 60 && mins < 12 * 60;
+    if (period === "noon") return mins >= 12 * 60 && mins < 15 * 60;
+    if (period === "afternoon") return mins >= 15 * 60 && mins < 18 * 60;
+    if (period === "evening") return mins >= 18 * 60;
+    return true;
+  });
+}
+
+async function getAvailableTimesForDate(businessId, business, dateKey) {
+  const date = parseDateKeyToDate(dateKey);
+  if (!date) return [];
+  const allSlots = getSlotsForDate(date, business);
+  const taken = await getTakenSlotsForDate(businessId, dateKey);
+  return allSlots.filter((time) => !taken.includes(time) && !isPastSlot(date, time));
+}
+
+async function getNextAvailableSlotSuggestions(businessId, business, limit = 3) {
+  const days = await getAvailableDays(businessId, business);
+  const out = [];
+  for (const day of days) {
+    for (const time of day.availableTimes || []) {
+      out.push({ date: day.date, time });
+      if (out.length >= limit) return out;
+    }
+  }
+  return out;
+}
+
+function findServiceByText(text, services = []) {
+  const lowered = String(text || "").toLowerCase();
+  if (!lowered) return null;
+  return (services || []).find((service) => {
+    const label = getServiceLabel(service).toLowerCase();
+    const textValue = String(service.text || "").toLowerCase();
+    const value = String(service.value || "").toLowerCase();
+    return (label && lowered.includes(label)) || (textValue && lowered.includes(textValue)) || (value && lowered.includes(value));
+  }) || null;
+}
+
+function getServiceLabel(service) {
+  return String(service?.label || service?.value || service?.text || "שירות").trim();
+}
+
+async function createSmartAppointment(from, business, draft) {
+  const taken = await isSlotTaken(business.businessId, draft.date, draft.time);
+  if (taken) {
+    await saveSession(from, { step: "smart_booking", smartDraft: { ...draft, time: "" } });
+    await sendWhatsAppMessage(from, `השעה ${draft.time} נתפסה בינתיים. כתוב לי שעה אחרת שמתאימה לך.`);
+    return;
+  }
+
+  const appointmentRef = db.collection(APPOINTMENTS_COLLECTION).doc();
+  await db.runTransaction(async (tx) => {
+    const slotQuery = db.collection(APPOINTMENTS_COLLECTION)
+      .where("businessId", "==", business.businessId)
+      .where("date", "==", draft.date)
+      .where("time", "==", draft.time);
+
+    const slotSnap = await tx.get(slotQuery);
+    if (slotSnap.docs.some((doc) => isActiveAppointment(doc.data() || {}))) {
+      throw new Error("slot_taken");
+    }
+
+    tx.set(appointmentRef, {
+      businessId: business.businessId,
+      businessName: business.businessName || business.name || "",
+      name: draft.name,
+      phone: normalizePhone(from),
+      service: draft.service || "",
+      date: draft.date,
+      time: draft.time,
+      status: "נקבע",
+      source: "whatsapp-smart-agent",
+      notes: "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    });
+  });
+
+  await db.collection("logs").add({
+    businessId: business.businessId,
+    type: "appointment_created",
+    source: "whatsapp-smart-agent",
+    appointmentId: appointmentRef.id,
+    phone: normalizePhone(from),
+    date: draft.date,
+    time: draft.time,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAtMs: Date.now(),
+  }).catch((err) => console.warn("smart appointment log failed", getErrorPayload(err)));
+
+  await removeMatchingWaitlistEntries({
+    businessId: business.businessId,
+    date: draft.date,
+    phone: normalizePhone(from),
+    appointmentId: appointmentRef.id,
+    source: "whatsapp_smart_agent_created",
+  });
+
+  await saveSession(from, {
+    step: "smart_idle",
+    businessId: business.businessId,
+    businessName: business.businessName || business.name || "העסק",
+    smartDraft: admin.firestore.FieldValue.delete(),
+  });
+
+  await sendWhatsAppMessage(
+    from,
+    `התור נקבע בהצלחה.\n\n` +
+    `שם: ${draft.name}\n` +
+    `תאריך: ${formatDatePrettyFromKey(draft.date)}\n` +
+    `שעה: ${draft.time}\n` +
+    `שירות: ${draft.service}\n\n` +
+    `נשמח לראותך.`
+  );
+}
+
+async function startSmartCancel(from, business) {
+  const active = await getFutureAppointmentsByPhone(business.businessId, from);
+  if (!active.length) {
+    await saveSession(from, { step: "smart_idle" });
+    await sendWhatsAppMessage(from, "לא מצאתי תור עתידי שמקושר למספר הזה.");
+    return;
+  }
+
+  if (active.length === 1) {
+    await saveSession(from, { step: "smart_cancel", cancelOptions: active, cancelAppointment: active[0] });
+    await sendWhatsAppMessage(
+      from,
+      `מצאתי תור אחד: ${formatDatePrettyFromKey(active[0].date)} בשעה ${active[0].time}.\nלמחוק אותו? כתוב כן או לא.`
+    );
+    return;
+  }
+
+  await saveSession(from, { step: "smart_cancel", cancelOptions: active });
+  await sendWhatsAppMessage(
+    from,
+    `מצאתי כמה תורים עתידיים:\n` +
+    active.map((a, i) => `${i + 1}. ${formatDatePrettyFromKey(a.date)} בשעה ${a.time} - ${a.service || "שירות"}`).join("\n") +
+    `\n\nאיזה תור לבטל? אפשר לכתוב מספר, תאריך או שעה.`
+  );
+}
+
+async function continueSmartCancel(from, text, business, session = {}) {
+  const lowered = String(text || "").toLowerCase();
+  const options = Array.isArray(session.cancelOptions) ? session.cancelOptions : [];
+  let appointment = session.cancelAppointment || null;
+
+  if (/^(לא|לא תודה|עזוב|ביטול|חזרה)$/i.test(lowered)) {
+    await saveSession(from, { step: "smart_idle", cancelOptions: admin.firestore.FieldValue.delete(), cancelAppointment: admin.firestore.FieldValue.delete() });
+    await sendWhatsAppMessage(from, "בסדר, לא ביטלתי את התור.");
+    return;
+  }
+
+  if (!appointment && options.length) {
+    const number = String(text || "").match(/\d+/)?.[0];
+    if (number && options[Number(number) - 1]) appointment = options[Number(number) - 1];
+
+    if (!appointment) {
+      const parsedDate = parseSmartDate(text);
+      const parsedTime = parseSmartTime(text);
+      appointment = options.find((a) => (parsedDate && a.date === parsedDate) || (parsedTime && a.time === parsedTime)) || null;
+    }
+
+    if (!appointment) {
+      await sendWhatsAppMessage(from, "לא הצלחתי לזהות איזה תור לבטל. אפשר לכתוב את מספר התור מהרשימה או את השעה שלו.");
+      return;
+    }
+
+    await saveSession(from, { step: "smart_cancel", cancelOptions: options, cancelAppointment: appointment });
+    await sendWhatsAppMessage(from, `לבטל את התור ב${formatDatePrettyFromKey(appointment.date)} בשעה ${appointment.time}? כתוב כן או לא.`);
+    return;
+  }
+
+  if (/^(כן|כן בטל|לבטל|מאשר|אישור|בטל)$/i.test(lowered)) {
+    if (!appointment?.id) {
+      await saveSession(from, { step: "smart_idle" });
+      await sendWhatsAppMessage(from, "לא מצאתי את התור לביטול.");
+      return;
+    }
+
+    const appointmentRef = db.collection(APPOINTMENTS_COLLECTION).doc(appointment.id);
+    const appointmentSnap = await appointmentRef.get();
+    if (!appointmentSnap.exists || String((appointmentSnap.data() || {}).businessId || "") !== business.businessId) {
+      await saveSession(from, { step: "smart_idle" });
+      await sendWhatsAppMessage(from, "לא מצאתי את התור לביטול.");
+      return;
+    }
+
+    await appointmentRef.delete();
+    await db.collection("logs").add({
+      businessId: business.businessId,
+      type: "appointment_cancelled",
+      source: "whatsapp-smart-agent",
+      appointmentId: appointment.id,
+      phone: normalizePhone(from),
+      date: appointment.date || "",
+      time: appointment.time || "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    }).catch((err) => console.warn("smart cancel log failed", getErrorPayload(err)));
+
+    await saveSession(from, { step: "smart_idle", cancelOptions: admin.firestore.FieldValue.delete(), cancelAppointment: admin.firestore.FieldValue.delete() });
+    await sendWhatsAppMessage(from, `התור בוטל בהצלחה.\n${formatDatePrettyFromKey(appointment.date)} בשעה ${appointment.time}`);
+    await notifyWaitlistForFreedSlot(business, appointment.date, appointment.time);
+    return;
+  }
+
+  await sendWhatsAppMessage(from, "כדי לבטל את התור כתוב כן. כדי להשאיר אותו כתוב לא.");
+}
+
+function addDays(date, days) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  d.setDate(d.getDate() + Number(days || 0));
+  return d;
+}
+
+function nextWeekday(fromDate, targetDay) {
+  const start = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+  let diff = (targetDay - start.getDay() + 7) % 7;
+  if (diff === 0) diff = 7;
+  return addDays(start, diff);
 }
 
 async function handleLegacyIncomingText(from, rawText, metadata = {}) {
